@@ -1,0 +1,35 @@
+nohup: ignoring input
+2025/07/20 13:53:44 Database connected successfully
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] POST   /api/v1/offers            --> portaldata-api/internal/api.(*OfferHandlers).CreateOffer-fm (4 handlers)
+[GIN-debug] PUT    /api/v1/offers/:id        --> portaldata-api/internal/api.(*OfferHandlers).UpdateOffer-fm (4 handlers)
+[GIN-debug] DELETE /api/v1/offers/:id        --> portaldata-api/internal/api.(*OfferHandlers).DeleteOffer-fm (4 handlers)
+[GIN-debug] GET    /api/v1/offers            --> portaldata-api/internal/api.(*OfferHandlers).ListOffers-fm (4 handlers)
+[GIN-debug] GET    /api/v1/offers/public     --> portaldata-api/internal/api.(*OfferHandlers).PublicListOffers-fm (4 handlers)
+[GIN-debug] GET    /api/v1/offers/wb_stock   --> portaldata-api/internal/api.(*OfferHandlers).WBStock-fm (4 handlers)
+[GIN-debug] GET    /api/v1/orders/:id        --> portaldata-api/internal/api.(*OrderHandlers).GetOrder-fm (4 handlers)
+[GIN-debug] GET    /api/v1/orders            --> portaldata-api/internal/api.(*OrderHandlers).ListOrders-fm (4 handlers)
+[GIN-debug] POST   /api/v1/warehouses        --> portaldata-api/internal/api.(*WarehouseHandlers).CreateWarehouse-fm (4 handlers)
+[GIN-debug] PUT    /api/v1/warehouses/:id    --> portaldata-api/internal/api.(*WarehouseHandlers).UpdateWarehouse-fm (4 handlers)
+[GIN-debug] DELETE /api/v1/warehouses/:id    --> portaldata-api/internal/api.(*WarehouseHandlers).DeleteWarehouse-fm (4 handlers)
+[GIN-debug] GET    /api/v1/warehouses        --> portaldata-api/internal/api.(*WarehouseHandlers).ListWarehouses-fm (4 handlers)
+[GIN-debug] POST   /api/v1/products          --> portaldata-api/internal/api.(*ProductHandlers).CreateProduct-fm (4 handlers)
+[GIN-debug] POST   /api/v1/products/batch    --> portaldata-api/internal/api.(*ProductHandlers).CreateProducts-fm (4 handlers)
+[GIN-debug] GET    /api/v1/products          --> portaldata-api/internal/api.(*ProductHandlers).ListProducts-fm (4 handlers)
+[GIN-debug] GET    /api/v1/products/:id      --> portaldata-api/internal/api.(*ProductHandlers).GetProduct-fm (4 handlers)
+[GIN-debug] PUT    /api/v1/products/:id      --> portaldata-api/internal/api.(*ProductHandlers).UpdateProduct-fm (4 handlers)
+[GIN-debug] DELETE /api/v1/products/:id      --> portaldata-api/internal/api.(*ProductHandlers).DeleteProduct-fm (4 handlers)
+2025/07/20 13:53:44 Starting server on port 8095
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :8095
+[GIN] 2025/07/20 - 13:55:01 | 200 |    2.343136ms |       127.0.0.1 | GET      "/api/v1/offers"
+[GIN] 2025/07/20 - 13:55:11 | 200 |     729.982µs |       127.0.0.1 | GET      "/api/v1/offers"
+[GIN] 2025/07/20 - 13:56:48 | 201 |   53.537543ms |       127.0.0.1 | POST     "/api/v1/offers"
+[GIN] 2025/07/20 - 13:56:58 | 200 |     694.013µs |       127.0.0.1 | GET      "/api/v1/offers/public"
+2025/07/20 14:11:38 Shutting down server...

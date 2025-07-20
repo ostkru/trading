@@ -1,0 +1,481 @@
+openapi: 3.0.3
+info:
+  title: PortalData API
+  version: 1.0.0
+  description: |
+    Полная документация по REST API для управления продуктами, офферами, заказами и складами.
+    Авторизация по API-ключу обязательна для всех методов (query param `api_key` или header `Authorization: Bearer ...`).
+servers:
+  - url: http://localhost:8095/api/v1
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Authorization: Bearer <api_key>'
+  parameters:
+    ApiKey:
+      in: query
+      name: api_key
+      schema:
+        type: string
+      required: false
+      description: API ключ (альтернатива заголовку Authorization)
+  schemas:
+    Product:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        vendor_article: {type: string}
+        price: {type: number}
+        brand: {type: string}
+        category: {type: string}
+        description: {type: string}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    CreateProductRequest:
+      type: object
+      required: [name, vendor_article, price, brand, category]
+      properties:
+        name: {type: string}
+        vendor_article: {type: string}
+        price: {type: number}
+        brand: {type: string}
+        category: {type: string}
+        description: {type: string}
+    UpdateProductRequest:
+      type: object
+      properties:
+        name: {type: string}
+        vendor_article: {type: string}
+        price: {type: number}
+        brand: {type: string}
+        category: {type: string}
+        description: {type: string}
+    Offer:
+      type: object
+      properties:
+        offer_id: {type: integer}
+        user_id: {type: integer}
+        is_public: {type: boolean}
+        product_id: {type: integer}
+        price_per_unit: {type: number}
+        tax_nds: {type: integer}
+        units_per_lot: {type: integer}
+        available_lots: {type: integer}
+        latitude: {type: number}
+        longitude: {type: number}
+        warehouse_id: {type: integer}
+        offer_type: {type: string}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    CreateOfferRequest:
+      type: object
+      required: [product_id, offer_type, price_per_unit, available_lots, tax_nds, units_per_lot, warehouse_id]
+      properties:
+        product_id: {type: integer}
+        offer_type: {type: string}
+        price_per_unit: {type: number}
+        available_lots: {type: integer}
+        tax_nds: {type: integer}
+        units_per_lot: {type: integer}
+        warehouse_id: {type: integer}
+        is_public: {type: boolean}
+    UpdateOfferRequest:
+      type: object
+      properties:
+        price_per_unit: {type: number}
+        available_lots: {type: integer}
+        tax_nds: {type: integer}
+        units_per_lot: {type: integer}
+        is_public: {type: boolean}
+    Order:
+      type: object
+      properties:
+        order_id: {type: integer}
+        total_amount: {type: number}
+        is_multi: {type: boolean}
+        offer_id: {type: integer}
+        initiator_user_id: {type: integer}
+        counterparty_user_id: {type: integer}
+        order_time: {type: string, format: date-time}
+        price_per_unit: {type: number}
+        units_per_lot: {type: integer}
+        lot_count: {type: integer}
+        notes: {type: string}
+        order_type: {type: string}
+        payment_method: {type: string}
+        order_status: {type: string}
+        shipping_address: {type: string}
+        tracking_number: {type: string}
+    GetOrderResponse:
+      type: object
+      properties:
+        order:
+          $ref: '#/components/schemas/Order'
+        order_items:
+          type: array
+          items:
+            type: object
+            properties:
+              id: {type: integer}
+              order_id: {type: integer}
+              offer_id: {type: integer}
+              qty: {type: integer}
+              price_per_unit: {type: number}
+              created_at: {type: string, format: date-time}
+              status: {type: string}
+    Warehouse:
+      type: object
+      properties:
+        id: {type: integer}
+        user_id: {type: integer}
+        updated_at: {type: string, format: date-time}
+        created_at: {type: string, format: date-time}
+        longitude: {type: number}
+        latitude: {type: number}
+        wb_id: {type: string}
+        working_hours: {type: string}
+        address: {type: string}
+    CreateWarehouseRequest:
+      type: object
+      required: [address, latitude, longitude]
+      properties:
+        address: {type: string}
+        latitude: {type: number}
+        longitude: {type: number}
+        working_hours: {type: string}
+    UpdateWarehouseRequest:
+      type: object
+      properties:
+        address: {type: string}
+        latitude: {type: number}
+        longitude: {type: number}
+        working_hours: {type: string}
+security:
+  - ApiKeyAuth: []
+paths:
+  /meta:
+    post:
+      summary: Создать мета-объект
+      description: Создаёт новый мета-объект (бывший продукт). Все поля обязательны, кроме description.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+            examples:
+              Пример:
+                value:
+                  name: "Test Product"
+                  vendor_article: "TP-001"
+                  price: 999.99
+                  brand: "TestBrand"
+                  category: "TestCategory"
+                  description: "Test product description"
+      responses:
+        '201':
+          description: Мета-объект создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+              examples:
+                Пример:
+                  value:
+                    id: 100
+                    name: "Test Product"
+                    vendor_article: "TP-001"
+                    price: 999.99
+                    brand: "TestBrand"
+                    category: "TestCategory"
+                    description: "Test product description"
+                    created_at: "2025-07-20T13:50:06.594272Z"
+                    updated_at: "2025-07-20T13:50:06.594272Z"
+        '400':
+          description: Ошибка валидации
+    get:
+      summary: Список мета-объектов
+      description: Возвращает список мета-объектов с пагинацией.
+      parameters:
+        - in: query
+          name: page
+          schema: {type: integer, default: 1}
+        - in: query
+          name: limit
+          schema: {type: integer, default: 10}
+      responses:
+        '200':
+          description: Список мета-объектов
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+              examples:
+                Пример:
+                  value:
+                    data:
+                      - id: 100
+                        name: "Test Product"
+                        vendor_article: "TP-001"
+                        price: 999.99
+                        brand: "TestBrand"
+                        category: "TestCategory"
+                        description: "Test product description"
+                        created_at: "2025-07-20T13:50:06.594272Z"
+                        updated_at: "2025-07-20T13:50:06.594272Z"
+  /meta/{id}:
+    get:
+      summary: Получить мета-объект по ID
+      description: Возвращает мета-объект по его уникальному идентификатору.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: integer}
+      responses:
+        '200':
+          description: Мета-объект найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+              examples:
+                Пример:
+                  value:
+                    id: 100
+                    name: "Test Product"
+                    vendor_article: "TP-001"
+                    price: 999.99
+                    brand: "TestBrand"
+                    category: "TestCategory"
+                    description: "Test product description"
+                    created_at: "2025-07-20T13:50:06.594272Z"
+                    updated_at: "2025-07-20T13:50:06.594272Z"
+        '404': {description: Не найден}
+    put:
+      summary: Обновить мета-объект
+      description: Обновляет данные мета-объекта по ID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+            examples:
+              Пример:
+                value:
+                  name: "Updated Product"
+                  price: 888.88
+      responses:
+        '200':
+          description: Мета-объект обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404': {description: Не найден}
+    delete:
+      summary: Удалить мета-объект
+      description: Удаляет мета-объект по ID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: integer}
+      responses:
+        '200': {description: Удалено}
+        '404': {description: Не найден}
+  /offers:
+    post:
+      summary: Создать оффер
+      description: Создаёт новый оффер. Все поля обязательны, кроме is_public.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOfferRequest'
+            examples:
+              Пример:
+                value:
+                  product_id: 100
+                  offer_type: "retail"
+                  price_per_unit: 1000.00
+                  available_lots: 10
+                  tax_nds: 20
+                  units_per_lot: 1
+                  warehouse_id: 1
+                  is_public: false
+      responses:
+        '201': {description: Оффер создан, content: {application/json: {schema: {$ref: '#/components/schemas/Offer'}}}}
+        '400': {description: Ошибка валидации}
+    get:
+      summary: Список офферов пользователя
+      description: Возвращает список офферов, созданных текущим пользователем.
+      responses:
+        '200': {description: Список офферов, content: {application/json: {schema: {type: object, properties: {offers: {type: array, items: {$ref: '#/components/schemas/Offer'}}}}}}}
+  /offers/public:
+    get:
+      summary: Публичные офферы
+      description: Возвращает список публичных офферов.
+      responses:
+        '200': {description: Список публичных офферов, content: {application/json: {schema: {type: object, properties: {offers: {type: array, items: {$ref: '#/components/schemas/Offer'}}}}}}}
+  /offers/{id}:
+    put:
+      summary: Обновить оффер
+      description: Обновляет данные оффера по ID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOfferRequest'
+            examples:
+              Пример:
+                value:
+                  price_per_unit: 900.00
+                  available_lots: 8
+                  tax_nds: 10
+                  units_per_lot: 1
+                  is_public: true
+      responses:
+        '200': {description: Обновлено, content: {application/json: {schema: {$ref: '#/components/schemas/Offer'}}}}
+        '404': {description: Не найден}
+    delete:
+      summary: Удалить оффер
+      description: Удаляет оффер по ID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: integer}
+      responses:
+        '204': {description: Удалено}
+        '409': {description: Есть связанные активные заказы}
+  /offers/wb_stock:
+    get:
+      summary: Остатки WB по офферу
+      description: Возвращает остатки товара на складе WB по офферу.
+      parameters:
+        - in: query
+          name: product_id
+          required: true
+          schema: {type: integer}
+        - in: query
+          name: warehouse_id
+          required: true
+          schema: {type: integer}
+        - in: query
+          name: supplier_id
+          required: true
+          schema: {type: integer}
+      responses:
+        '200': {description: Остатки, content: {application/json: {schema: {type: object, properties: {stock: {type: integer}}}}}}
+  /orders:
+    get:
+      summary: Список заказов пользователя
+      description: Возвращает список заказов, созданных текущим пользователем.
+      parameters:
+        - in: query
+          name: page
+          schema: {type: integer, default: 1}
+        - in: query
+          name: per_page
+          schema: {type: integer, default: 20}
+        - in: query
+          name: status
+          schema: {type: string}
+      responses:
+        '200': {description: Список заказов, content: {application/json: {schema: {type: object, properties: {orders: {type: array, items: {$ref: '#/components/schemas/Order'}}, total: {type: integer}, page: {type: integer}, per_page: {type: integer}}}}}}
+  /orders/{id}:
+    get:
+      summary: Получить заказ по ID
+      description: Возвращает заказ по его уникальному идентификатору.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: integer}
+      responses:
+        '200': {description: Заказ, content: {application/json: {schema: {$ref: '#/components/schemas/GetOrderResponse'}}}}
+        '404': {description: Не найден}
+  /warehouses:
+    post:
+      summary: Создать склад
+      description: Создаёт новый склад. Все поля обязательны.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWarehouseRequest'
+            examples:
+              Пример:
+                value:
+                  address: "123 Main St"
+                  latitude: 55.7558
+                  longitude: 37.6173
+                  working_hours: "9:00-18:00"
+      responses:
+        '201': {description: Склад создан, content: {application/json: {schema: {$ref: '#/components/schemas/Warehouse'}}}}
+        '400': {description: Ошибка валидации}
+    get:
+      summary: Список складов пользователя
+      description: Возвращает список складов, созданных текущим пользователем.
+      responses:
+        '200': {description: Список складов, content: {application/json: {schema: {type: object, properties: {warehouses: {type: array, items: {$ref: '#/components/schemas/Warehouse'}}}}}}}
+  /warehouses/{id}:
+    put:
+      summary: Обновить склад
+      description: Обновляет данные склада по ID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWarehouseRequest'
+            examples:
+              Пример:
+                value:
+                  address: "456 Oak Ave"
+                  latitude: 55.7600
+                  longitude: 37.6200
+                  working_hours: "10:00-19:00"
+      responses:
+        '200': {description: Обновлено, content: {application/json: {schema: {$ref: '#/components/schemas/Warehouse'}}}}
+        '404': {description: Не найден}
+    delete:
+      summary: Удалить склад
+      description: Удаляет склад по ID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: integer}
+      responses:
+        '204': {description: Удалено}
+        '404': {description: Не найден} 

@@ -1,0 +1,61 @@
+nohup: ignoring input
+2025/07/20 15:45:56 Database connected successfully
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /openapi.yaml             --> main.main.func1 (4 handlers)
+[GIN-debug] GET    /docs                     --> main.main.func2 (4 handlers)
+[GIN-debug] POST   /api/v1/offers            --> portaldata-api/internal/api.(*OfferHandlers).CreateOffer-fm (5 handlers)
+[GIN-debug] PUT    /api/v1/offers/:id        --> portaldata-api/internal/api.(*OfferHandlers).UpdateOffer-fm (5 handlers)
+[GIN-debug] DELETE /api/v1/offers/:id        --> portaldata-api/internal/api.(*OfferHandlers).DeleteOffer-fm (5 handlers)
+[GIN-debug] GET    /api/v1/offers            --> portaldata-api/internal/api.(*OfferHandlers).ListOffers-fm (5 handlers)
+[GIN-debug] GET    /api/v1/offers/public     --> portaldata-api/internal/api.(*OfferHandlers).PublicListOffers-fm (5 handlers)
+[GIN-debug] GET    /api/v1/offers/wb_stock   --> portaldata-api/internal/api.(*OfferHandlers).WBStock-fm (5 handlers)
+[GIN-debug] GET    /api/v1/orders/:id        --> portaldata-api/internal/api.(*OrderHandlers).GetOrder-fm (5 handlers)
+[GIN-debug] GET    /api/v1/orders            --> portaldata-api/internal/api.(*OrderHandlers).ListOrders-fm (5 handlers)
+[GIN-debug] POST   /api/v1/warehouses        --> portaldata-api/internal/api.(*WarehouseHandlers).CreateWarehouse-fm (5 handlers)
+[GIN-debug] PUT    /api/v1/warehouses/:id    --> portaldata-api/internal/api.(*WarehouseHandlers).UpdateWarehouse-fm (5 handlers)
+[GIN-debug] DELETE /api/v1/warehouses/:id    --> portaldata-api/internal/api.(*WarehouseHandlers).DeleteWarehouse-fm (5 handlers)
+[GIN-debug] GET    /api/v1/warehouses        --> portaldata-api/internal/api.(*WarehouseHandlers).ListWarehouses-fm (5 handlers)
+[GIN-debug] POST   /api/v1/meta              --> portaldata-api/internal/api.(*ProductHandlers).CreateProduct-fm (5 handlers)
+[GIN-debug] POST   /api/v1/meta/batch        --> portaldata-api/internal/api.(*ProductHandlers).CreateProducts-fm (5 handlers)
+[GIN-debug] GET    /api/v1/meta              --> portaldata-api/internal/api.(*ProductHandlers).ListProducts-fm (5 handlers)
+[GIN-debug] GET    /api/v1/meta/:id          --> portaldata-api/internal/api.(*ProductHandlers).GetProduct-fm (5 handlers)
+[GIN-debug] PUT    /api/v1/meta/:id          --> portaldata-api/internal/api.(*ProductHandlers).UpdateProduct-fm (5 handlers)
+[GIN-debug] DELETE /api/v1/meta/:id          --> portaldata-api/internal/api.(*ProductHandlers).DeleteProduct-fm (5 handlers)
+[GIN-debug] GET    /swagger/*filepath        --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (4 handlers)
+[GIN-debug] HEAD   /swagger/*filepath        --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (4 handlers)
+2025/07/20 15:45:56 Starting server on port 8095
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :8095
+2025/07/20 15:46:59 BRUTEFORCE: ATTEMPT 127.0.0.1:WRONGKEY #1
+[GIN] 2025/07/20 - 15:46:59 | 401 |    1.056514ms |       127.0.0.1 | GET      "/api/v1/meta"
+2025/07/20 15:46:59 BRUTEFORCE: ATTEMPT 127.0.0.1:WRONGKEY #2
+[GIN] 2025/07/20 - 15:46:59 | 401 |     455.179µs |       127.0.0.1 | GET      "/api/v1/meta"
+2025/07/20 15:46:59 BRUTEFORCE: ATTEMPT 127.0.0.1:WRONGKEY #3
+[GIN] 2025/07/20 - 15:46:59 | 401 |     288.666µs |       127.0.0.1 | GET      "/api/v1/meta"
+2025/07/20 15:46:59 BRUTEFORCE: ATTEMPT 127.0.0.1:WRONGKEY #4
+[GIN] 2025/07/20 - 15:46:59 | 401 |     458.001µs |       127.0.0.1 | GET      "/api/v1/meta"
+2025/07/20 15:46:59 BRUTEFORCE: ATTEMPT 127.0.0.1:WRONGKEY #5
+[GIN] 2025/07/20 - 15:46:59 | 401 |     488.471µs |       127.0.0.1 | GET      "/api/v1/meta"
+2025/07/20 15:46:59 BRUTEFORCE: ATTEMPT 127.0.0.1:WRONGKEY #6
+[GIN] 2025/07/20 - 15:46:59 | 401 |     399.601µs |       127.0.0.1 | GET      "/api/v1/meta"
+2025/07/20 15:46:59 BRUTEFORCE: ATTEMPT 127.0.0.1:WRONGKEY #7
+[GIN] 2025/07/20 - 15:46:59 | 401 |     394.553µs |       127.0.0.1 | GET      "/api/v1/meta"
+2025/07/20 15:46:59 BRUTEFORCE: ATTEMPT 127.0.0.1:WRONGKEY #8
+[GIN] 2025/07/20 - 15:46:59 | 401 |     412.461µs |       127.0.0.1 | GET      "/api/v1/meta"
+2025/07/20 15:47:00 BRUTEFORCE: ATTEMPT 127.0.0.1:WRONGKEY #9
+[GIN] 2025/07/20 - 15:47:00 | 401 |     338.369µs |       127.0.0.1 | GET      "/api/v1/meta"
+2025/07/20 15:47:00 BRUTEFORCE: ATTEMPT 127.0.0.1:WRONGKEY #10
+[GIN] 2025/07/20 - 15:47:00 | 401 |     322.213µs |       127.0.0.1 | GET      "/api/v1/meta"
+2025/07/20 15:47:00 BRUTEFORCE: ATTEMPT 127.0.0.1:WRONGKEY #11
+2025/07/20 15:47:00 BRUTEFORCE: BAN 1m 127.0.0.1:WRONGKEY
+[GIN] 2025/07/20 - 15:47:00 | 401 |     431.021µs |       127.0.0.1 | GET      "/api/v1/meta"
+2025/07/20 15:47:00 BRUTEFORCE: BLOCKED 127.0.0.1:WRONGKEY (level 1) до 2025-07-20 15:48:00.015690136 +0300 MSK m=+123.968293842
+[GIN] 2025/07/20 - 15:47:00 | 429 |      84.415µs |       127.0.0.1 | GET      "/api/v1/meta"
+2025/07/20 15:47:00 BRUTEFORCE: BLOCKED 127.0.0.1:WRONGKEY (level 1) до 2025-07-20 15:48:00.015690136 +0300 MSK m=+123.968293842
+[GIN] 2025/07/20 - 15:47:00 | 429 |      71.808µs |       127.0.0.1 | GET      "/api/v1/meta"
