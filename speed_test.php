@@ -16,10 +16,8 @@ for ($i = 1; $i <= $php_requests; $i++) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Следуем редиректам
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        "X-API-Key: {$api_key}",
-        "Content-Type: application/json"
-    ]);
+    $headers = ["Authorization: Bearer $api_key", "Content-Type: application/json"];
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     $response = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
@@ -44,10 +42,8 @@ for ($i = 1; $i <= $go_requests; $i++) {
     curl_setopt($ch, CURLOPT_URL, $go_url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        "X-API-Key: {$api_key}",
-        "Content-Type: application/json"
-    ]);
+    $headers = ["Authorization: Bearer $api_key", "Content-Type: application/json"];
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     $response = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);

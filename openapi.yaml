@@ -4,24 +4,19 @@ info:
   version: 1.0.0
   description: |
     Полная документация по REST API для управления продуктами, офферами, заказами и складами.
-    Авторизация по API-ключу обязательна для всех методов (query param `api_key` или header `Authorization: Bearer ...`).
+    Авторизация по API-ключу обязательна для всех методов (заголовок Authorization).
 servers:
   - url: https://api.portaldata.ru/v1/products
 components:
   securitySchemes:
     ApiKeyAuth:
-      type: apiKey
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
       in: header
       name: Authorization
-      description: 'Authorization: Bearer <api_key>'
-  parameters:
-    ApiKey:
-      in: query
-      name: api_key
-      schema:
-        type: string
-      required: false
-      description: API ключ (альтернатива заголовку Authorization)
+      description: 'Authorization: <api_key>'
+  parameters: {}
   schemas:
     Product:
       type: object

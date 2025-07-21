@@ -2,6 +2,7 @@ package user
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,9 +17,15 @@ func NewAuthService(userService *Service) *AuthService {
 
 func (s *AuthService) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		apiKey := c.GetHeader("X-API-KEY")
+		authHeader := c.GetHeader("Authorization")
+		var apiKey string
+		if authHeader != "" && len(authHeader) > 7 && strings.HasPrefix(authHeader, "Bearer ") {
+			apiKey = authHeader[7:]
+		} else {
+			apiKey = c.GetHeader("X-API-KEY")
+		}
 		if apiKey == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "API key is required"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "API key is required (use Authorization: Bearer <token> или X-API-KEY)"})
 			c.Abort()
 			return
 		}
