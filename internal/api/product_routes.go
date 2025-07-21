@@ -4,11 +4,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterProductRoutes(r *gin.RouterGroup, h *ProductHandlers) {
-	r.POST("/meta", h.CreateProduct)
-	r.POST("/meta/batch", h.CreateProducts)
-	r.GET("/meta", h.ListProducts)
-	r.GET("/meta/:id", h.GetProduct)
-	r.PUT("/meta/:id", h.UpdateProduct)
-	r.DELETE("/meta/:id", h.DeleteProduct)
+func RegisterMetaproductRoutes(r *gin.RouterGroup, h *MetaproductHandlers) {
+	r.POST("/metaproduct", h.CreateMetaproduct)
+	r.POST("/metaproduct/batch", h.CreateMetaproducts)
+	r.GET("/metaproduct", h.ListMetaproducts)
+	r.GET("/metaproduct/:id", h.GetMetaproduct)
+	r.PUT("/metaproduct/:id", h.UpdateMetaproduct)
+	r.DELETE("/metaproduct/:id", h.DeleteMetaproduct)
 } 

@@ -69,10 +69,21 @@ func (h *WarehouseHandlers) DeleteWarehouse(c *gin.Context) {
 
 func (h *WarehouseHandlers) ListWarehouses(c *gin.Context) {
 	userID := int64(5) // временно для теста, чтобы увидеть реальные склады
-	warehouses, err := h.service.ListWarehouses(userID)
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100 // Ограничение максимального лимита
+	}
+	response, err := h.service.ListWarehouses(userID, page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"warehouses": warehouses})
+	c.JSON(http.StatusOK, response)
 } 

@@ -4,7 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterOrderRoutes(r *gin.RouterGroup, h *OrderHandlers) {
-	r.GET("/orders/:id", h.GetOrder)
-	r.GET("/orders", h.ListOrders)
+func RegisterOrderRoutes(router *gin.RouterGroup, handler *OrderHandlers) {
+	router.GET("/orders/:id", handler.GetOrder)
+	router.GET("/orders", handler.ListOrders)
+	router.POST("/orders", handler.CreateOrder)
 } 

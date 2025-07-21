@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"time"
-
+	"github.com/lib/pq"
 	"portaldata-api/internal/database"
 	"portaldata-api/internal/models"
 )
@@ -20,9 +20,9 @@ func NewProductService(db *database.DB) *ProductService {
 
 func (s *ProductService) CreateProduct(req models.CreateProductRequest) (*models.Product, error) {
 	query := `
-		INSERT INTO products (name, vendor_article, price, brand, category, description, created_at, updated_at)
+		INSERT INTO products (name, vendor_article, recommend_price, brand, category, description, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		RETURNING id, name, vendor_article, price, brand, category, description, created_at, updated_at
+		RETURNING id, name, vendor_article, recommend_price, brand, category, description, created_at, updated_at
 	`
 
 	now := time.Now()
@@ -32,7 +32,7 @@ func (s *ProductService) CreateProduct(req models.CreateProductRequest) (*models
 		query,
 		req.Name,
 		req.VendorArticle,
-		req.Price,
+		req.RecommendPrice,
 		req.Brand,
 		req.Category,
 		req.Description,
@@ -42,7 +42,7 @@ func (s *ProductService) CreateProduct(req models.CreateProductRequest) (*models
 		&product.ID,
 		&product.Name,
 		&product.VendorArticle,
-		&product.Price,
+		&product.RecommendPrice,
 		&product.Brand,
 		&product.Category,
 		&product.Description,
@@ -51,7 +51,12 @@ func (s *ProductService) CreateProduct(req models.CreateProductRequest) (*models
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to create product: %w", err)
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "23505" && pqErr.Constraint == "idx_brand_vendor_article" {
+				return nil, fmt.Errorf("Товар с таким брендом и артикулом уже существует")
+			}
+		}
+		return nil, fmt.Errorf("Ошибка при создании товара: %w", err)
 	}
 
 	log.Printf("Created product: %s (ID: %d)", product.Name, product.ID)
@@ -67,16 +72,16 @@ func (s *ProductService) CreateProducts(req models.CreateProductsRequest) ([]mod
 
 	var products []models.Product
 	query := `
-		INSERT INTO products (name, vendor_article, price, brand, category, description, created_at, updated_at)
+		INSERT INTO products (name, vendor_article, recommend_price, brand, category, description, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		ON CONFLICT (brand, vendor_article) 
 		DO UPDATE SET 
 			name = EXCLUDED.name,
-			price = EXCLUDED.price,
+			recommend_price = EXCLUDED.recommend_price,
 			category = EXCLUDED.category,
 			description = EXCLUDED.description,
 			updated_at = EXCLUDED.updated_at
-		RETURNING id, name, vendor_article, price, brand, category, description, created_at, updated_at
+		RETURNING id, name, vendor_article, recommend_price, brand, category, description, created_at, updated_at
 	`
 
 	now := time.Now()
@@ -86,7 +91,7 @@ func (s *ProductService) CreateProducts(req models.CreateProductsRequest) ([]mod
 			query,
 			reqProduct.Name,
 			reqProduct.VendorArticle,
-			reqProduct.Price,
+			reqProduct.RecommendPrice,
 			reqProduct.Brand,
 			reqProduct.Category,
 			reqProduct.Description,
@@ -96,7 +101,7 @@ func (s *ProductService) CreateProducts(req models.CreateProductsRequest) ([]mod
 			&product.ID,
 			&product.Name,
 			&product.VendorArticle,
-			&product.Price,
+			&product.RecommendPrice,
 			&product.Brand,
 			&product.Category,
 			&product.Description,
@@ -121,22 +126,28 @@ func (s *ProductService) CreateProducts(req models.CreateProductsRequest) ([]mod
 
 func (s *ProductService) GetProduct(id int) (*models.Product, error) {
 	query := `
-		SELECT id, name, vendor_article, price, brand, category, description, created_at, updated_at
+		SELECT id, name, vendor_article, recommend_price, brand, category, description, created_at, updated_at
 		FROM products WHERE id = $1
 	`
 
 	var product models.Product
+	var recommendPrice sql.NullFloat64
 	err := s.db.QueryRow(query, id).Scan(
 		&product.ID,
 		&product.Name,
 		&product.VendorArticle,
-		&product.Price,
+		&recommendPrice,
 		&product.Brand,
 		&product.Category,
 		&product.Description,
 		&product.CreatedAt,
 		&product.UpdatedAt,
 	)
+	if recommendPrice.Valid {
+		product.RecommendPrice = &recommendPrice.Float64
+	} else {
+		product.RecommendPrice = nil
+	}
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -148,25 +159,43 @@ func (s *ProductService) GetProduct(id int) (*models.Product, error) {
 	return &product, nil
 }
 
-func (s *ProductService) ListProducts(page, limit int) (*models.ProductListResponse, error) {
+func (s *ProductService) ListProducts(page, limit int, owner string, userID int64) (*models.ProductListResponse, error) {
 	offset := (page - 1) * limit
 
 	// Получаем общее количество
 	var total int
-	err := s.db.QueryRow("SELECT COUNT(*) FROM products").Scan(&total)
+	countQuery := "SELECT COUNT(*) FROM products"
+	where := ""
+	var args []interface{}
+	if owner == "my" {
+		where = " WHERE user_id = $1"
+		args = append(args, userID)
+	} else if owner == "others" {
+		where = " WHERE user_id <> $1"
+		args = append(args, userID)
+	}
+	if where != "" {
+		countQuery += where
+	}
+	err := s.db.QueryRow(countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count products: %w", err)
 	}
 
 	// Получаем товары
 	query := `
-		SELECT id, name, vendor_article, price, brand, category, description, created_at, updated_at
-		FROM products 
+		SELECT id, name, vendor_article, recommend_price, brand, category, description, created_at, updated_at
+		FROM products` + where + `
 		ORDER BY created_at DESC 
-		LIMIT $1 OFFSET $2
+		LIMIT $2 OFFSET $3
 	`
+	if where == "" {
+		args = []interface{}{limit, offset}
+	} else {
+		args = append(args, limit, offset)
+	}
 
-	rows, err := s.db.Query(query, limit, offset)
+	rows, err := s.db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query products: %w", err)
 	}
@@ -175,17 +204,23 @@ func (s *ProductService) ListProducts(page, limit int) (*models.ProductListRespo
 	var products []models.Product
 	for rows.Next() {
 		var product models.Product
+		var recommendPrice sql.NullFloat64
 		err := rows.Scan(
 			&product.ID,
 			&product.Name,
 			&product.VendorArticle,
-			&product.Price,
+			&recommendPrice,
 			&product.Brand,
 			&product.Category,
 			&product.Description,
 			&product.CreatedAt,
 			&product.UpdatedAt,
 		)
+		if recommendPrice.Valid {
+			product.RecommendPrice = &recommendPrice.Float64
+		} else {
+			product.RecommendPrice = nil
+		}
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan product: %w", err)
 		}
@@ -205,21 +240,22 @@ func (s *ProductService) UpdateProduct(id int, req models.UpdateProductRequest) 
 		UPDATE products 
 		SET name = COALESCE($1, name),
 			vendor_article = COALESCE($2, vendor_article),
-			price = COALESCE($3, price),
+			recommend_price = COALESCE($3, recommend_price),
 			brand = COALESCE($4, brand),
 			category = COALESCE($5, category),
 			description = COALESCE($6, description),
 			updated_at = $7
 		WHERE id = $8
-		RETURNING id, name, vendor_article, price, brand, category, description, created_at, updated_at
+		RETURNING id, name, vendor_article, recommend_price, brand, category, description, created_at, updated_at
 	`
 
 	var product models.Product
+	var recommendPrice sql.NullFloat64
 	err := s.db.QueryRow(
 		query,
 		req.Name,
 		req.VendorArticle,
-		req.Price,
+		req.RecommendPrice,
 		req.Brand,
 		req.Category,
 		req.Description,
@@ -229,13 +265,18 @@ func (s *ProductService) UpdateProduct(id int, req models.UpdateProductRequest) 
 		&product.ID,
 		&product.Name,
 		&product.VendorArticle,
-		&product.Price,
+		&recommendPrice,
 		&product.Brand,
 		&product.Category,
 		&product.Description,
 		&product.CreatedAt,
 		&product.UpdatedAt,
 	)
+	if recommendPrice.Valid {
+		product.RecommendPrice = &recommendPrice.Float64
+	} else {
+		product.RecommendPrice = nil
+	}
 
 	if err != nil {
 		if err == sql.ErrNoRows {

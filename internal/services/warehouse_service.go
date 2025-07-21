@@ -75,22 +75,41 @@ func (s *WarehouseService) DeleteWarehouse(id int64, userID int64) error {
 	return err
 }
 
-func (s *WarehouseService) ListWarehouses(userID int64) ([]models.Warehouse, error) {
-	rows, err := s.db.Query(`SELECT id, user_id, updated_at, created_at, longitude, latitude, wb_id, working_hours, address FROM warehouses WHERE user_id = $1 ORDER BY id DESC`, userID)
+type WarehouseListResponse struct {
+	Warehouses []models.Warehouse `json:"warehouses"`
+	Total      int                `json:"total"`
+	Page       int                `json:"page"`
+	Limit      int                `json:"limit"`
+}
+
+func (s *WarehouseService) ListWarehouses(userID int64, page, limit int) (*WarehouseListResponse, error) {
+	offset := (page - 1) * limit
+	var total int
+	err := s.db.QueryRow("SELECT COUNT(*) FROM warehouses WHERE user_id = $1", userID).Scan(&total)
+	if err != nil {
+		return nil, err
+	}
+	query := `SELECT id, user_id, updated_at, created_at, longitude, latitude, wb_id, working_hours, address FROM warehouses WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	rows, err := s.db.Query(query, userID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	warehouses := []models.Warehouse{}
+	var warehouses []models.Warehouse
 	for rows.Next() {
-		wh := models.Warehouse{}
+		var wh models.Warehouse
 		err := rows.Scan(&wh.ID, &wh.UserID, &wh.UpdatedAt, &wh.CreatedAt, &wh.Longitude, &wh.Latitude, &wh.WBID, &wh.WorkingHours, &wh.Address)
 		if err != nil {
 			return nil, err
 		}
 		warehouses = append(warehouses, wh)
 	}
-	return warehouses, nil
+	return &WarehouseListResponse{
+		Warehouses: warehouses,
+		Total:      total,
+		Page:       page,
+		Limit:      limit,
+	}, nil
 }
 
 func (s *WarehouseService) GetWarehouseByID(id int64) (*models.Warehouse, error) {

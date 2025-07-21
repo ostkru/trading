@@ -1,0 +1,361 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "PortalData API",
+        "version": "1.0.0",
+        "description": "Полная документация по REST API для управления продуктами, офферами, заказами и складами. Авторизация по API-ключу обязательна для всех методов (query param `api_key` или header `Authorization: Bearer ...`)."
+    },
+    "components": {
+        "securitySchemes": {
+            "ApiKeyAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "description": "Authorization: Bearer <api_key>"
+            }
+        },
+        "schemas": {
+            "Product": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "integer" },
+                    "name": { "type": "string" },
+                    "vendor_article": { "type": "string" },
+                    "recommend_price": { "type": "number" },
+                    "brand": { "type": "string" },
+                    "category": { "type": "string" },
+                    "description": { "type": "string" },
+                    "created_at": { "type": "string", "format": "date-time" },
+                    "updated_at": { "type": "string", "format": "date-time" }
+                }
+            },
+            "CreateProductRequest": {
+                "type": "object",
+                "required": ["name", "vendor_article", "recommend_price", "brand", "category"],
+                "properties": {
+                    "name": { "type": "string" },
+                    "vendor_article": { "type": "string" },
+                    "recommend_price": { "type": "number" },
+                    "brand": { "type": "string" },
+                    "category": { "type": "string" },
+                    "description": { "type": "string" }
+                }
+            },
+            "UpdateProductRequest": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "vendor_article": { "type": "string" },
+                    "recommend_price": { "type": "number" },
+                    "brand": { "type": "string" },
+                    "category": { "type": "string" },
+                    "description": { "type": "string" }
+                }
+            },
+            "Offer": {
+                "type": "object",
+                "properties": {
+                    "offer_id": { "type": "integer" },
+                    "user_id": { "type": "integer" },
+                    "is_public": { "type": "boolean" },
+                    "product_id": { "type": "integer" },
+                    "price_per_unit": { "type": "number" },
+                    "tax_nds": { "type": "integer" },
+                    "units_per_lot": { "type": "integer" },
+                    "available_lots": { "type": "integer" },
+                    "latitude": { "type": "number" },
+                    "longitude": { "type": "number" },
+                    "warehouse_id": { "type": "integer" },
+                    "offer_type": { "type": "string" },
+                    "created_at": { "type": "string", "format": "date-time" },
+                    "updated_at": { "type": "string", "format": "date-time" },
+                    "max_shipping_days": { "type": "integer", "description": "Максимальный срок отгрузки в днях. 0 — сегодня в рабочее время." }
+                }
+            },
+            "CreateOfferRequest": {
+                "type": "object",
+                "required": ["product_id", "offer_type", "price_per_unit", "available_lots", "tax_nds", "units_per_lot", "warehouse_id", "is_public"],
+                "properties": {
+                    "product_id": { "type": "integer", "description": "ID метапродукта, к которому относится оффер." },
+                    "offer_type": { "type": "string", "enum": ["sell", "buy"], "description": "Тип оффера: sell — продажа, buy — покупка." },
+                    "price_per_unit": { "type": "number", "description": "Цена за единицу товара." },
+                    "available_lots": { "type": "integer", "description": "Доступное количество лотов." },
+                    "tax_nds": { "type": "integer", "description": "Ставка НДС в цене." },
+                    "units_per_lot": { "type": "integer", "default": 1, "description": "Количество единиц в лоте." },
+                    "warehouse_id": { "type": "integer", "description": "ID склада." },
+                    "is_public": { "type": "boolean", "description": "Публичный оффер или нет." },
+                    "max_shipping_days": { "type": "integer", "default": 0, "description": "Максимальный срок отгрузки в днях. 0 — сегодня." }
+                }
+            },
+            "UpdateOfferRequest": {
+                "type": "object",
+                "properties": {
+                    "price_per_unit": { "type": "number" },
+                    "available_lots": { "type": "integer" },
+                    "tax_nds": { "type": "integer" },
+                    "units_per_lot": { "type": "integer" },
+                    "is_public": { "type": "boolean" },
+                    "max_shipping_days": { "type": "integer", "description": "Новый срок отгрузки." }
+                }
+            },
+            "Order": {
+                "type": "object",
+                "properties": {
+                    "order_id": { "type": "integer" },
+                    "total_amount": { "type": "number" },
+                    "is_multi": { "type": "boolean" },
+                    "offer_id": { "type": "integer" },
+                    "initiator_user_id": { "type": "integer" },
+                    "counterparty_user_id": { "type": "integer" },
+                    "order_time": { "type": "string", "format": "date-time" },
+                    "price_per_unit": { "type": "number" },
+                    "units_per_lot": { "type": "integer" },
+                    "lot_count": { "type": "integer" },
+                    "notes": { "type": "string" },
+                    "order_type": { "type": "string" },
+                    "payment_method": { "type": "string" },
+                    "order_status": { "type": "string" },
+                    "shipping_address": { "type": "string" },
+                    "tracking_number": { "type": "string" },
+                    "max_shipping_days": { "type": "integer", "description": "Срок отгрузки, зафиксированный на момент создания заказа." }
+                }
+            },
+            "CreateOrderRequest": {
+                "type": "object",
+                "required": ["offer_id", "lot_count", "order_type", "price_per_unit", "units_per_lot"],
+                "properties": {
+                    "offer_id": { "type": "integer" },
+                    "lot_count": { "type": "integer" },
+                    "order_type": { "type": "string" },
+                    "price_per_unit": { "type": "number" },
+                    "units_per_lot": { "type": "integer" }
+                }
+            },
+            "GetOrderResponse": {
+                "type": "object",
+                "properties": {
+                    "order": { "$ref": "#/components/schemas/Order" },
+                    "order_items": { "type": "array", "items": { "type": "object" } }
+                }
+            },
+            "Warehouse": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "integer" },
+                    "user_id": { "type": "integer" },
+                    "address": { "type": "string" },
+                    "latitude": { "type": "number" },
+                    "longitude": { "type": "number" },
+                    "working_hours": { "type": "string" },
+                    "created_at": { "type": "string", "format": "date-time" },
+                    "updated_at": { "type": "string", "format": "date-time" }
+                }
+            },
+            "CreateWarehouseRequest": {
+                "type": "object",
+                "required": ["address", "latitude", "longitude"],
+                "properties": {
+                    "address": { "type": "string" },
+                    "latitude": { "type": "number" },
+                    "longitude": { "type": "number" },
+                    "working_hours": { "type": "string" }
+                }
+            },
+            "UpdateWarehouseRequest": {
+                "type": "object",
+                "properties": {
+                    "address": { "type": "string" },
+                    "latitude": { "type": "number" },
+                    "longitude": { "type": "number" },
+                    "working_hours": { "type": "string" }
+                }
+            }
+        }
+    },
+    "security": [{"ApiKeyAuth": []}],
+    "paths": {
+        "/metaproduct": {
+            "get": {
+                "summary": "Список metaproduct",
+                "parameters": [
+                    {"in": "query", "name": "owner", "schema": {"type": "string", "enum": ["my", "others", "all"]}, "description": "Фильтр по производителю."},
+                    {"in": "query", "name": "page", "schema": {"type": "integer", "default": 1}, "description": "Номер страницы."},
+                    {"in": "query", "name": "limit", "schema": {"type": "integer", "default": 10, "maximum": 100}, "description": "Количество на страницу."}
+                ],
+                "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } } } } } }
+            },
+            "post": {
+                "summary": "Создать metaproduct",
+                "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateProductRequest" } } } },
+                "responses": { "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } } }
+            }
+        },
+        "/metaproduct/{id}": {
+            "get": {
+                "summary": "Получить metaproduct по ID",
+                "parameters": [{"in": "path", "name": "id", "required": true, "schema": {"type": "integer"}}],
+                "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } } }
+            },
+            "put": {
+                "summary": "Обновить metaproduct",
+                "parameters": [{"in": "path", "name": "id", "required": true, "schema": {"type": "integer"}}],
+                "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateProductRequest" } } } },
+                "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } } }
+            },
+            "delete": {
+                "summary": "Удалить metaproduct",
+                "parameters": [{"in": "path", "name": "id", "required": true, "schema": {"type": "integer"}}],
+                "responses": { "204": { "description": "No Content" } }
+            }
+        },
+        "/offers": {
+            "get": {
+                "summary": "Список офферов пользователя",
+                "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Offer" } } } } } }
+            },
+            "post": {
+                "summary": "Создать оффер",
+                "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateOfferRequest" } } } },
+                "responses": { "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Offer" } } } } }
+            }
+        },
+        "/offers/public": {
+            "get": {
+                "summary": "Публичные офферы",
+                "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Offer" } } } } } }
+            }
+        },
+        "/offers/{id}": {
+            "put": {
+                "summary": "Обновить оффер",
+                "parameters": [{"in": "path", "name": "id", "required": true, "schema": {"type": "integer"}}],
+                "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateOfferRequest" } } } },
+                "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Offer" } } } } }
+            },
+            "delete": {
+                "summary": "Удалить оффер",
+                "parameters": [{"in": "path", "name": "id", "required": true, "schema": {"type": "integer"}}],
+                "responses": { "204": { "description": "No Content" } }
+            }
+        },
+        "/orders": {
+            "get": {
+                "summary": "Список заказов",
+                "description": "Возвращает список заказов. Можно фильтровать по роли (initiator, counterparty, all) и по статусу.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "role",
+                        "schema": {
+                            "type": "string",
+                            "enum": ["initiator", "counterparty", "all"],
+                            "default": "all"
+                        },
+                        "description": "Фильтр по роли: initiator — я создал, counterparty — мне создали, all — все."
+                    },
+                    {
+                        "in": "query",
+                        "name": "page",
+                        "schema": { "type": "integer", "default": 1 },
+                        "description": "Номер страницы."
+                    },
+                    {
+                        "in": "query",
+                        "name": "per_page",
+                        "schema": { "type": "integer", "default": 20 },
+                        "description": "Количество на страницу."
+                    },
+                    {
+                        "in": "query",
+                        "name": "status",
+                        "schema": { "type": "string" },
+                        "description": "Фильтр по статусу заказа."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "orders": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Order"
+                                            }
+                                        },
+                                        "total": { "type": "integer" },
+                                        "page": { "type": "integer" },
+                                        "per_page": { "type": "integer" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Создать заказ",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "offer_id": { "type": "integer" },
+                                    "lot_count": { "type": "integer" }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Order"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/{id}": {
+            "get": {
+                "summary": "Получить заказ по ID",
+                "parameters": [{"in": "path", "name": "id", "required": true, "schema": {"type": "integer"}}],
+                "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GetOrderResponse" } } } } }
+            }
+        },
+        "/warehouses": {
+            "get": {
+                "summary": "Список складов",
+                "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Warehouse" } } } } } }
+            },
+            "post": {
+                "summary": "Создать склад",
+                "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateWarehouseRequest" } } } },
+                "responses": { "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Warehouse" } } } } }
+            }
+        },
+        "/warehouses/{id}": {
+            "put": {
+                "summary": "Обновить склад",
+                "parameters": [{"in": "path", "name": "id", "required": true, "schema": {"type": "integer"}}],
+                "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateWarehouseRequest" } } } },
+                "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Warehouse" } } } } }
+            },
+            "delete": {
+                "summary": "Удалить склад",
+                "parameters": [{"in": "path", "name": "id", "required": true, "schema": {"type": "integer"}}],
+                "responses": { "204": { "description": "No Content" } }
+            }
+        }
+    }
+} 

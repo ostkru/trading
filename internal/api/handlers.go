@@ -138,6 +138,8 @@ func (h *Handlers) GetProduct(c *gin.Context) {
 func (h *Handlers) ListProducts(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	owner := c.DefaultQuery("owner", "all")
+	userID, _ := c.Get("user_id")
 
 	if page < 1 {
 		page = 1
@@ -146,7 +148,7 @@ func (h *Handlers) ListProducts(c *gin.Context) {
 		limit = 10
 	}
 
-	response, err := h.productService.ListProducts(page, limit)
+	response, err := h.productService.ListProducts(page, limit, owner, userID.(int64))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.APIResponse{
 			OK:    false,

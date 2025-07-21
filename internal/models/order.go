@@ -17,6 +17,14 @@ type Order struct {
 	OrderStatus        string   `json:"order_status"`
 	ShippingAddress    *string  `json:"shipping_address,omitempty"`
 	TrackingNumber     *string  `json:"tracking_number,omitempty"`
+	MaxShippingDays    int      `json:"max_shipping_days"`
+	CreatedAt          *string `json:"created_at,omitempty"`
+	UpdatedAt          *string `json:"updated_at,omitempty"`
+}
+
+type CreateOrderRequest struct {
+	OfferID  int64 `json:"offer_id"`
+	LotCount int   `json:"lot_count"`
 }
 
 type OrderItem struct {

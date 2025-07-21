@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: PortalData API
   version: 1.0.0
@@ -6,7 +6,7 @@ info:
     Полная документация по REST API для управления продуктами, офферами, заказами и складами.
     Авторизация по API-ключу обязательна для всех методов (query param `api_key` или header `Authorization: Bearer ...`).
 servers:
-  - url: http://localhost:8095/api/v1
+  - url: https://api.portaldata.ru/v1/products
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -29,7 +29,7 @@ components:
         id: {type: integer}
         name: {type: string}
         vendor_article: {type: string}
-        price: {type: number}
+        recommend_price: {type: number}
         brand: {type: string}
         category: {type: string}
         description: {type: string}
@@ -37,20 +37,21 @@ components:
         updated_at: {type: string, format: date-time}
     CreateProductRequest:
       type: object
-      required: [name, vendor_article, price, brand, category]
+      required: [name, vendor_article, recommend_price, brand, category]
       properties:
         name: {type: string}
         vendor_article: {type: string}
-        price: {type: number}
+        recommend_price: {type: number}
         brand: {type: string}
         category: {type: string}
         description: {type: string}
+      description: 'Поля created_at и updated_at выставляются сервером автоматически.'
     UpdateProductRequest:
       type: object
       properties:
         name: {type: string}
         vendor_article: {type: string}
-        price: {type: number}
+        recommend_price: {type: number}
         brand: {type: string}
         category: {type: string}
         description: {type: string}
@@ -73,16 +74,22 @@ components:
         updated_at: {type: string, format: date-time}
     CreateOfferRequest:
       type: object
-      required: [product_id, offer_type, price_per_unit, available_lots, tax_nds, units_per_lot, warehouse_id]
+      required: [product_id, offer_type, price_per_unit, available_lots, tax_nds, units_per_lot, warehouse_id, is_public]
       properties:
         product_id: {type: integer}
-        offer_type: {type: string}
+        offer_type:
+          type: string
+          enum: [sell, buy]
+          description: 'Тип оффера: только "sell" или "buy"'
         price_per_unit: {type: number}
         available_lots: {type: integer}
         tax_nds: {type: integer}
         units_per_lot: {type: integer}
         warehouse_id: {type: integer}
-        is_public: {type: boolean}
+        is_public:
+          type: boolean
+          description: 'Обязательное поле. Публичный оффер или нет.'
+      description: 'Поля created_at и updated_at выставляются сервером автоматически.'
     UpdateOfferRequest:
       type: object
       properties:
@@ -147,6 +154,7 @@ components:
         latitude: {type: number}
         longitude: {type: number}
         working_hours: {type: string}
+      description: 'Поля created_at и updated_at выставляются сервером автоматически.'
     UpdateWarehouseRequest:
       type: object
       properties:
@@ -157,59 +165,55 @@ components:
 security:
   - ApiKeyAuth: []
 paths:
-  /meta:
+  /metaproduct:
     post:
-      summary: Создать мета-объект
-      description: Создаёт новый мета-объект (бывший продукт). Все поля обязательны, кроме description.
+      summary: Создать metaproduct
+      description: Создаёт новый metaproduct (бывший продукт). Все поля обязательны, кроме description.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateProductRequest'
-            examples:
-              Пример:
-                value:
-                  name: "Test Product"
-                  vendor_article: "TP-001"
-                  price: 999.99
-                  brand: "TestBrand"
-                  category: "TestCategory"
-                  description: "Test product description"
       responses:
         '201':
-          description: Мета-объект создан
+          description: Metaproduct создан
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
-              examples:
-                Пример:
-                  value:
-                    id: 100
-                    name: "Test Product"
-                    vendor_article: "TP-001"
-                    price: 999.99
-                    brand: "TestBrand"
-                    category: "TestCategory"
-                    description: "Test product description"
-                    created_at: "2025-07-20T13:50:06.594272Z"
-                    updated_at: "2025-07-20T13:50:06.594272Z"
         '400':
           description: Ошибка валидации
     get:
-      summary: Список мета-объектов
-      description: Возвращает список мета-объектов с пагинацией.
+      summary: Список metaproduct
+      description: Возвращает список metaproduct с пагинацией. Можно фильтровать по производителю: my (мои), others (чужие), all (все).
       parameters:
         - in: query
+          name: owner
+          schema:
+            type: string
+            enum:
+              - my
+              - others
+              - all
+            default: all
+          description: 'Фильтр по производителю: my — только мои, others — чужие, all — все.'
+        - in: query
           name: page
-          schema: {type: integer, default: 1}
+          schema:
+            type: integer
+            default: 1
+          description: 'Номер страницы (начиная с 1)'
         - in: query
           name: limit
-          schema: {type: integer, default: 10}
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+          description: 'Количество позиций на страницу (максимум 100)'
       responses:
         '200':
-          description: Список мета-объектов
+          description: Список metaproduct
           content:
             application/json:
               schema:
@@ -219,23 +223,10 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Product'
-              examples:
-                Пример:
-                  value:
-                    data:
-                      - id: 100
-                        name: "Test Product"
-                        vendor_article: "TP-001"
-                        price: 999.99
-                        brand: "TestBrand"
-                        category: "TestCategory"
-                        description: "Test product description"
-                        created_at: "2025-07-20T13:50:06.594272Z"
-                        updated_at: "2025-07-20T13:50:06.594272Z"
-  /meta/{id}:
+  /metaproduct/{id}:
     get:
-      summary: Получить мета-объект по ID
-      description: Возвращает мета-объект по его уникальному идентификатору.
+      summary: Получить metaproduct по ID
+      description: Возвращает metaproduct по его уникальному идентификатору.
       parameters:
         - in: path
           name: id
@@ -243,27 +234,16 @@ paths:
           schema: {type: integer}
       responses:
         '200':
-          description: Мета-объект найден
+          description: Metaproduct найден
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
-              examples:
-                Пример:
-                  value:
-                    id: 100
-                    name: "Test Product"
-                    vendor_article: "TP-001"
-                    price: 999.99
-                    brand: "TestBrand"
-                    category: "TestCategory"
-                    description: "Test product description"
-                    created_at: "2025-07-20T13:50:06.594272Z"
-                    updated_at: "2025-07-20T13:50:06.594272Z"
-        '404': {description: Не найден}
+        '404':
+          description: Не найден
     put:
-      summary: Обновить мета-объект
-      description: Обновляет данные мета-объекта по ID.
+      summary: Обновить metaproduct
+      description: Обновляет данные metaproduct по ID.
       parameters:
         - in: path
           name: id
@@ -275,51 +255,38 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateProductRequest'
-            examples:
-              Пример:
-                value:
-                  name: "Updated Product"
-                  price: 888.88
       responses:
         '200':
-          description: Мета-объект обновлён
+          description: Metaproduct обновлён
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
-        '404': {description: Не найден}
+        '404':
+          description: Не найден
     delete:
-      summary: Удалить мета-объект
-      description: Удаляет мета-объект по ID.
+      summary: Удалить metaproduct
+      description: Удаляет metaproduct по ID.
       parameters:
         - in: path
           name: id
           required: true
           schema: {type: integer}
       responses:
-        '200': {description: Удалено}
-        '404': {description: Не найден}
+        '200':
+          description: Удалено
+        '404':
+          description: Не найден
   /offers:
     post:
       summary: Создать оффер
-      description: Создаёт новый оффер. Все поля обязательны, кроме is_public.
+      description: Создаёт новый оффер. Все поля обязательны, кроме is_public. product_id — это metaproduct_id.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateOfferRequest'
-            examples:
-              Пример:
-                value:
-                  product_id: 100
-                  offer_type: "retail"
-                  price_per_unit: 1000.00
-                  available_lots: 10
-                  tax_nds: 20
-                  units_per_lot: 1
-                  warehouse_id: 1
-                  is_public: false
       responses:
         '201': {description: Оффер создан, content: {application/json: {schema: {$ref: '#/components/schemas/Offer'}}}}
         '400': {description: Ошибка валидации}
@@ -398,9 +365,11 @@ paths:
         - in: query
           name: page
           schema: {type: integer, default: 1}
+          description: 'Номер страницы (начиная с 1)'
         - in: query
           name: per_page
-          schema: {type: integer, default: 20}
+          schema: {type: integer, default: 20, maximum: 100}
+          description: 'Количество позиций на страницу (максимум 100)'
         - in: query
           name: status
           schema: {type: string}
@@ -428,13 +397,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateWarehouseRequest'
-            examples:
-              Пример:
-                value:
-                  address: "123 Main St"
-                  latitude: 55.7558
-                  longitude: 37.6173
-                  working_hours: "9:00-18:00"
       responses:
         '201': {description: Склад создан, content: {application/json: {schema: {$ref: '#/components/schemas/Warehouse'}}}}
         '400': {description: Ошибка валидации}

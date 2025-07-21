@@ -19,6 +19,7 @@ type Offer struct {
 	OfferType      string  `json:"offer_type"`
 	OfferName      *string `json:"offer_name,omitempty"`
 	Status         *string `json:"status,omitempty"`
+	MaxShippingDays int    `json:"max_shipping_days"`
 }
 
 type CreateOfferRequest struct {
@@ -30,6 +31,7 @@ type CreateOfferRequest struct {
 	UnitsPerLot   int     `json:"units_per_lot"`
 	WarehouseID   int64   `json:"warehouse_id"`
 	IsPublic      *bool   `json:"is_public,omitempty"`
+	MaxShippingDays *int   `json:"max_shipping_days,omitempty"`
 }
 
 type UpdateOfferRequest struct {
@@ -38,4 +40,5 @@ type UpdateOfferRequest struct {
 	TaxNDS        *int     `json:"tax_nds,omitempty"`
 	UnitsPerLot   *int     `json:"units_per_lot,omitempty"`
 	IsPublic      *bool    `json:"is_public,omitempty"`
+	MaxShippingDays *int   `json:"max_shipping_days,omitempty"`
 } 

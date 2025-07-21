@@ -24,13 +24,14 @@ func (h *OfferHandlers) CreateOffer(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные данные запроса: " + err.Error()})
 		return
 	}
+
 	userID, _ := c.Get("user_id")
-	offer, err := h.service.CreateOffer(req, userID.(int64))
+	newOffer, err := h.service.CreateOffer(userID.(int64), req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сервера: " + err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, offer)
+	c.JSON(http.StatusCreated, newOffer)
 }
 
 func (h *OfferHandlers) UpdateOffer(c *gin.Context) {
@@ -74,12 +75,23 @@ func (h *OfferHandlers) DeleteOffer(c *gin.Context) {
 
 func (h *OfferHandlers) ListOffers(c *gin.Context) {
 	userID, _ := c.Get("user_id")
-	offers, err := h.service.ListOffers(userID.(int64))
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100 // Ограничение максимального лимита
+	}
+	response, err := h.service.ListOffers(userID.(int64), page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"offers": offers})
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *OfferHandlers) PublicListOffers(c *gin.Context) {

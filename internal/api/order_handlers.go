@@ -4,47 +4,102 @@ import (
 	"net/http"
 	"strconv"
 
+	"portaldata-api/internal/models"
 	"portaldata-api/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
 
 type OrderHandlers struct {
-	service *services.OrderService
+	orderService *services.OrderService
 }
 
 func NewOrderHandlers(service *services.OrderService) *OrderHandlers {
-	return &OrderHandlers{service: service}
+	return &OrderHandlers{orderService: service}
+}
+
+func (h *OrderHandlers) CreateOrder(c *gin.Context) {
+	var req models.CreateOrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	uid, ok := userID.(int64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
+	order, err := h.orderService.CreateOrder(uid, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, order)
 }
 
 func (h *OrderHandlers) GetOrder(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	orderID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID заказа"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order ID"})
 		return
 	}
-	userID := int64(1)
-	order, err := h.service.GetOrder(id, userID)
+
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+	uid, ok := userID.(int64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
+	order, err := h.orderService.GetOrderByID(orderID, uid)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сервера: " + err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, order)
 }
 
 func (h *OrderHandlers) ListOrders(c *gin.Context) {
-	userID := int64(1)
-	status := c.Query("status")
-	var statusPtr *string
-	if status != "" {
-		statusPtr = &status
-	}
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	perPage, _ := strconv.Atoi(c.DefaultQuery("per_page", "20"))
-	orders, total, err := h.service.ListOrders(userID, statusPtr, page, perPage)
+	status := c.Query("status")
+	role := c.DefaultQuery("role", "all")
+
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	uid, ok := userID.(int64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
+	orders, total, err := h.orderService.ListOrders(uid, &status, role, page, perPage)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"orders": orders, "total": total, "page": page, "per_page": perPage})
+
+	c.JSON(http.StatusOK, gin.H{
+		"orders":   orders,
+		"total":    total,
+		"page":     page,
+		"per_page": perPage,
+	})
 } 

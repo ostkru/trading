@@ -5,33 +5,33 @@ import (
 )
 
 type Product struct {
-	ID           int       `json:"id" db:"id"`
-	Name         string    `json:"name" db:"name" validate:"required"`
-	VendorArticle string   `json:"vendor_article" db:"vendor_article" validate:"required"`
-	Price        float64   `json:"price" db:"price" validate:"required,min=0"`
-	Brand        string    `json:"brand" db:"brand" validate:"required"`
-	Category     string    `json:"category" db:"category" validate:"required"`
-	Description  string    `json:"description" db:"description"`
-	CreatedAt    time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
+	ID             int        `json:"id" db:"id"`
+	Name           string     `json:"name" db:"name" validate:"required"`
+	VendorArticle  string     `json:"vendor_article" db:"vendor_article" validate:"required"`
+	RecommendPrice *float64   `json:"recommend_price" db:"recommend_price" validate:"required,min=0"`
+	Brand          string     `json:"brand" db:"brand" validate:"required"`
+	Category       string     `json:"category" db:"category" validate:"required"`
+	Description    string     `json:"description" db:"description"`
+	CreatedAt      time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at" db:"updated_at"`
 }
 
 type CreateProductRequest struct {
-	Name         string  `json:"name" validate:"required"`
-	VendorArticle string `json:"vendor_article" validate:"required"`
-	Price        float64 `json:"price" validate:"required,min=0"`
-	Brand        string  `json:"brand" validate:"required"`
-	Category     string  `json:"category" validate:"required"`
-	Description  string  `json:"description"`
+	Name           string  `json:"name" validate:"required"`
+	VendorArticle  string  `json:"vendor_article" validate:"required"`
+	RecommendPrice float64 `json:"recommend_price" validate:"required,min=0"`
+	Brand          string  `json:"brand" validate:"required"`
+	Category       string  `json:"category" validate:"required"`
+	Description    string  `json:"description"`
 }
 
 type UpdateProductRequest struct {
-	Name         *string  `json:"name,omitempty"`
-	VendorArticle *string `json:"vendor_article,omitempty"`
-	Price        *float64 `json:"price,omitempty"`
-	Brand        *string  `json:"brand,omitempty"`
-	Category     *string  `json:"category,omitempty"`
-	Description  *string  `json:"description,omitempty"`
+	Name           *string  `json:"name,omitempty"`
+	VendorArticle  *string  `json:"vendor_article,omitempty"`
+	RecommendPrice *float64 `json:"recommend_price,omitempty"`
+	Brand          *string  `json:"brand,omitempty"`
+	Category       *string  `json:"category,omitempty"`
+	Description    *string  `json:"description,omitempty"`
 }
 
 type ProductListResponse struct {

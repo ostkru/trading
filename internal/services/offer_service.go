@@ -8,7 +8,6 @@ import (
 	"os"
 	"portaldata-api/internal/database"
 	"portaldata-api/internal/models"
-	"portaldata-api/internal/utils"
 	"strings"
 )
 
@@ -20,7 +19,7 @@ func NewOfferService(db *database.DB) *OfferService {
 	return &OfferService{db: db}
 }
 
-func (s *OfferService) CreateOffer(req models.CreateOfferRequest, userID int64) (*models.Offer, error) {
+func (s *OfferService) CreateOffer(userID int64, req models.CreateOfferRequest) (*models.Offer, error) {
 	if req.ProductID == 0 || req.OfferType == "" || req.PricePerUnit == 0 || req.AvailableLots == 0 || req.TaxNDS == 0 || req.UnitsPerLot == 0 || req.WarehouseID == 0 {
 		return nil, errors.New("Требуются product_id, offer_type, price_per_unit, available_lots, tax_nds, units_per_lot, warehouse_id")
 	}
@@ -31,33 +30,50 @@ func (s *OfferService) CreateOffer(req models.CreateOfferRequest, userID int64) 
 	} else if err != nil {
 		return nil, err
 	}
+	query := `
+        INSERT INTO offers (user_id, product_id, offer_type, price_per_unit, available_lots, tax_nds, units_per_lot, warehouse_id, is_public, max_shipping_days)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        RETURNING offer_id, created_at, updated_at
+    `
+	var offer models.Offer
+	offer.UserID = userID
+	offer.ProductID = &req.ProductID
+	offer.OfferType = req.OfferType
+	offer.PricePerUnit = req.PricePerUnit
+	offer.AvailableLots = req.AvailableLots
+	offer.TaxNDS = req.TaxNDS
+	offer.UnitsPerLot = req.UnitsPerLot
+	offer.WarehouseID = &req.WarehouseID
+	
 	isPublic := true
 	if req.IsPublic != nil {
 		isPublic = *req.IsPublic
 	}
-	var offerID int64
-	err = s.db.QueryRow(
-		`INSERT INTO offers (user_id, product_id, offer_type, price_per_unit, available_lots, tax_nds, units_per_lot, warehouse_id, latitude, longitude, is_public)
-		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING offer_id`,
-		userID, req.ProductID, req.OfferType, req.PricePerUnit, req.AvailableLots, req.TaxNDS, req.UnitsPerLot, req.WarehouseID, latitude, longitude, isPublic,
-	).Scan(&offerID)
+	offer.IsPublic = &isPublic
+	
+	maxShippingDays := 0
+    if req.MaxShippingDays != nil {
+        maxShippingDays = *req.MaxShippingDays
+    }
+    offer.MaxShippingDays = maxShippingDays
+
+
+	err = s.db.QueryRow(query,
+		offer.UserID,
+		offer.ProductID,
+		offer.OfferType,
+		offer.PricePerUnit,
+		offer.AvailableLots,
+		offer.TaxNDS,
+		offer.UnitsPerLot,
+		offer.WarehouseID,
+		offer.IsPublic,
+		offer.MaxShippingDays,
+	).Scan(&offer.OfferID, &offer.CreatedAt, &offer.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
-	return &models.Offer{
-		OfferID:      offerID,
-		UserID:       userID,
-		ProductID:    utils.PtrInt64(req.ProductID),
-		OfferType:    req.OfferType,
-		PricePerUnit: req.PricePerUnit,
-		AvailableLots: req.AvailableLots,
-		TaxNDS:       req.TaxNDS,
-		UnitsPerLot:  req.UnitsPerLot,
-		WarehouseID:  utils.PtrInt64(req.WarehouseID),
-		Latitude:     utils.PtrFloat64(latitude),
-		Longitude:    utils.PtrFloat64(longitude),
-		IsPublic:     utils.PtrBool(isPublic),
-	}, nil
+	return &offer, nil
 }
 
 func (s *OfferService) UpdateOffer(id int64, req models.UpdateOfferRequest, userID int64) (*models.Offer, error) {
@@ -99,6 +115,11 @@ func (s *OfferService) UpdateOffer(id int64, req models.UpdateOfferRequest, user
 		params = append(params, *req.IsPublic)
 		idx++
 	}
+	if req.MaxShippingDays != nil {
+		setClauses = append(setClauses, fmt.Sprintf("max_shipping_days = $%d", idx))
+		params = append(params, *req.MaxShippingDays)
+		idx++
+	}
 	if len(setClauses) == 0 {
 		return nil, nil // Нет полей для обновления
 	}
@@ -135,28 +156,47 @@ func (s *OfferService) DeleteOffer(id int64, userID int64) error {
 	return err
 }
 
-func (s *OfferService) ListOffers(userID int64) ([]models.Offer, error) {
-	rows, err := s.db.Query(`SELECT offer_id, wb_id, user_id, updated_at, created_at, is_public, product_id, price_per_unit, tax_nds, units_per_lot, available_lots, category_id, latitude, longitude, warehouse_id, offer_type, offer_name, status FROM offers WHERE user_id = $1 ORDER BY offer_id DESC`, userID)
+type OfferListResponse struct {
+	Offers []models.Offer `json:"offers"`
+	Total  int           `json:"total"`
+	Page   int           `json:"page"`
+	Limit  int           `json:"limit"`
+}
+
+func (s *OfferService) ListOffers(userID int64, page, limit int) (*OfferListResponse, error) {
+	offset := (page - 1) * limit
+	var total int
+	err := s.db.QueryRow("SELECT COUNT(*) FROM offers WHERE user_id = $1", userID).Scan(&total)
+	if err != nil {
+		return nil, err
+	}
+	query := `SELECT offer_id, wb_id, user_id, updated_at, created_at, is_public, product_id, price_per_unit, tax_nds, units_per_lot, available_lots, category_id, latitude, longitude, warehouse_id, offer_type, offer_name, status, max_shipping_days FROM offers WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	rows, err := s.db.Query(query, userID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	offers := []models.Offer{}
+	var offers []models.Offer
 	for rows.Next() {
-		offer := models.Offer{}
+		var offer models.Offer
 		err := rows.Scan(
-			&offer.OfferID, &offer.WBID, &offer.UserID, &offer.UpdatedAt, &offer.CreatedAt, &offer.IsPublic, &offer.ProductID, &offer.PricePerUnit, &offer.TaxNDS, &offer.UnitsPerLot, &offer.AvailableLots, &offer.CategoryID, &offer.Latitude, &offer.Longitude, &offer.WarehouseID, &offer.OfferType, &offer.OfferName, &offer.Status,
+			&offer.OfferID, &offer.WBID, &offer.UserID, &offer.UpdatedAt, &offer.CreatedAt, &offer.IsPublic, &offer.ProductID, &offer.PricePerUnit, &offer.TaxNDS, &offer.UnitsPerLot, &offer.AvailableLots, &offer.CategoryID, &offer.Latitude, &offer.Longitude, &offer.WarehouseID, &offer.OfferType, &offer.OfferName, &offer.Status, &offer.MaxShippingDays,
 		)
 		if err != nil {
 			return nil, err
 		}
 		offers = append(offers, offer)
 	}
-	return offers, nil
+	return &OfferListResponse{
+		Offers: offers,
+		Total:  total,
+		Page:   page,
+		Limit:  limit,
+	}, nil
 }
 
 func (s *OfferService) PublicListOffers() ([]models.Offer, error) {
-	rows, err := s.db.Query(`SELECT offer_id, wb_id, user_id, updated_at, created_at, is_public, product_id, price_per_unit, tax_nds, units_per_lot, available_lots, category_id, latitude, longitude, warehouse_id, offer_type, offer_name, status FROM offers WHERE is_public = true ORDER BY offer_id DESC`)
+	rows, err := s.db.Query(`SELECT offer_id, wb_id, user_id, updated_at, created_at, is_public, product_id, price_per_unit, tax_nds, units_per_lot, available_lots, category_id, latitude, longitude, warehouse_id, offer_type, offer_name, status, max_shipping_days FROM offers WHERE is_public = true ORDER BY offer_id DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +205,7 @@ func (s *OfferService) PublicListOffers() ([]models.Offer, error) {
 	for rows.Next() {
 		offer := models.Offer{}
 		err := rows.Scan(
-			&offer.OfferID, &offer.WBID, &offer.UserID, &offer.UpdatedAt, &offer.CreatedAt, &offer.IsPublic, &offer.ProductID, &offer.PricePerUnit, &offer.TaxNDS, &offer.UnitsPerLot, &offer.AvailableLots, &offer.CategoryID, &offer.Latitude, &offer.Longitude, &offer.WarehouseID, &offer.OfferType, &offer.OfferName, &offer.Status,
+			&offer.OfferID, &offer.WBID, &offer.UserID, &offer.UpdatedAt, &offer.CreatedAt, &offer.IsPublic, &offer.ProductID, &offer.PricePerUnit, &offer.TaxNDS, &offer.UnitsPerLot, &offer.AvailableLots, &offer.CategoryID, &offer.Latitude, &offer.Longitude, &offer.WarehouseID, &offer.OfferType, &offer.OfferName, &offer.Status, &offer.MaxShippingDays,
 		)
 		if err != nil {
 			return nil, err
@@ -230,10 +270,10 @@ func (s *OfferService) WBStock(productID, warehouseID, supplierID int64) (int, e
 }
 
 func (s *OfferService) GetOfferByID(id int64) (*models.Offer, error) {
-	row := s.db.QueryRow(`SELECT offer_id, wb_id, user_id, updated_at, created_at, is_public, product_id, price_per_unit, tax_nds, units_per_lot, available_lots, category_id, latitude, longitude, warehouse_id, offer_type, offer_name, status FROM offers WHERE offer_id = $1`, id)
+	row := s.db.QueryRow(`SELECT offer_id, wb_id, user_id, updated_at, created_at, is_public, product_id, price_per_unit, tax_nds, units_per_lot, available_lots, category_id, latitude, longitude, warehouse_id, offer_type, offer_name, status, max_shipping_days FROM offers WHERE offer_id = $1`, id)
 	offer := models.Offer{}
 	err := row.Scan(
-		&offer.OfferID, &offer.WBID, &offer.UserID, &offer.UpdatedAt, &offer.CreatedAt, &offer.IsPublic, &offer.ProductID, &offer.PricePerUnit, &offer.TaxNDS, &offer.UnitsPerLot, &offer.AvailableLots, &offer.CategoryID, &offer.Latitude, &offer.Longitude, &offer.WarehouseID, &offer.OfferType, &offer.OfferName, &offer.Status,
+		&offer.OfferID, &offer.WBID, &offer.UserID, &offer.UpdatedAt, &offer.CreatedAt, &offer.IsPublic, &offer.ProductID, &offer.PricePerUnit, &offer.TaxNDS, &offer.UnitsPerLot, &offer.AvailableLots, &offer.CategoryID, &offer.Latitude, &offer.Longitude, &offer.WarehouseID, &offer.OfferType, &offer.OfferName, &offer.Status, &offer.MaxShippingDays,
 	)
 	if err != nil {
 		return nil, err

@@ -42,11 +42,15 @@ func main() {
 	offerHandlers := api.NewOfferHandlers(offerService)
 	orderHandlers := api.NewOrderHandlers(orderService)
 	warehouseHandlers := api.NewWarehouseHandlers(warehouseService)
-	productHandlers := api.NewProductHandlers(productService)
+	metaproductHandlers := api.NewMetaproductHandlers(productService)
 
 	// Публикация OpenAPI YAML
 	router.GET("/openapi.yaml", func(c *gin.Context) {
-		c.File("/var/www/go/openapi.yaml")
+		c.File("openapi.yaml")
+	})
+	// Добавляю обработчик для openapi.json
+	router.GET("/openapi.json", func(c *gin.Context) {
+		c.File("openapi.json")
 	})
 
 	// Swagger UI редирект (можно заменить на локальный Swagger UI при необходимости)
@@ -60,7 +64,7 @@ func main() {
 	api.RegisterOfferRoutes(apiGroup, offerHandlers)
 	api.RegisterOrderRoutes(apiGroup, orderHandlers)
 	api.RegisterWarehouseRoutes(apiGroup, warehouseHandlers)
-	api.RegisterProductRoutes(apiGroup, productHandlers)
+	api.RegisterMetaproductRoutes(apiGroup, metaproductHandlers)
 
 	router.Static("/swagger", "/var/www/go/swagger")
 
