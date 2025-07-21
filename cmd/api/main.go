@@ -7,94 +7,89 @@ import (
 	"os/signal"
 	"syscall"
 
-	"portaldata-api/internal/api"
-	"portaldata-api/internal/config"
-	"portaldata-api/internal/database"
-	"portaldata-api/internal/services"
+	"portaldata-api/internal/pkg/config"
+	"portaldata-api/internal/pkg/database"
 
+	metaproduct "portaldata-api/internal/modules/metaproduct"
+	offer "portaldata-api/internal/modules/offer"
+	order "portaldata-api/internal/modules/order"
+	warehouse "portaldata-api/internal/modules/warehouse"
+	user "portaldata-api/internal/modules/user"
+
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		log.Fatalf("Ошибка загрузки конфигурации: %v", err)
 	}
+
 	db, err := database.NewConnection(cfg.Database)
 	if err != nil {
-		log.Fatalf("Failed to connect to DB: %v", err)
+		log.Fatalf("Ошибка подключения к базе данных: %v", err)
 	}
+	defer db.Close()
 
 	router := gin.Default()
 
-	// Включаю защиту от брутфорса до всех остальных middleware
-	router.Use(api.BruteForceMiddleware())
+	// Middlewares
+	// router.Use(middleware.BruteForceMiddleware())
 
-	// Инициализация сервисов с БД
-	offerService := services.NewOfferService(db)
-	orderService := services.NewOrderService(db)
-	warehouseService := services.NewWarehouseService(db)
-	productService := services.NewProductService(db)
-	userService := services.NewUserService(db.DB)
-	authService := api.NewAuthService(userService)
+	userService := user.NewService(db.DB)
+	authService := user.NewAuthService(userService)
+	authMiddleware := authService.AuthMiddleware()
 
-	// Инициализация обработчиков
-	offerHandlers := api.NewOfferHandlers(offerService)
-	orderHandlers := api.NewOrderHandlers(orderService)
-	warehouseHandlers := api.NewWarehouseHandlers(warehouseService)
-	metaproductHandlers := api.NewMetaproductHandlers(productService)
+	metaproductService := metaproduct.NewService(db)
+	metaproductHandlers := metaproduct.NewHandlers(metaproductService)
 
-	// Публикация OpenAPI YAML
-	router.GET("/openapi.yaml", func(c *gin.Context) {
-		c.File("openapi.yaml")
-	})
-	// Добавляю обработчик для openapi.json
-	router.GET("/openapi.json", func(c *gin.Context) {
-		c.File("openapi.json")
-	})
+	offerService := offer.NewService(db)
+	offerHandlers := offer.NewHandlers(offerService)
 
-	// Swagger UI редирект (можно заменить на локальный Swagger UI при необходимости)
-	router.GET("/docs", func(c *gin.Context) {
-		c.Redirect(http.StatusFound, "https://petstore.swagger.io/?url=http://"+c.Request.Host+"/openapi.yaml")
-	})
+	orderService := order.NewService(db)
+	orderHandlers := order.NewHandlers(orderService)
 
-	// Группировка API
+	warehouseService := warehouse.NewService(db)
+	warehouseHandlers := warehouse.NewHandlers(warehouseService)
+
+	// Swagger
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	apiGroup := router.Group("/api/v1")
-	apiGroup.Use(authService.Middleware())
-	api.RegisterOfferRoutes(apiGroup, offerHandlers)
-	api.RegisterOrderRoutes(apiGroup, orderHandlers)
-	api.RegisterWarehouseRoutes(apiGroup, warehouseHandlers)
-	api.RegisterMetaproductRoutes(apiGroup, metaproductHandlers)
+	apiGroup.Use(authMiddleware)
+	metaproduct.RegisterRoutes(apiGroup, metaproductHandlers)
+	offer.RegisterRoutes(apiGroup, offerHandlers)
+	order.RegisterRoutes(apiGroup, orderHandlers)
+	warehouse.RegisterRoutes(apiGroup, warehouseHandlers)
 
-	router.Static("/swagger", "/var/www/go/swagger")
+	// Register public routes separately
+	publicOfferRoutes := router.Group("/api/v1")
+	offer.RegisterPublicRoutes(publicOfferRoutes, offerHandlers)
 
-	router.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(http.StatusOK)
-			return
-		}
-
-		if c.IsAborted() {
-			return
-		}
-
-		c.Next()
-	})
+	server := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: router,
+	}
 
 	go func() {
-		log.Printf("Starting server on port 8095")
-		if err := router.Run(":8095"); err != nil {
-			log.Fatalf("Failed to start server: %v", err)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-
-	log.Println("Shutting down server...")
+	log.Println("Сервер останавливается...")
 }

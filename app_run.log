@@ -35,3 +35,66 @@
 Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
 [GIN-debug] Listening and serving HTTP on :8095
 [GIN] 2025/07/21 - 14:27:59 | 200 |    2.034608ms |     92.53.64.38 | GET      "/api/v1/orders/3?api_key=f428fbc16a97b9e2a55717bd34e97537ec34cb8c04a5f32eeb4e88c9ee998a53"
+2025/07/21 16:11:15 No .env file found, using environment variables
+2025/07/21 16:11:15 Database connected successfully
+2025/07/21 16:13:03 Сервер останавливается...
+2025/07/21 16:13:18 No .env file found, using environment variables
+2025/07/21 16:13:18 Database connected successfully
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /swagger/*any             --> github.com/swaggo/gin-swagger.CustomWrapHandler.func1 (4 handlers)
+[GIN-debug] POST   /api/v1/metaproducts      --> portaldata-api/internal/modules/metaproduct.(*Handlers).CreateMetaproduct-fm (5 handlers)
+[GIN-debug] GET    /api/v1/metaproducts      --> portaldata-api/internal/modules/metaproduct.(*Handlers).ListMetaproducts-fm (5 handlers)
+[GIN-debug] GET    /api/v1/metaproducts/:id  --> portaldata-api/internal/modules/metaproduct.(*Handlers).GetMetaproduct-fm (5 handlers)
+[GIN-debug] PUT    /api/v1/metaproducts/:id  --> portaldata-api/internal/modules/metaproduct.(*Handlers).UpdateMetaproduct-fm (5 handlers)
+[GIN-debug] DELETE /api/v1/metaproducts/:id  --> portaldata-api/internal/modules/metaproduct.(*Handlers).DeleteMetaproduct-fm (5 handlers)
+[GIN-debug] POST   /api/v1/metaproducts/batch --> portaldata-api/internal/modules/metaproduct.(*Handlers).CreateMetaproducts-fm (5 handlers)
+[GIN-debug] POST   /api/v1/offers            --> portaldata-api/internal/modules/offer.(*Handlers).CreateOffer-fm (5 handlers)
+[GIN-debug] PUT    /api/v1/offers/:id        --> portaldata-api/internal/modules/offer.(*Handlers).UpdateOffer-fm (5 handlers)
+[GIN-debug] DELETE /api/v1/offers/:id        --> portaldata-api/internal/modules/offer.(*Handlers).DeleteOffer-fm (5 handlers)
+[GIN-debug] GET    /api/v1/offers            --> portaldata-api/internal/modules/offer.(*Handlers).ListOffers-fm (5 handlers)
+[GIN-debug] GET    /api/v1/offers/:id        --> portaldata-api/internal/modules/offer.(*Handlers).GetOffer-fm (5 handlers)
+[GIN-debug] GET    /api/v1/offers/wb_stock   --> portaldata-api/internal/modules/offer.(*Handlers).WBStock-fm (5 handlers)
+[GIN-debug] GET    /api/v1/orders/:id        --> portaldata-api/internal/modules/order.(*Handlers).GetOrder-fm (5 handlers)
+[GIN-debug] GET    /api/v1/orders            --> portaldata-api/internal/modules/order.(*Handlers).ListOrders-fm (5 handlers)
+[GIN-debug] POST   /api/v1/orders            --> portaldata-api/internal/modules/order.(*Handlers).CreateOrder-fm (5 handlers)
+[GIN-debug] POST   /api/v1/warehouses        --> portaldata-api/internal/modules/warehouse.(*Handlers).CreateWarehouse-fm (5 handlers)
+[GIN-debug] PUT    /api/v1/warehouses/:id    --> portaldata-api/internal/modules/warehouse.(*Handlers).UpdateWarehouse-fm (5 handlers)
+[GIN-debug] DELETE /api/v1/warehouses/:id    --> portaldata-api/internal/modules/warehouse.(*Handlers).DeleteWarehouse-fm (5 handlers)
+[GIN-debug] GET    /api/v1/warehouses        --> portaldata-api/internal/modules/warehouse.(*Handlers).ListWarehouses-fm (5 handlers)
+[GIN-debug] GET    /api/v1/offers/public     --> portaldata-api/internal/modules/offer.(*Handlers).PublicListOffers-fm (4 handlers)
+2025/07/21 16:15:16 Сервер останавливается...
+2025/07/21 16:15:26 No .env file found, using environment variables
+2025/07/21 16:15:26 Database connected successfully
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /swagger/*any             --> github.com/swaggo/gin-swagger.CustomWrapHandler.func1 (4 handlers)
+[GIN-debug] POST   /api/v1/metaproducts      --> portaldata-api/internal/modules/metaproduct.(*Handlers).CreateMetaproduct-fm (5 handlers)
+[GIN-debug] GET    /api/v1/metaproducts      --> portaldata-api/internal/modules/metaproduct.(*Handlers).ListMetaproducts-fm (5 handlers)
+[GIN-debug] GET    /api/v1/metaproducts/:id  --> portaldata-api/internal/modules/metaproduct.(*Handlers).GetMetaproduct-fm (5 handlers)
+[GIN-debug] PUT    /api/v1/metaproducts/:id  --> portaldata-api/internal/modules/metaproduct.(*Handlers).UpdateMetaproduct-fm (5 handlers)
+[GIN-debug] DELETE /api/v1/metaproducts/:id  --> portaldata-api/internal/modules/metaproduct.(*Handlers).DeleteMetaproduct-fm (5 handlers)
+[GIN-debug] POST   /api/v1/metaproducts/batch --> portaldata-api/internal/modules/metaproduct.(*Handlers).CreateMetaproducts-fm (5 handlers)
+[GIN-debug] POST   /api/v1/offers            --> portaldata-api/internal/modules/offer.(*Handlers).CreateOffer-fm (5 handlers)
+[GIN-debug] PUT    /api/v1/offers/:id        --> portaldata-api/internal/modules/offer.(*Handlers).UpdateOffer-fm (5 handlers)
+[GIN-debug] DELETE /api/v1/offers/:id        --> portaldata-api/internal/modules/offer.(*Handlers).DeleteOffer-fm (5 handlers)
+[GIN-debug] GET    /api/v1/offers            --> portaldata-api/internal/modules/offer.(*Handlers).ListOffers-fm (5 handlers)
+[GIN-debug] GET    /api/v1/offers/:id        --> portaldata-api/internal/modules/offer.(*Handlers).GetOffer-fm (5 handlers)
+[GIN-debug] GET    /api/v1/offers/wb_stock   --> portaldata-api/internal/modules/offer.(*Handlers).WBStock-fm (5 handlers)
+[GIN-debug] GET    /api/v1/orders/:id        --> portaldata-api/internal/modules/order.(*Handlers).GetOrder-fm (5 handlers)
+[GIN-debug] GET    /api/v1/orders            --> portaldata-api/internal/modules/order.(*Handlers).ListOrders-fm (5 handlers)
+[GIN-debug] POST   /api/v1/orders            --> portaldata-api/internal/modules/order.(*Handlers).CreateOrder-fm (5 handlers)
+[GIN-debug] POST   /api/v1/warehouses        --> portaldata-api/internal/modules/warehouse.(*Handlers).CreateWarehouse-fm (5 handlers)
+[GIN-debug] PUT    /api/v1/warehouses/:id    --> portaldata-api/internal/modules/warehouse.(*Handlers).UpdateWarehouse-fm (5 handlers)
+[GIN-debug] DELETE /api/v1/warehouses/:id    --> portaldata-api/internal/modules/warehouse.(*Handlers).DeleteWarehouse-fm (5 handlers)
+[GIN-debug] GET    /api/v1/warehouses        --> portaldata-api/internal/modules/warehouse.(*Handlers).ListWarehouses-fm (5 handlers)
+[GIN-debug] GET    /api/v1/offers/public     --> portaldata-api/internal/modules/offer.(*Handlers).PublicListOffers-fm (4 handlers)
+2025/07/21 16:16:56 Сервер останавливается...
