@@ -1,0 +1,21 @@
+=== ТЕСТ GO API С ПРАВИЛЬНОЙ ФУНКЦИОНАЛЬНОСТЬЮ ===
+
+1. Тест Go API - GET /products:
+  Время: 0.52499771118164ms (HTTP: 404)
+  Ответ: 404 page not found...
+
+2. Тест Go API - POST /products:
+  Время: 0.28300285339355ms (HTTP: 404)
+  Ответ: 404 page not found...
+
+3. Тест PHP API - GET /products.php:
+  Время: 7.066011428833ms (HTTP: 0)
+  Ответ: ...
+
+=== РЕЗУЛЬТАТЫ СРАВНЕНИЯ ===
+Go API (GET): 0.52499771118164ms
+Go API (POST): 0.28300285339355ms
+PHP API (GET): 7.066011428833ms
+
+Go API быстрее PHP API на 6.5410137176514ms (92.570098188076%)
+ 

@@ -187,11 +187,13 @@ func (s *ProductService) ListProducts(page, limit int, owner string, userID int6
 		SELECT id, name, vendor_article, recommend_price, brand, category, description, created_at, updated_at
 		FROM products` + where + `
 		ORDER BY created_at DESC 
-		LIMIT $2 OFFSET $3
+		LIMIT $%d OFFSET $%d
 	`
 	if where == "" {
+		query = fmt.Sprintf(query, 1, 2)
 		args = []interface{}{limit, offset}
 	} else {
+		query = fmt.Sprintf(query, 2, 3)
 		args = append(args, limit, offset)
 	}
 

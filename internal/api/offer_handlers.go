@@ -94,6 +94,33 @@ func (h *OfferHandlers) ListOffers(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func (h *OfferHandlers) GetOffer(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID оффера"})
+		return
+	}
+
+	offer, err := h.service.GetOfferByID(id)
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Оффер не найден"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Проверка доступа (опционально, если нужно)
+	// userID, _ := c.Get("user_id")
+	// if offer.UserID != userID.(int64) {
+	// 	c.JSON(http.StatusForbidden, gin.H{"error": "Доступ запрещен"})
+	// 	return
+	// }
+
+	c.JSON(http.StatusOK, offer)
+}
+
 func (h *OfferHandlers) PublicListOffers(c *gin.Context) {
 	offers, err := h.service.PublicListOffers()
 	if err != nil {

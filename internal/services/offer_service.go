@@ -132,6 +132,37 @@ func (s *OfferService) UpdateOffer(id int64, req models.UpdateOfferRequest, user
 	return s.GetOfferByID(id)
 }
 
+func (s *OfferService) GetOfferByID(id int64) (*models.Offer, error) {
+	query := `SELECT offer_id, wb_id, user_id, updated_at, created_at, is_public, product_id, price_per_unit, tax_nds, units_per_lot, available_lots, category_id, latitude, longitude, warehouse_id, offer_type, offer_name, status, max_shipping_days FROM offers WHERE offer_id = $1`
+	row := s.db.QueryRow(query, id)
+	var offer models.Offer
+	err := row.Scan(
+		&offer.OfferID,
+		&offer.WBID,
+		&offer.UserID,
+		&offer.UpdatedAt,
+		&offer.CreatedAt,
+		&offer.IsPublic,
+		&offer.ProductID,
+		&offer.PricePerUnit,
+		&offer.TaxNDS,
+		&offer.UnitsPerLot,
+		&offer.AvailableLots,
+		&offer.CategoryID,
+		&offer.Latitude,
+		&offer.Longitude,
+		&offer.WarehouseID,
+		&offer.OfferType,
+		&offer.OfferName,
+		&offer.Status,
+		&offer.MaxShippingDays,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &offer, nil
+}
+
 func (s *OfferService) DeleteOffer(id int64, userID int64) error {
 	if id == 0 {
 		return errors.New("Требуется id")
@@ -267,16 +298,4 @@ func (s *OfferService) WBStock(productID, warehouseID, supplierID int64) (int, e
 		}
 	}
 	return totalQty, nil
-}
-
-func (s *OfferService) GetOfferByID(id int64) (*models.Offer, error) {
-	row := s.db.QueryRow(`SELECT offer_id, wb_id, user_id, updated_at, created_at, is_public, product_id, price_per_unit, tax_nds, units_per_lot, available_lots, category_id, latitude, longitude, warehouse_id, offer_type, offer_name, status, max_shipping_days FROM offers WHERE offer_id = $1`, id)
-	offer := models.Offer{}
-	err := row.Scan(
-		&offer.OfferID, &offer.WBID, &offer.UserID, &offer.UpdatedAt, &offer.CreatedAt, &offer.IsPublic, &offer.ProductID, &offer.PricePerUnit, &offer.TaxNDS, &offer.UnitsPerLot, &offer.AvailableLots, &offer.CategoryID, &offer.Latitude, &offer.Longitude, &offer.WarehouseID, &offer.OfferType, &offer.OfferName, &offer.Status, &offer.MaxShippingDays,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &offer, nil
 }
