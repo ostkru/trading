@@ -14,7 +14,6 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	DBName   string
-	SSLMode  string
 }
 
 type Config struct {
@@ -28,7 +27,7 @@ func Load() (*Config, error) {
 		log.Println("No .env file found, using environment variables")
 	}
 
-	dbPort, err := strconv.Atoi(getEnv("DB_PORT", "5434"))
+	dbPort, err := strconv.Atoi(getEnv("DB_PORT", "3306"))
 	if err != nil {
 		return nil, err
 	}
@@ -38,9 +37,8 @@ func Load() (*Config, error) {
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     dbPort,
 			User:     getEnv("DB_USER", "dev"),
-			Password: getEnv("DB_PASSWORD", "devpass"),
+			Password: getEnv("DB_PASSWORD", "DevPass123@"),
 			DBName:   getEnv("DB_NAME", "portaldata"),
-			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},
 		Port:    getEnv("PORT", "8095"),
 		GinMode: getEnv("GIN_MODE", "debug"),

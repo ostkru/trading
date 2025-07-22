@@ -27,4 +27,4 @@ type UpdateWarehouseRequest struct {
 	Latitude     *float64 `json:"latitude,omitempty"`
 	Longitude    *float64 `json:"longitude,omitempty"`
 	WorkingHours *string  `json:"working_hours,omitempty"`
-}
+} 

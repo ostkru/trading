@@ -19,6 +19,10 @@ func NewService(db *database.DB) *Service {
 }
 
 func (s *Service) CreateOrder(initiatorUserID int64, req CreateOrderRequest) (*Order, error) {
+	if req.OfferID == 0 || req.LotCount == 0 {
+		return nil, errors.New("offer_id and lot_count are required")
+	}
+
 	tx, err := s.db.Begin()
 	if err != nil {
 		return nil, err
@@ -27,7 +31,7 @@ func (s *Service) CreateOrder(initiatorUserID int64, req CreateOrderRequest) (*O
 
 	var offer offer.Offer
 	var counterpartyUserID int64
-	offerQuery := "SELECT user_id, price_per_unit, units_per_lot, max_shipping_days, available_lots, offer_type FROM offers WHERE offer_id = $1 FOR UPDATE"
+	offerQuery := "SELECT user_id, price_per_unit, units_per_lot, max_shipping_days, available_lots, offer_type FROM offers WHERE offer_id = ? FOR UPDATE"
 	err = tx.QueryRow(offerQuery, req.OfferID).Scan(&counterpartyUserID, &offer.PricePerUnit, &offer.UnitsPerLot, &offer.MaxShippingDays, &offer.AvailableLots, &offer.OfferType)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -45,7 +49,7 @@ func (s *Service) CreateOrder(initiatorUserID int64, req CreateOrderRequest) (*O
 	}
 
 	newAvailableLots := offer.AvailableLots - req.LotCount
-	_, err = tx.Exec("UPDATE offers SET available_lots = $1 WHERE offer_id = $2", newAvailableLots, req.OfferID)
+	_, err = tx.Exec("UPDATE offers SET available_lots = ? WHERE offer_id = ?", newAvailableLots, req.OfferID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,10 +62,29 @@ func (s *Service) CreateOrder(initiatorUserID int64, req CreateOrderRequest) (*O
 	}
 
 	query := `INSERT INTO orders (initiator_user_id, counterparty_user_id, offer_id, lot_count, order_type, price_per_unit, units_per_lot, max_shipping_days)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-              RETURNING order_id, total_amount, is_multi, order_time, order_status, created_at, updated_at`
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+	
+	result, err := tx.Exec(query,
+		initiatorUserID,
+		counterpartyUserID,
+		req.OfferID,
+		req.LotCount,
+		orderType,
+		offer.PricePerUnit,
+		offer.UnitsPerLot,
+		offer.MaxShippingDays,
+	)
+	if err != nil {
+		return nil, err
+	}
+	
+	orderID, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
 
 	var order Order
+	order.OrderID = orderID
 	order.InitiatorUserID = initiatorUserID
 	order.CounterpartyUserID = &counterpartyUserID
 	order.OfferID = &req.OfferID
@@ -71,20 +94,6 @@ func (s *Service) CreateOrder(initiatorUserID int64, req CreateOrderRequest) (*O
 	order.UnitsPerLot = offer.UnitsPerLot
 	order.MaxShippingDays = offer.MaxShippingDays
 
-	err = tx.QueryRow(query,
-		order.InitiatorUserID,
-		order.CounterpartyUserID,
-		order.OfferID,
-		order.LotCount,
-		order.OrderType,
-		order.PricePerUnit,
-		order.UnitsPerLot,
-		order.MaxShippingDays,
-	).Scan(&order.OrderID, &order.TotalAmount, &order.IsMulti, &order.OrderTime, &order.OrderStatus, &order.CreatedAt, &order.UpdatedAt)
-
-	if err != nil {
-		return nil, err
-	}
 	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
@@ -95,9 +104,9 @@ func (s *Service) GetOrderByID(orderID, userID int64) (*Order, error) {
 	var order Order
 	query := `SELECT order_id, total_amount, is_multi, offer_id, initiator_user_id, counterparty_user_id, order_time, price_per_unit, units_per_lot, lot_count, notes, order_type, payment_method, order_status, shipping_address, tracking_number, max_shipping_days, created_at, updated_at
               FROM orders
-              WHERE order_id = $1 AND (initiator_user_id = $2 OR counterparty_user_id = $2)`
+              WHERE order_id = ? AND (initiator_user_id = ? OR counterparty_user_id = ?)`
 
-	err := s.db.QueryRow(query, orderID, userID).Scan(
+	err := s.db.QueryRow(query, orderID, userID, userID).Scan(
 		&order.OrderID,
 		&order.TotalAmount,
 		&order.IsMulti,
@@ -136,7 +145,7 @@ func (s *Service) GetOrder(orderID int64, userID int64) (*GetOrderResponse, erro
 		return nil, err
 	}
 
-	rows, err := s.db.Query(`SELECT id, order_id, offer_id, qty, price_per_unit, created_at, status FROM order_items WHERE order_id = $1`, orderID)
+	rows, err := s.db.Query(`SELECT id, order_id, offer_id, qty, price_per_unit, created_at, status FROM order_items WHERE order_id = ?`, orderID)
 	if err != nil {
 		return nil, err
 	}

@@ -34,10 +34,10 @@ type UpdateProductRequest struct {
 }
 
 type ProductListResponse struct {
-	Products []Product `json:"products"`
-	Total    int       `json:"total"`
-	Page     int       `json:"page"`
-	Limit    int       `json:"limit"`
+	Data  []Product `json:"data"`
+	Total int       `json:"total"`
+	Page  int       `json:"page"`
+	Limit int       `json:"limit"`
 }
 
 type CreateProductsRequest struct {

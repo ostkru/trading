@@ -36,6 +36,15 @@ func main() {
 
 	router := gin.Default()
 
+	// Базовый маршрут для проверки доступности
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "PortalData API is running on port " + cfg.Port,
+			"status":  "ok",
+			"database": "mysql",
+		})
+	})
+
 	// Middlewares
 	// router.Use(middleware.BruteForceMiddleware())
 

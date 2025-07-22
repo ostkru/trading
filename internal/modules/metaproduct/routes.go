@@ -9,4 +9,12 @@ func RegisterRoutes(r *gin.RouterGroup, h *Handlers) {
 	r.PUT("/metaproducts/:id", h.UpdateMetaproduct)
 	r.DELETE("/metaproducts/:id", h.DeleteMetaproduct)
 	r.POST("/metaproducts/batch", h.CreateMetaproducts)
+	
+	// Алиасы для совместимости
+	r.POST("/products", h.CreateMetaproduct)
+	r.GET("/products", h.ListMetaproducts)
+	r.GET("/products/:id", h.GetMetaproduct)
+	r.PUT("/products/:id", h.UpdateMetaproduct)
+	r.DELETE("/products/:id", h.DeleteMetaproduct)
+	r.POST("/products/batch", h.CreateMetaproducts)
 } 
