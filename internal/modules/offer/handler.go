@@ -101,6 +101,7 @@ func (h *Handlers) ListOffers(c *gin.Context) {
 	}
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	filter := c.DefaultQuery("filter", "my") // my, others, all
 	if page < 1 {
 		page = 1
 	}
@@ -110,7 +111,7 @@ func (h *Handlers) ListOffers(c *gin.Context) {
 	if limit > 100 {
 		limit = 100
 	}
-	response, err := h.service.ListOffers(userID.(int64), page, limit)
+	response, err := h.service.ListOffers(userID.(int64), page, limit, filter)
 	if err != nil {
 		log.Printf("ListOffers error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

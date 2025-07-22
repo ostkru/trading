@@ -126,12 +126,20 @@ func (h *Handlers) UpdateOrderStatus(c *gin.Context) {
 	order, err := h.service.UpdateOrderStatus(id, userID.(int64), req)
 	if err != nil {
 		log.Printf("UpdateOrderStatus error: %v", err)
+		log.Printf("Error type: %T", err)
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "заказ не найден"})
+			return
+		}
 		if strings.Contains(err.Error(), "недостаточно прав") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
 		if strings.Contains(err.Error(), "недопустимый статус") {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+		if strings.Contains(err.Error(), "заказ не найден") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

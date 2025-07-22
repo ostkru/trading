@@ -189,6 +189,9 @@ func (s *Service) UpdateOrderStatus(orderID, userID int64, req UpdateOrderStatus
 	// Проверяем, что заказ существует и пользователь имеет к нему доступ
 	order, err := s.GetOrderByID(orderID, userID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("заказ не найден")
+		}
 		return nil, err
 	}
 
@@ -213,13 +216,31 @@ func (s *Service) UpdateOrderStatus(orderID, userID int64, req UpdateOrderStatus
 
 	// Обновляем статус
 	query := `UPDATE orders SET order_status = ?, status_reason = ?, status_changed_at = CURRENT_TIMESTAMP, status_changed_by = ? WHERE order_id = ?`
-	_, err = s.db.Exec(query, req.Status, req.Reason, userID, orderID)
+	result, err := s.db.Exec(query, req.Status, req.Reason, userID, orderID)
 	if err != nil {
 		return nil, err
 	}
+	
+	// Проверяем, была ли обновлена хотя бы одна строка
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+	
+	if rowsAffected == 0 {
+		return nil, errors.New("заказ не найден")
+	}
 
 	// Возвращаем обновленный заказ
-	return s.GetOrderByID(orderID, userID)
+	updatedOrder, err := s.GetOrderByID(orderID, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("заказ не найден после обновления")
+		}
+		return nil, err
+	}
+	
+	return updatedOrder, nil
 }
 
 func (s *Service) canChangeStatus(order *Order, userID int64, newStatus string) bool {

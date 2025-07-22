@@ -162,19 +162,44 @@ type OfferListResponse struct {
 	Limit  int     `json:"limit"`
 }
 
-func (s *Service) ListOffers(userID int64, page, limit int) (*OfferListResponse, error) {
+func (s *Service) ListOffers(userID int64, page, limit int, filter string) (*OfferListResponse, error) {
 	offset := (page - 1) * limit
 
+	var whereClause string
+	var countParams []interface{}
+	var queryParams []interface{}
+
+	switch filter {
+	case "my":
+		whereClause = "WHERE user_id = ?"
+		countParams = append(countParams, userID)
+		queryParams = append(queryParams, userID)
+	case "others":
+		whereClause = "WHERE user_id != ?"
+		countParams = append(countParams, userID)
+		queryParams = append(queryParams, userID)
+	case "all":
+		whereClause = ""
+	default:
+		whereClause = "WHERE user_id = ?"
+		countParams = append(countParams, userID)
+		queryParams = append(queryParams, userID)
+	}
+
+	// Подсчет общего количества
 	var total int
-	err := s.db.QueryRow("SELECT COUNT(*) FROM offers WHERE user_id = ?", userID).Scan(&total)
+	countQuery := "SELECT COUNT(*) FROM offers " + whereClause
+	err := s.db.QueryRow(countQuery, countParams...).Scan(&total)
 	if err != nil {
 		return nil, err
 	}
 
+	// Получение офферов
 	query := `SELECT offer_id, user_id, updated_at, created_at, is_public, product_id, price_per_unit, tax_nds, units_per_lot, available_lots, latitude, longitude, warehouse_id, offer_type, max_shipping_days 
-	          FROM offers WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`
+	          FROM offers ` + whereClause + ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	
-	rows, err := s.db.Query(query, userID, limit, offset)
+	queryParams = append(queryParams, limit, offset)
+	rows, err := s.db.Query(query, queryParams...)
 	if err != nil {
 		return nil, err
 	}

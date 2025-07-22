@@ -37,6 +37,7 @@ CREATE TABLE offers (
     longitude NUMERIC,
     warehouse_id INTEGER REFERENCES warehouses(id),
     offer_type VARCHAR,
+    max_shipping_days INTEGER,
     created_at TIMESTAMP,
     updated_at TIMESTAMP
 );
@@ -57,7 +58,8 @@ CREATE TABLE orders (
     payment_method VARCHAR,
     order_status VARCHAR,
     shipping_address VARCHAR,
-    tracking_number VARCHAR
+    tracking_number VARCHAR,
+    max_shipping_days INTEGER
 );
 
 CREATE TABLE order_items (

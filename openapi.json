@@ -26,174 +26,414 @@
       "Product": {
         "type": "object",
         "properties": {
-          "id": {"type": "integer"},
-          "name": {"type": "string"},
-          "vendor_article": {"type": "string"},
-          "recommend_price": {"type": "number"},
-          "brand": {"type": "string"},
-          "category": {"type": "string"},
-          "description": {"type": "string"},
-          "created_at": {"type": "string", "format": "date-time"},
-          "updated_at": {"type": "string", "format": "date-time"}
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "vendor_article": {
+            "type": "string"
+          },
+          "recommend_price": {
+            "type": "number"
+          },
+          "brand": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "CreateProductRequest": {
         "type": "object",
-        "required": ["name", "vendor_article", "recommend_price", "brand", "category"],
+        "required": [
+          "name",
+          "vendor_article",
+          "recommend_price",
+          "brand",
+          "category"
+        ],
         "properties": {
-          "name": {"type": "string"},
-          "vendor_article": {"type": "string"},
-          "recommend_price": {"type": "number"},
-          "brand": {"type": "string"},
-          "category": {"type": "string"},
-          "description": {"type": "string"}
+          "name": {
+            "type": "string"
+          },
+          "vendor_article": {
+            "type": "string"
+          },
+          "recommend_price": {
+            "type": "number"
+          },
+          "brand": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
         },
         "description": "Поля created_at и updated_at выставляются сервером автоматически."
       },
       "UpdateProductRequest": {
         "type": "object",
         "properties": {
-          "name": {"type": "string"},
-          "vendor_article": {"type": "string"},
-          "recommend_price": {"type": "number"},
-          "brand": {"type": "string"},
-          "category": {"type": "string"},
-          "description": {"type": "string"}
+          "name": {
+            "type": "string"
+          },
+          "vendor_article": {
+            "type": "string"
+          },
+          "recommend_price": {
+            "type": "number"
+          },
+          "brand": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
         }
       },
       "Offer": {
         "type": "object",
         "properties": {
-          "offer_id": {"type": "integer"},
-          "user_id": {"type": "integer"},
-          "is_public": {"type": "boolean"},
-          "product_id": {"type": "integer"},
-          "price_per_unit": {"type": "number"},
-          "tax_nds": {"type": "integer"},
-          "units_per_lot": {"type": "integer"},
-          "available_lots": {"type": "integer"},
-          "latitude": {"type": "number", "description": "Координаты автоматически подтягиваются из склада"},
-          "longitude": {"type": "number", "description": "Координаты автоматически подтягиваются из склада"},
-          "warehouse_id": {"type": "integer"},
+          "offer_id": {
+            "type": "integer"
+          },
+          "user_id": {
+            "type": "integer"
+          },
+          "is_public": {
+            "type": "boolean"
+          },
+          "product_id": {
+            "type": "integer"
+          },
+          "price_per_unit": {
+            "type": "number"
+          },
+          "tax_nds": {
+            "type": "integer"
+          },
+          "units_per_lot": {
+            "type": "integer"
+          },
+          "available_lots": {
+            "type": "integer"
+          },
+          "latitude": {
+            "type": "number",
+            "description": "Координаты автоматически подтягиваются из склада"
+          },
+          "longitude": {
+            "type": "number",
+            "description": "Координаты автоматически подтягиваются из склада"
+          },
+          "warehouse_id": {
+            "type": "integer"
+          },
           "offer_type": {
             "type": "string",
-            "enum": ["sale", "sell", "buy", "purchase"],
+            "enum": [
+              "sale",
+              "sell",
+              "buy",
+              "purchase"
+            ],
             "description": "Тип оффера: sale/sell - продажа, buy/purchase - покупка"
           },
-          "max_shipping_days": {"type": "integer", "default": 0, "description": "Максимальное количество дней доставки"},
-          "created_at": {"type": "string", "format": "date-time"},
-          "updated_at": {"type": "string", "format": "date-time"}
+          "max_shipping_days": {
+            "type": "integer",
+            "default": 0,
+            "description": "Максимальное количество дней доставки"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "CreateOfferRequest": {
         "type": "object",
-        "required": ["product_id", "offer_type", "price_per_unit", "available_lots", "tax_nds", "units_per_lot", "warehouse_id"],
+        "required": [
+          "product_id",
+          "offer_type",
+          "price_per_unit",
+          "available_lots",
+          "tax_nds",
+          "units_per_lot",
+          "warehouse_id"
+        ],
         "properties": {
-          "product_id": {"type": "integer"},
+          "product_id": {
+            "type": "integer"
+          },
           "offer_type": {
             "type": "string",
-            "enum": ["sale", "sell", "buy", "purchase"],
+            "enum": [
+              "sale",
+              "sell",
+              "buy",
+              "purchase"
+            ],
             "description": "Тип оффера: sale/sell - продажа, buy/purchase - покупка"
           },
-          "price_per_unit": {"type": "number"},
-          "available_lots": {"type": "integer"},
-          "tax_nds": {"type": "integer"},
-          "units_per_lot": {"type": "integer"},
-          "warehouse_id": {"type": "integer", "description": "Координаты будут автоматически подтянуты из склада"},
-          "is_public": {"type": "boolean", "description": "Публичный оффер или нет"},
-          "max_shipping_days": {"type": "integer", "default": 0, "description": "Максимальное количество дней доставки"}
+          "price_per_unit": {
+            "type": "number"
+          },
+          "available_lots": {
+            "type": "integer"
+          },
+          "tax_nds": {
+            "type": "integer"
+          },
+          "units_per_lot": {
+            "type": "integer"
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "description": "Координаты будут автоматически подтянуты из склада"
+          },
+          "is_public": {
+            "type": "boolean",
+            "description": "Публичный оффер или нет"
+          },
+          "max_shipping_days": {
+            "type": "integer",
+            "default": 0,
+            "description": "Максимальное количество дней доставки"
+          }
         },
         "description": "Поля created_at и updated_at выставляются сервером автоматически. Координаты автоматически заполняются из склада."
       },
       "UpdateOfferRequest": {
         "type": "object",
         "properties": {
-          "price_per_unit": {"type": "number"},
-          "available_lots": {"type": "integer"},
-          "tax_nds": {"type": "integer"},
-          "units_per_lot": {"type": "integer"},
-          "is_public": {"type": "boolean"},
-          "max_shipping_days": {"type": "integer"},
-          "warehouse_id": {"type": "integer", "description": "При изменении склада координаты обновятся автоматически"}
+          "price_per_unit": {
+            "type": "number"
+          },
+          "available_lots": {
+            "type": "integer"
+          },
+          "tax_nds": {
+            "type": "integer"
+          },
+          "units_per_lot": {
+            "type": "integer"
+          },
+          "is_public": {
+            "type": "boolean"
+          },
+          "max_shipping_days": {
+            "type": "integer"
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "description": "При изменении склада координаты обновятся автоматически"
+          }
         }
       },
       "Order": {
         "type": "object",
         "properties": {
-          "order_id": {"type": "integer"},
-          "total_amount": {"type": "number", "description": "Общая сумма заказа"},
+          "order_id": {
+            "type": "integer"
+          },
+          "total_amount": {
+            "type": "number",
+            "description": "Общая сумма заказа"
+          },
           "is_multi": {
             "type": "object",
             "properties": {
-              "Bool": {"type": "boolean"},
-              "Valid": {"type": "boolean"}
+              "Bool": {
+                "type": "boolean"
+              },
+              "Valid": {
+                "type": "boolean"
+              }
             }
           },
-          "offer_id": {"type": "integer"},
-          "initiator_user_id": {"type": "integer", "description": "ID покупателя (создателя заказа)"},
-          "counterparty_user_id": {"type": "integer", "description": "ID продавца (владельца оффера)"},
-          "order_time": {"type": "string", "format": "date-time"},
-          "price_per_unit": {"type": "number"},
-          "units_per_lot": {"type": "integer"},
-          "lot_count": {"type": "integer"},
-          "notes": {"type": "string"},
+          "offer_id": {
+            "type": "integer"
+          },
+          "initiator_user_id": {
+            "type": "integer",
+            "description": "ID покупателя (создателя заказа)"
+          },
+          "counterparty_user_id": {
+            "type": "integer",
+            "description": "ID продавца (владельца оффера)"
+          },
+          "order_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "price_per_unit": {
+            "type": "number"
+          },
+          "units_per_lot": {
+            "type": "integer"
+          },
+          "lot_count": {
+            "type": "integer"
+          },
+          "notes": {
+            "type": "string"
+          },
           "order_type": {
             "type": "string",
-            "enum": ["buy", "sell"],
+            "enum": [
+              "buy",
+              "sell"
+            ],
             "description": "buy - покупка, sell - продажа"
           },
-          "payment_method": {"type": "string"},
+          "payment_method": {
+            "type": "string"
+          },
           "order_status": {
             "type": "string",
-            "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "rejected"],
+            "enum": [
+              "pending",
+              "confirmed",
+              "processing",
+              "shipped",
+              "delivered",
+              "cancelled",
+              "rejected"
+            ],
             "description": "Статус заказа"
           },
-          "status_reason": {"type": "string", "description": "Причина изменения статуса"},
-          "status_changed_at": {"type": "string", "format": "date-time", "description": "Время изменения статуса"},
-          "status_changed_by": {"type": "integer", "description": "ID пользователя, изменившего статус"},
-          "shipping_address": {"type": "string"},
-          "tracking_number": {"type": "string"},
-          "max_shipping_days": {"type": "integer", "description": "Максимальное количество дней доставки"},
-          "created_at": {"type": "string", "format": "date-time"},
-          "updated_at": {"type": "string", "format": "date-time"}
+          "status_reason": {
+            "type": "string",
+            "description": "Причина изменения статуса"
+          },
+          "status_changed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Время изменения статуса"
+          },
+          "status_changed_by": {
+            "type": "integer",
+            "description": "ID пользователя, изменившего статус"
+          },
+          "shipping_address": {
+            "type": "string"
+          },
+          "tracking_number": {
+            "type": "string"
+          },
+          "max_shipping_days": {
+            "type": "integer",
+            "description": "Максимальное количество дней доставки"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "CreateOrderRequest": {
         "type": "object",
-        "required": ["offer_id", "quantity"],
+        "required": [
+          "offer_id",
+          "quantity"
+        ],
         "properties": {
-          "offer_id": {"type": "integer", "description": "ID оффера"},
-          "quantity": {"type": "integer", "description": "Количество лотов"}
+          "offer_id": {
+            "type": "integer",
+            "description": "ID оффера"
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "Количество лотов"
+          }
         }
       },
       "UpdateOrderStatusRequest": {
         "type": "object",
-        "required": ["status"],
+        "required": [
+          "status"
+        ],
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "rejected"],
+            "enum": [
+              "pending",
+              "confirmed",
+              "processing",
+              "shipped",
+              "delivered",
+              "cancelled",
+              "rejected"
+            ],
             "description": "Новый статус заказа"
           },
-          "reason": {"type": "string", "description": "Причина изменения статуса"}
+          "reason": {
+            "type": "string",
+            "description": "Причина изменения статуса"
+          }
         }
       },
       "GetOrderResponse": {
         "type": "object",
         "properties": {
-          "order": {"$ref": "#/components/schemas/Order"},
+          "order": {
+            "$ref": "#/components/schemas/Order"
+          },
           "order_items": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "id": {"type": "integer"},
-                "order_id": {"type": "integer"},
-                "offer_id": {"type": "integer"},
-                "qty": {"type": "integer"},
-                "price_per_unit": {"type": "number"},
-                "created_at": {"type": "string", "format": "date-time"},
-                "status": {"type": "string"}
+                "id": {
+                  "type": "integer"
+                },
+                "order_id": {
+                  "type": "integer"
+                },
+                "offer_id": {
+                  "type": "integer"
+                },
+                "qty": {
+                  "type": "integer"
+                },
+                "price_per_unit": {
+                  "type": "number"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "status": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -202,44 +442,96 @@
       "Warehouse": {
         "type": "object",
         "properties": {
-          "id": {"type": "integer"},
-          "user_id": {"type": "integer"},
-          "name": {"type": "string", "description": "Название склада"},
-          "updated_at": {"type": "string", "format": "date-time"},
-          "created_at": {"type": "string", "format": "date-time"},
-          "longitude": {"type": "number"},
-          "latitude": {"type": "number"},
-          "wb_id": {"type": "string"},
-          "working_hours": {"type": "string"},
-          "address": {"type": "string"}
+          "id": {
+            "type": "integer"
+          },
+          "user_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "description": "Название склада"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "wb_id": {
+            "type": "string"
+          },
+          "working_hours": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          }
         }
       },
       "CreateWarehouseRequest": {
         "type": "object",
-        "required": ["name", "address", "latitude", "longitude"],
+        "required": [
+          "name",
+          "address",
+          "latitude",
+          "longitude"
+        ],
         "properties": {
-          "name": {"type": "string", "description": "Название склада"},
-          "address": {"type": "string"},
-          "latitude": {"type": "number"},
-          "longitude": {"type": "number"},
-          "working_hours": {"type": "string"}
+          "name": {
+            "type": "string",
+            "description": "Название склада"
+          },
+          "address": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "working_hours": {
+            "type": "string"
+          }
         },
         "description": "Поля created_at и updated_at выставляются сервером автоматически."
       },
       "UpdateWarehouseRequest": {
         "type": "object",
         "properties": {
-          "name": {"type": "string", "description": "Название склада"},
-          "address": {"type": "string"},
-          "latitude": {"type": "number"},
-          "longitude": {"type": "number"},
-          "working_hours": {"type": "string"}
+          "name": {
+            "type": "string",
+            "description": "Название склада"
+          },
+          "address": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "working_hours": {
+            "type": "string"
+          }
         }
       }
     }
   },
   "security": [
-    {"ApiKeyAuth": []}
+    {
+      "ApiKeyAuth": []
+    }
   ],
   "paths": {
     "/": {
@@ -254,8 +546,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {"type": "string"},
-                    "database": {"type": "string"}
+                    "message": {
+                      "type": "string"
+                    },
+                    "database": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -272,7 +568,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {"$ref": "#/components/schemas/CreateProductRequest"}
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductRequest"
+              }
             }
           }
         },
@@ -281,11 +579,15 @@
             "description": "Продукт создан",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/Product"}
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
               }
             }
           },
-          "400": {"description": "Ошибка валидации"}
+          "400": {
+            "description": "Ошибка валидации"
+          }
         }
       },
       "get": {
@@ -297,7 +599,11 @@
             "name": "owner",
             "schema": {
               "type": "string",
-              "enum": ["my", "others", "all"],
+              "enum": [
+                "my",
+                "others",
+                "all"
+              ],
               "default": "all"
             },
             "description": "Фильтр по производителю: my — только мои, others — чужие, all — все."
@@ -305,13 +611,20 @@
           {
             "in": "query",
             "name": "page",
-            "schema": {"type": "integer", "default": 1},
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
             "description": "Номер страницы (начиная с 1)"
           },
           {
             "in": "query",
             "name": "limit",
-            "schema": {"type": "integer", "default": 10, "maximum": 100},
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "maximum": 100
+            },
             "description": "Количество позиций на страницу (максимум 100)"
           }
         ],
@@ -325,7 +638,9 @@
                   "properties": {
                     "data": {
                       "type": "array",
-                      "items": {"$ref": "#/components/schemas/Product"}
+                      "items": {
+                        "$ref": "#/components/schemas/Product"
+                      }
                     }
                   }
                 }
@@ -344,7 +659,9 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -352,11 +669,15 @@
             "description": "Продукт найден",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/Product"}
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
               }
             }
           },
-          "404": {"description": "Не найден"}
+          "404": {
+            "description": "Не найден"
+          }
         }
       },
       "put": {
@@ -367,14 +688,18 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {"$ref": "#/components/schemas/UpdateProductRequest"}
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductRequest"
+              }
             }
           }
         },
@@ -383,11 +708,15 @@
             "description": "Продукт обновлён",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/Product"}
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
               }
             }
           },
-          "404": {"description": "Не найден"}
+          "404": {
+            "description": "Не найден"
+          }
         }
       },
       "delete": {
@@ -398,12 +727,18 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
-          "200": {"description": "Удалено"},
-          "404": {"description": "Не найден"}
+          "200": {
+            "description": "Удалено"
+          },
+          "404": {
+            "description": "Не найден"
+          }
         }
       }
     },
@@ -415,7 +750,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {"$ref": "#/components/schemas/CreateProductRequest"}
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductRequest"
+              }
             }
           }
         },
@@ -424,11 +761,15 @@
             "description": "Metaproduct создан",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/Product"}
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
               }
             }
           },
-          "400": {"description": "Ошибка валидации"}
+          "400": {
+            "description": "Ошибка валидации"
+          }
         }
       },
       "get": {
@@ -440,7 +781,11 @@
             "name": "owner",
             "schema": {
               "type": "string",
-              "enum": ["my", "others", "all"],
+              "enum": [
+                "my",
+                "others",
+                "all"
+              ],
               "default": "all"
             },
             "description": "Фильтр по производителю: my — только мои, others — чужие, all — все."
@@ -448,13 +793,20 @@
           {
             "in": "query",
             "name": "page",
-            "schema": {"type": "integer", "default": 1},
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
             "description": "Номер страницы (начиная с 1)"
           },
           {
             "in": "query",
             "name": "limit",
-            "schema": {"type": "integer", "default": 10, "maximum": 100},
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "maximum": 100
+            },
             "description": "Количество позиций на страницу (максимум 100)"
           }
         ],
@@ -468,7 +820,9 @@
                   "properties": {
                     "data": {
                       "type": "array",
-                      "items": {"$ref": "#/components/schemas/Product"}
+                      "items": {
+                        "$ref": "#/components/schemas/Product"
+                      }
                     }
                   }
                 }
@@ -487,7 +841,9 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -495,11 +851,15 @@
             "description": "Metaproduct найден",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/Product"}
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
               }
             }
           },
-          "404": {"description": "Не найден"}
+          "404": {
+            "description": "Не найден"
+          }
         }
       },
       "put": {
@@ -510,14 +870,18 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {"$ref": "#/components/schemas/UpdateProductRequest"}
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductRequest"
+              }
             }
           }
         },
@@ -526,11 +890,15 @@
             "description": "Metaproduct обновлён",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/Product"}
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
               }
             }
           },
-          "404": {"description": "Не найден"}
+          "404": {
+            "description": "Не найден"
+          }
         }
       },
       "delete": {
@@ -541,12 +909,18 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
-          "200": {"description": "Удалено"},
-          "404": {"description": "Не найден"}
+          "200": {
+            "description": "Удалено"
+          },
+          "404": {
+            "description": "Не найден"
+          }
         }
       }
     },
@@ -558,7 +932,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {"$ref": "#/components/schemas/CreateOfferRequest"}
+              "schema": {
+                "$ref": "#/components/schemas/CreateOfferRequest"
+              }
             }
           }
         },
@@ -567,11 +943,15 @@
             "description": "Оффер создан",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/Offer"}
+                "schema": {
+                  "$ref": "#/components/schemas/Offer"
+                }
               }
             }
           },
-          "400": {"description": "Ошибка валидации"}
+          "400": {
+            "description": "Ошибка валидации"
+          }
         }
       },
       "get": {
@@ -587,7 +967,9 @@
                   "properties": {
                     "offers": {
                       "type": "array",
-                      "items": {"$ref": "#/components/schemas/Offer"}
+                      "items": {
+                        "$ref": "#/components/schemas/Offer"
+                      }
                     }
                   }
                 }
@@ -611,7 +993,9 @@
                   "properties": {
                     "offers": {
                       "type": "array",
-                      "items": {"$ref": "#/components/schemas/Offer"}
+                      "items": {
+                        "$ref": "#/components/schemas/Offer"
+                      }
                     }
                   }
                 }
@@ -630,18 +1014,22 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {"$ref": "#/components/schemas/UpdateOfferRequest"},
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOfferRequest"
+              },
               "examples": {
                 "Пример": {
                   "value": {
-                    "price_per_unit": 900.00,
+                    "price_per_unit": 900,
                     "available_lots": 8,
                     "tax_nds": 10,
                     "units_per_lot": 1,
@@ -658,11 +1046,15 @@
             "description": "Обновлено",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/Offer"}
+                "schema": {
+                  "$ref": "#/components/schemas/Offer"
+                }
               }
             }
           },
-          "404": {"description": "Не найден"}
+          "404": {
+            "description": "Не найден"
+          }
         }
       },
       "delete": {
@@ -673,12 +1065,18 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
-          "204": {"description": "Удалено"},
-          "409": {"description": "Есть связанные активные заказы"}
+          "204": {
+            "description": "Удалено"
+          },
+          "409": {
+            "description": "Есть связанные активные заказы"
+          }
         }
       }
     },
@@ -691,19 +1089,25 @@
             "in": "query",
             "name": "product_id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           },
           {
             "in": "query",
             "name": "warehouse_id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           },
           {
             "in": "query",
             "name": "supplier_id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -714,7 +1118,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "stock": {"type": "integer"}
+                    "stock": {
+                      "type": "integer"
+                    }
                   }
                 }
               }
@@ -731,7 +1137,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {"$ref": "#/components/schemas/CreateOrderRequest"}
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderRequest"
+              }
             }
           }
         },
@@ -740,12 +1148,18 @@
             "description": "Заказ создан",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/Order"}
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
               }
             }
           },
-          "400": {"description": "Ошибка валидации"},
-          "404": {"description": "Оффер не найден"}
+          "400": {
+            "description": "Ошибка валидации"
+          },
+          "404": {
+            "description": "Оффер не найден"
+          }
         }
       },
       "get": {
@@ -755,13 +1169,20 @@
           {
             "in": "query",
             "name": "page",
-            "schema": {"type": "integer", "default": 1},
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
             "description": "Номер страницы (начиная с 1)"
           },
           {
             "in": "query",
             "name": "per_page",
-            "schema": {"type": "integer", "default": 20, "maximum": 100},
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "maximum": 100
+            },
             "description": "Количество позиций на страницу (максимум 100)"
           },
           {
@@ -769,7 +1190,15 @@
             "name": "status",
             "schema": {
               "type": "string",
-              "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "rejected"]
+              "enum": [
+                "pending",
+                "confirmed",
+                "processing",
+                "shipped",
+                "delivered",
+                "cancelled",
+                "rejected"
+              ]
             },
             "description": "Фильтр по статусу заказа"
           }
@@ -784,11 +1213,19 @@
                   "properties": {
                     "orders": {
                       "type": "array",
-                      "items": {"$ref": "#/components/schemas/Order"}
+                      "items": {
+                        "$ref": "#/components/schemas/Order"
+                      }
                     },
-                    "total": {"type": "integer"},
-                    "page": {"type": "integer"},
-                    "per_page": {"type": "integer"}
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "per_page": {
+                      "type": "integer"
+                    }
                   }
                 }
               }
@@ -806,7 +1243,9 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -814,11 +1253,15 @@
             "description": "Заказ",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/GetOrderResponse"}
+                "schema": {
+                  "$ref": "#/components/schemas/GetOrderResponse"
+                }
               }
             }
           },
-          "404": {"description": "Не найден"}
+          "404": {
+            "description": "Не найден"
+          }
         }
       }
     },
@@ -831,14 +1274,18 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {"$ref": "#/components/schemas/UpdateOrderStatusRequest"},
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrderStatusRequest"
+              },
               "examples": {
                 "Пример": {
                   "value": {
@@ -855,13 +1302,21 @@
             "description": "Статус изменен",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/Order"}
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
               }
             }
           },
-          "400": {"description": "Недопустимый статус"},
-          "403": {"description": "Недостаточно прав для изменения статуса"},
-          "404": {"description": "Заказ не найден"}
+          "400": {
+            "description": "Недопустимый статус"
+          },
+          "403": {
+            "description": "Недостаточно прав для изменения статуса"
+          },
+          "404": {
+            "description": "Заказ не найден"
+          }
         }
       }
     },
@@ -873,7 +1328,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {"$ref": "#/components/schemas/CreateWarehouseRequest"}
+              "schema": {
+                "$ref": "#/components/schemas/CreateWarehouseRequest"
+              }
             }
           }
         },
@@ -882,11 +1339,15 @@
             "description": "Склад создан",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/Warehouse"}
+                "schema": {
+                  "$ref": "#/components/schemas/Warehouse"
+                }
               }
             }
           },
-          "400": {"description": "Ошибка валидации"}
+          "400": {
+            "description": "Ошибка валидации"
+          }
         }
       },
       "get": {
@@ -902,7 +1363,9 @@
                   "properties": {
                     "warehouses": {
                       "type": "array",
-                      "items": {"$ref": "#/components/schemas/Warehouse"}
+                      "items": {
+                        "$ref": "#/components/schemas/Warehouse"
+                      }
                     }
                   }
                 }
@@ -921,21 +1384,25 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {"$ref": "#/components/schemas/UpdateWarehouseRequest"},
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWarehouseRequest"
+              },
               "examples": {
                 "Пример": {
                   "value": {
                     "name": "Основной склад",
                     "address": "456 Oak Ave",
-                    "latitude": 55.7600,
-                    "longitude": 37.6200,
+                    "latitude": 55.76,
+                    "longitude": 37.62,
                     "working_hours": "10:00-19:00"
                   }
                 }
@@ -948,11 +1415,15 @@
             "description": "Обновлено",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/Warehouse"}
+                "schema": {
+                  "$ref": "#/components/schemas/Warehouse"
+                }
               }
             }
           },
-          "404": {"description": "Не найден"}
+          "404": {
+            "description": "Не найден"
+          }
         }
       },
       "delete": {
@@ -963,14 +1434,41 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {"type": "integer"}
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
-          "204": {"description": "Удалено"},
-          "404": {"description": "Не найден"}
+          "204": {
+            "description": "Удалено"
+          },
+          "404": {
+            "description": "Не найден"
+          }
         }
+      }
+    },
+    "/api/v1/offers": {
+      "get": {
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "Фильтр офферов: my (только мои), others (чужие), all (все)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "my",
+                "others",
+                "all"
+              ],
+              "default": "my"
+            }
+          }
+        ]
       }
     }
   }
-} 
+}

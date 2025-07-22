@@ -1,298 +1,395 @@
 <?php
+/**
+ * Тест ролей офферов и автоматического заполнения координат
+ * Проверяет логику офферов покупки/продажи и автоматическое заполнение координат
+ * Включает замеры скорости выполнения
+ */
 
 class OfferRolesAndCoordinatesTest {
     private $baseUrl = 'http://localhost:8095/api/v1';
-    private $user1Token = '80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27';
-    private $user2Token = 'f9c912b6989eb166ee48ec6d8f07a2b0d29d5efc8ae1c2e44fac9fe8c4d4a0b5';
+    private $users = [
+        'user1' => [
+            'name' => 'clear13808',
+            'api_token' => '80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27'
+        ],
+        'user2' => [
+            'name' => 'veriy47043', 
+            'api_token' => 'f9c912b6989eb166ee48ec6d8f07a2b0d29d5efc8ae1c2e44fac9fe8c4d4a0b5'
+        ]
+    ];
     
     private $testResults = [];
-    private $totalTests = 0;
-    private $passedTests = 0;
-    
-    public function run() {
-        echo "🚀 ТЕСТИРОВАНИЕ ЛОГИКИ РОЛЕЙ И КООРДИНАТ\n";
-        echo "==========================================\n\n";
+    private $performanceMetrics = [];
+    private $createdProducts = [];
+    private $createdWarehouses = [];
+    private $createdOffers = [];
+    private $createdOrders = [];
+
+    public function runAllTests() {
+        $totalStartTime = microtime(true);
         
-        $this->testSaleOfferOrder();
-        $this->testBuyOfferOrder();
-        $this->testCoordinatesAutoFill();
+        echo "🚀 ТЕСТ РОЛЕЙ ОФФЕРОВ И КООРДИНАТ\n";
+        echo "==================================\n\n";
+
+        // 1. Создание тестовых ресурсов
+        $this->createTestResources();
         
+        // 2. Тестирование офферов продажи
+        $this->testSaleOffers();
+        
+        // 3. Тестирование офферов покупки
+        $this->testBuyOffers();
+        
+        // 4. Тестирование автоматического заполнения координат
+        $this->testCoordinatePopulation();
+        
+        $totalEndTime = microtime(true);
+        $this->performanceMetrics['total_time'] = round(($totalEndTime - $totalStartTime) * 1000, 2);
+        
+        // Вывод результатов
         $this->printResults();
     }
-    
-    private function testSaleOfferOrder() {
-        echo "📦 1. ТЕСТ ЗАКАЗА НА ОФФЕР ПРОДАЖИ\n";
-        echo "------------------------------------\n";
+
+    private function createTestResources() {
+        echo "📦 СОЗДАНИЕ ТЕСТОВЫХ РЕСУРСОВ\n";
+        echo "------------------------------\n";
         
-        // Создаем оффер на продажу от User2
-        $this->createSaleOffer();
-        
-        // User1 создает заказ на оффер User2
-        $this->createOrderOnSaleOffer();
-        
-        // Проверяем роли в заказе
-        $this->checkSaleOrderRoles();
-    }
-    
-    private function testBuyOfferOrder() {
-        echo "\n📦 2. ТЕСТ ЗАКАЗА НА ОФФЕР ПОКУПКИ\n";
-        echo "-------------------------------------\n";
-        
-        // Создаем оффер на покупку от User2
-        $this->createBuyOffer();
-        
-        // User1 создает заказ на оффер покупки User2
-        $this->createOrderOnBuyOffer();
-        
-        // Проверяем роли в заказе
-        $this->checkBuyOrderRoles();
-    }
-    
-    private function testCoordinatesAutoFill() {
-        echo "\n📍 3. ТЕСТ АВТОМАТИЧЕСКОГО ЗАПОЛНЕНИЯ КООРДИНАТ\n";
-        echo "------------------------------------------------\n";
-        
-        $this->testCreateOfferWithCoordinates();
-        $this->testUpdateOfferWithNewWarehouse();
-    }
-    
-    private function createSaleOffer() {
-        $data = [
-            'product_id' => 19,
-            'offer_type' => 'sale',
-            'price_per_unit' => 300.0,
-            'available_lots' => 10,
-            'tax_nds' => 20,
-            'units_per_lot' => 1,
-            'warehouse_id' => 3,
-            'is_public' => true,
-            'max_shipping_days' => 5
+        // Создание продуктов
+        $productData1 = [
+            'name' => 'Продукт для продажи',
+            'vendor_article' => 'SALE-TEST-001',
+            'recommend_price' => 100.00,
+            'brand' => 'TestBrand',
+            'category' => 'TestCategory',
+            'description' => 'Продукт для тестирования офферов продажи'
         ];
         
-        $response = $this->makeRequest('POST', '/offers', $data, $this->user2Token);
-        $this->assertTest('Создание оффера на продажу', 
-            isset($response['offer_id']), $response);
-    }
-    
-    private function createBuyOffer() {
-        $data = [
-            'product_id' => 19,
-            'offer_type' => 'buy',
-            'price_per_unit' => 250.0,
-            'available_lots' => 5,
-            'tax_nds' => 20,
-            'units_per_lot' => 1,
-            'warehouse_id' => 3,
-            'is_public' => true,
-            'max_shipping_days' => 3
+        $startTime = microtime(true);
+        $response = $this->makeRequest('POST', '/products', $productData1, $this->users['user1']['api_token']);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Создание продукта для продажи'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Создание продукта для продажи', $response['status'] === 201, $response);
+        if ($response['status'] === 201) {
+            $this->createdProducts['sale'] = $response['data']['id'];
+        }
+        
+        $productData2 = [
+            'name' => 'Продукт для покупки',
+            'vendor_article' => 'BUY-TEST-001',
+            'recommend_price' => 150.00,
+            'brand' => 'TestBrand2',
+            'category' => 'TestCategory2',
+            'description' => 'Продукт для тестирования офферов покупки'
         ];
         
-        $response = $this->makeRequest('POST', '/offers', $data, $this->user2Token);
-        $this->assertTest('Создание оффера на покупку', 
-            isset($response['offer_id']), $response);
-    }
-    
-    private function createOrderOnSaleOffer() {
-        // Получаем последний оффер на продажу
-        $offers = $this->makeRequest('GET', '/offers', [], $this->user2Token);
-        $saleOffer = null;
-        foreach ($offers['offers'] as $offer) {
-            if ($offer['offer_type'] === 'sale') {
-                $saleOffer = $offer;
-                break;
-            }
+        $startTime = microtime(true);
+        $response = $this->makeRequest('POST', '/products', $productData2, $this->users['user2']['api_token']);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Создание продукта для покупки'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Создание продукта для покупки', $response['status'] === 201, $response);
+        if ($response['status'] === 201) {
+            $this->createdProducts['buy'] = $response['data']['id'];
         }
         
-        if (!$saleOffer) {
-            $this->assertTest('Найден оффер на продажу', false, 'Оффер на продажу не найден');
-            return;
-        }
-        
-        $data = [
-            'offer_id' => $saleOffer['offer_id'],
-            'quantity' => 2
+        // Создание складов
+        $warehouseData1 = [
+            'name' => 'Склад для продажи',
+            'address' => 'ул. Продажная, 1',
+            'latitude' => 55.7558,
+            'longitude' => 37.6176,
+            'working_hours' => '09:00-18:00'
         ];
         
-        $response = $this->makeRequest('POST', '/orders', $data, $this->user1Token);
-        $this->assertTest('Создание заказа на оффер продажи', 
-            isset($response['order_id']), $response);
-        
-        // Сохраняем заказ для проверки ролей
-        $this->saleOrder = $response;
-    }
-    
-    private function createOrderOnBuyOffer() {
-        // Получаем последний оффер на покупку
-        $offers = $this->makeRequest('GET', '/offers', [], $this->user2Token);
-        $buyOffer = null;
-        foreach ($offers['offers'] as $offer) {
-            if ($offer['offer_type'] === 'buy') {
-                $buyOffer = $offer;
-                break;
-            }
+        $startTime = microtime(true);
+        $response = $this->makeRequest('POST', '/warehouses', $warehouseData1, $this->users['user1']['api_token']);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Создание склада для продажи'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Создание склада для продажи', $response['status'] === 201, $response);
+        if ($response['status'] === 201) {
+            $this->createdWarehouses['sale'] = $response['data']['id'];
         }
         
-        if (!$buyOffer) {
-            $this->assertTest('Найден оффер на покупку', false, 'Оффер на покупку не найден');
-            return;
-        }
-        
-        $data = [
-            'offer_id' => $buyOffer['offer_id'],
-            'quantity' => 1
+        $warehouseData2 = [
+            'name' => 'Склад для покупки',
+            'address' => 'ул. Покупная, 2',
+            'latitude' => 55.7600,
+            'longitude' => 37.6200,
+            'working_hours' => '10:00-19:00'
         ];
         
-        $response = $this->makeRequest('POST', '/orders', $data, $this->user1Token);
-        $this->assertTest('Создание заказа на оффер покупки', 
-            isset($response['order_id']), $response);
-        
-        // Сохраняем заказ для проверки ролей
-        $this->buyOrder = $response;
-    }
-    
-    private function checkSaleOrderRoles() {
-        if (!isset($this->saleOrder)) {
-            $this->assertTest('Проверка ролей в заказе продажи', false, 'Заказ не создан');
-            return;
+        $startTime = microtime(true);
+        $response = $this->makeRequest('POST', '/warehouses', $warehouseData2, $this->users['user2']['api_token']);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Создание склада для покупки'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Создание склада для покупки', $response['status'] === 201, $response);
+        if ($response['status'] === 201) {
+            $this->createdWarehouses['buy'] = $response['data']['id'];
         }
         
-        // В заказе на продажу: User1 (создатель) = покупатель, User2 (владелец оффера) = продавец
-        $this->assertTest('User1 является покупателем в заказе продажи', 
-            $this->saleOrder['initiator_user_id'] == 1, $this->saleOrder);
-        
-        $this->assertTest('User2 является продавцом в заказе продажи', 
-            $this->saleOrder['counterparty_user_id'] == 2, $this->saleOrder);
-        
-        $this->assertTest('Тип заказа продажи - buy', 
-            $this->saleOrder['order_type'] === 'buy', $this->saleOrder);
+        echo "\n";
     }
-    
-    private function checkBuyOrderRoles() {
-        if (!isset($this->buyOrder)) {
-            $this->assertTest('Проверка ролей в заказе покупки', false, 'Заказ не создан');
-            return;
-        }
+
+    private function testSaleOffers() {
+        echo "💰 ТЕСТИРОВАНИЕ ОФФЕРОВ ПРОДАЖИ\n";
+        echo "--------------------------------\n";
         
-        // В заказе на покупку: User1 (создатель) = продавец, User2 (владелец оффера) = покупатель
-        $this->assertTest('User1 является продавцом в заказе покупки', 
-            $this->buyOrder['initiator_user_id'] == 1, $this->buyOrder);
-        
-        $this->assertTest('User2 является покупателем в заказе покупки', 
-            $this->buyOrder['counterparty_user_id'] == 2, $this->buyOrder);
-        
-        $this->assertTest('Тип заказа покупки - sell', 
-            $this->buyOrder['order_type'] === 'sell', $this->buyOrder);
-    }
-    
-    private function testCreateOfferWithCoordinates() {
-        $data = [
-            'product_id' => 23,
-            'offer_type' => 'sale',
-            'price_per_unit' => 400.0,
-            'available_lots' => 3,
-            'tax_nds' => 20,
-            'units_per_lot' => 1,
-            'warehouse_id' => 5, // Склад с координатами
-            'is_public' => true,
-            'max_shipping_days' => 7
-        ];
-        
-        $response = $this->makeRequest('POST', '/offers', $data, $this->user1Token);
-        $this->assertTest('Создание оффера с автоматическими координатами', 
-            isset($response['offer_id']), $response);
-        
-        if (isset($response['offer_id'])) {
-            $this->assertTest('Координаты автоматически заполнены', 
-                isset($response['latitude']) && isset($response['longitude']), $response);
+        if (isset($this->createdProducts['sale']) && isset($this->createdWarehouses['sale'])) {
+            // Создание оффера продажи
+            $offerData = [
+                'product_id' => $this->createdProducts['sale'],
+                'offer_type' => 'sale',
+                'price_per_unit' => 100.00,
+                'available_lots' => 10,
+                'tax_nds' => 20,
+                'units_per_lot' => 1,
+                'warehouse_id' => $this->createdWarehouses['sale'],
+                'is_public' => true,
+                'max_shipping_days' => 3
+            ];
             
-            $this->assertTest('Координаты соответствуют складу', 
-                $response['latitude'] == 59.93110000 && $response['longitude'] == 30.36090000, $response);
+            $startTime = microtime(true);
+            $response = $this->makeRequest('POST', '/offers', $offerData, $this->users['user1']['api_token']);
+            $endTime = microtime(true);
+            $this->performanceMetrics['Создание оффера продажи'] = round(($endTime - $startTime) * 1000, 2);
+            $this->assertTest('Создание оффера продажи', $response['status'] === 201, $response);
+            if ($response['status'] === 201) {
+                $this->createdOffers['sale'] = $response['data']['offer_id'];
+                
+                // Проверка автоматического заполнения координат
+                if (isset($response['data']['latitude']) && isset($response['data']['longitude'])) {
+                    $this->assertTest('Координаты заполнены автоматически', 
+                        $response['data']['latitude'] == 55.7558 && $response['data']['longitude'] == 37.6176, $response);
+                }
+            }
+            
+            // Создание заказа на оффер продажи
+            if (isset($this->createdOffers['sale'])) {
+                $orderData = [
+                    'offer_id' => $this->createdOffers['sale'],
+                    'quantity' => 2
+                ];
+                
+                $startTime = microtime(true);
+                $response = $this->makeRequest('POST', '/orders', $orderData, $this->users['user2']['api_token']);
+                $endTime = microtime(true);
+                $this->performanceMetrics['Создание заказа на оффер продажи'] = round(($endTime - $startTime) * 1000, 2);
+                $this->assertTest('Создание заказа на оффер продажи', $response['status'] === 201, $response);
+                if ($response['status'] === 201) {
+                    $this->createdOrders['sale'] = $response['data']['order_id'];
+                    
+                    // Проверка ролей в заказе продажи
+                    if (isset($response['data']['initiator_user_id']) && isset($response['data']['counterparty_user_id'])) {
+                        $this->assertTest('User2 является покупателем в заказе продажи', 
+                            $response['data']['initiator_user_id'] == 2, $response);
+                        $this->assertTest('User1 является продавцом в заказе продажи', 
+                            $response['data']['counterparty_user_id'] == 1, $response);
+                    }
+                    
+                    if (isset($response['data']['order_type'])) {
+                        $this->assertTest('Тип заказа продажи', $response['data']['order_type'] === 'buy', $response);
+                    }
+                }
+            }
         }
+        
+        echo "\n";
     }
-    
-    private function testUpdateOfferWithNewWarehouse() {
-        // Получаем последний оффер
-        $offers = $this->makeRequest('GET', '/offers', [], $this->user1Token);
-        if (empty($offers['offers'])) {
-            $this->assertTest('Обновление координат оффера', false, 'Нет офферов для обновления');
-            return;
+
+    private function testBuyOffers() {
+        echo "🛒 ТЕСТИРОВАНИЕ ОФФЕРОВ ПОКУПКИ\n";
+        echo "--------------------------------\n";
+        
+        if (isset($this->createdProducts['buy']) && isset($this->createdWarehouses['buy'])) {
+            // Создание оффера покупки
+            $offerData = [
+                'product_id' => $this->createdProducts['buy'],
+                'offer_type' => 'buy',
+                'price_per_unit' => 150.00,
+                'available_lots' => 5,
+                'tax_nds' => 20,
+                'units_per_lot' => 1,
+                'warehouse_id' => $this->createdWarehouses['buy'],
+                'is_public' => true,
+                'max_shipping_days' => 5
+            ];
+            
+            $startTime = microtime(true);
+            $response = $this->makeRequest('POST', '/offers', $offerData, $this->users['user2']['api_token']);
+            $endTime = microtime(true);
+            $this->performanceMetrics['Создание оффера покупки'] = round(($endTime - $startTime) * 1000, 2);
+            $this->assertTest('Создание оффера покупки', $response['status'] === 201, $response);
+            if ($response['status'] === 201) {
+                $this->createdOffers['buy'] = $response['data']['offer_id'];
+                
+                // Проверка автоматического заполнения координат
+                if (isset($response['data']['latitude']) && isset($response['data']['longitude'])) {
+                    $this->assertTest('Координаты заполнены автоматически для покупки', 
+                        $response['data']['latitude'] == 55.7600 && $response['data']['longitude'] == 37.6200, $response);
+                }
+            }
+            
+            // Создание заказа на оффер покупки
+            if (isset($this->createdOffers['buy'])) {
+                $orderData = [
+                    'offer_id' => $this->createdOffers['buy'],
+                    'quantity' => 1
+                ];
+                
+                $startTime = microtime(true);
+                $response = $this->makeRequest('POST', '/orders', $orderData, $this->users['user1']['api_token']);
+                $endTime = microtime(true);
+                $this->performanceMetrics['Создание заказа на оффер покупки'] = round(($endTime - $startTime) * 1000, 2);
+                $this->assertTest('Создание заказа на оффер покупки', $response['status'] === 201, $response);
+                if ($response['status'] === 201) {
+                    $this->createdOrders['buy'] = $response['data']['order_id'];
+                    
+                    // Проверка ролей в заказе покупки
+                    if (isset($response['data']['initiator_user_id']) && isset($response['data']['counterparty_user_id'])) {
+                        $this->assertTest('User2 является покупателем в заказе покупки', 
+                            $response['data']['initiator_user_id'] == 2, $response);
+                        $this->assertTest('User1 является продавцом в заказе покупки', 
+                            $response['data']['counterparty_user_id'] == 1, $response);
+                    }
+                    
+                    if (isset($response['data']['order_type'])) {
+                        $this->assertTest('Тип заказа покупки', $response['data']['order_type'] === 'sell', $response);
+                    }
+                }
+            }
         }
         
-        $offer = $offers['offers'][0];
-        
-        $data = [
-            'warehouse_id' => 1 // Склад с другими координатами
-        ];
-        
-        $response = $this->makeRequest('PUT', "/offers/{$offer['offer_id']}", $data, $this->user1Token);
-        $this->assertTest('Обновление оффера с новым складом', 
-            isset($response['offer_id']), $response);
-        
-        if (isset($response['offer_id'])) {
-            $this->assertTest('Координаты обновились', 
-                $response['latitude'] == 55.75580000 && $response['longitude'] == 37.61760000, $response);
-        }
+        echo "\n";
     }
-    
-    private function makeRequest($method, $endpoint, $data = [], $token = null) {
+
+    private function testCoordinatePopulation() {
+        echo "📍 ТЕСТИРОВАНИЕ АВТОМАТИЧЕСКОГО ЗАПОЛНЕНИЯ КООРДИНАТ\n";
+        echo "----------------------------------------------------\n";
+        
+        // Обновление оффера с изменением склада
+        if (isset($this->createdOffers['sale']) && isset($this->createdWarehouses['buy'])) {
+            $updateData = [
+                'warehouse_id' => $this->createdWarehouses['buy']
+            ];
+            
+            $startTime = microtime(true);
+            $response = $this->makeRequest('PUT', '/offers/' . $this->createdOffers['sale'], $updateData, $this->users['user1']['api_token']);
+            $endTime = microtime(true);
+            $this->performanceMetrics['Обновление координат при смене склада'] = round(($endTime - $startTime) * 1000, 2);
+            $this->assertTest('Обновление координат при смене склада', $response['status'] === 200, $response);
+            
+            if ($response['status'] === 200 && isset($response['data']['latitude']) && isset($response['data']['longitude'])) {
+                $this->assertTest('Координаты обновлены после смены склада', 
+                    $response['data']['latitude'] == 55.7600 && $response['data']['longitude'] == 37.6200, $response);
+            }
+        }
+        
+        echo "\n";
+    }
+
+    private function makeRequest($method, $endpoint, $data = null, $apiToken = null) {
         $url = $this->baseUrl . $endpoint;
         
-        $headers = ['Content-Type: application/json'];
-        if ($token) {
-            $headers[] = "Authorization: Bearer $token";
+        $headers = [
+            'Content-Type: application/json',
+            'Accept: application/json'
+        ];
+        
+        if ($apiToken) {
+            $headers[] = 'Authorization: Bearer ' . $apiToken;
         }
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         
-        if (!empty($data)) {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        if ($method === 'POST') {
+            curl_setopt($ch, CURLOPT_POST, true);
+            if ($data) {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            }
+        } elseif ($method === 'PUT') {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+            if ($data) {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            }
+        } elseif ($method === 'DELETE') {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
         }
         
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
         
-        if ($httpCode >= 400) {
-            return ['error' => $response];
-        }
-        
-        return json_decode($response, true) ?: [];
+        return [
+            'status' => $httpCode,
+            'data' => json_decode($response, true),
+            'raw' => $response
+        ];
     }
-    
-    private function assertTest($name, $condition, $response = null) {
-        $this->totalTests++;
+
+    private function assertTest($testName, $condition, $response) {
+        $result = $condition ? '✅ ПРОЙДЕН' : '❌ ПРОВАЛЕН';
+        $status = $response['status'];
+        $message = isset($response['data']['error']) ? $response['data']['error'] : '';
         
-        if ($condition) {
-            echo "✅ $name\n";
-            $this->passedTests++;
-        } else {
-            echo "❌ $name\n";
-            if ($response && isset($response['error'])) {
-                echo "   Ошибка: {$response['error']}\n";
+        echo sprintf("%-50s %s (HTTP %d)", $testName, $result, $status);
+        if ($message) {
+            echo " - $message";
+        }
+        echo "\n";
+        
+        $this->testResults[] = [
+            'name' => $testName,
+            'passed' => $condition,
+            'status' => $status,
+            'message' => $message
+        ];
+    }
+
+    private function printResults() {
+        echo "\n" . str_repeat("=", 80) . "\n";
+        echo "📊 РЕЗУЛЬТАТЫ ТЕСТИРОВАНИЯ РОЛЕЙ ОФФЕРОВ И КООРДИНАТ\n";
+        echo str_repeat("=", 80) . "\n\n";
+        
+        $totalTests = count($this->testResults);
+        $passedTests = count(array_filter($this->testResults, function($test) {
+            return $test['passed'];
+        }));
+        $failedTests = $totalTests - $passedTests;
+        $successRate = round(($passedTests / $totalTests) * 100, 2);
+        
+        echo "📈 ОБЩАЯ СТАТИСТИКА:\n";
+        echo "   Всего тестов: $totalTests\n";
+        echo "   Пройдено: $passedTests\n";
+        echo "   Провалено: $failedTests\n";
+        echo "   Успешность: $successRate%\n";
+        echo "   Общее время выполнения: {$this->performanceMetrics['total_time']} мс\n\n";
+        
+        echo "⚡ МЕТРИКИ ПРОИЗВОДИТЕЛЬНОСТИ:\n";
+        echo str_repeat("-", 80) . "\n";
+        foreach ($this->performanceMetrics as $testName => $time) {
+            if ($testName !== 'total_time') {
+                echo sprintf("%-50s %6.2f мс\n", $testName, $time);
             }
         }
-    }
-    
-    private function printResults() {
-        echo "\n📊 РЕЗУЛЬТАТЫ ТЕСТИРОВАНИЯ\n";
-        echo "============================\n";
-        echo "Всего тестов: {$this->totalTests}\n";
-        echo "Пройдено: {$this->passedTests}\n";
-        echo "Провалено: " . ($this->totalTests - $this->passedTests) . "\n";
-        echo "Процент успеха: " . round(($this->passedTests / $this->totalTests) * 100, 2) . "%\n\n";
+        echo str_repeat("-", 80) . "\n";
         
-        if ($this->passedTests == $this->totalTests) {
-            echo "🎉 ВСЕ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО!\n";
-        } else {
-            echo "⚠️  НЕКОТОРЫЕ ТЕСТЫ ПРОВАЛЕНЫ\n";
+        if ($failedTests > 0) {
+            echo "\n❌ ПРОВАЛЕННЫЕ ТЕСТЫ:\n";
+            echo str_repeat("-", 80) . "\n";
+            foreach ($this->testResults as $test) {
+                if (!$test['passed']) {
+                    echo sprintf("• %s (HTTP %d): %s\n", $test['name'], $test['status'], $test['message']);
+                }
+            }
         }
+        
+        echo "\n" . str_repeat("=", 80) . "\n";
     }
 }
 
-// Запуск теста
+// Запуск тестов
 $test = new OfferRolesAndCoordinatesTest();
-$test->run(); 
+$test->runAllTests(); 

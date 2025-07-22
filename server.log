@@ -1,0 +1,43 @@
+nohup: ignoring input
+2025/07/22 18:57:32 No .env file found, using environment variables
+2025/07/22 18:57:32 Index creation warning: Error 1061 (42000): Duplicate key name 'idx_products_brand_vendor'
+2025/07/22 18:57:32 Index creation warning: Error 1061 (42000): Duplicate key name 'idx_products_name'
+2025/07/22 18:57:32 Index creation warning: Error 1061 (42000): Duplicate key name 'idx_products_category'
+2025/07/22 18:57:32 Database connected successfully
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /                         --> main.main.func1 (3 handlers)
+[GIN-debug] GET    /swagger/*any             --> github.com/swaggo/gin-swagger.CustomWrapHandler.func1 (3 handlers)
+[GIN-debug] POST   /api/v1/metaproducts      --> portaldata-api/internal/modules/metaproduct.(*Handlers).CreateMetaproduct-fm (4 handlers)
+[GIN-debug] GET    /api/v1/metaproducts      --> portaldata-api/internal/modules/metaproduct.(*Handlers).ListMetaproducts-fm (4 handlers)
+[GIN-debug] GET    /api/v1/metaproducts/:id  --> portaldata-api/internal/modules/metaproduct.(*Handlers).GetMetaproduct-fm (4 handlers)
+[GIN-debug] PUT    /api/v1/metaproducts/:id  --> portaldata-api/internal/modules/metaproduct.(*Handlers).UpdateMetaproduct-fm (4 handlers)
+[GIN-debug] DELETE /api/v1/metaproducts/:id  --> portaldata-api/internal/modules/metaproduct.(*Handlers).DeleteMetaproduct-fm (4 handlers)
+[GIN-debug] POST   /api/v1/metaproducts/batch --> portaldata-api/internal/modules/metaproduct.(*Handlers).CreateMetaproducts-fm (4 handlers)
+[GIN-debug] POST   /api/v1/products          --> portaldata-api/internal/modules/metaproduct.(*Handlers).CreateMetaproduct-fm (4 handlers)
+[GIN-debug] GET    /api/v1/products          --> portaldata-api/internal/modules/metaproduct.(*Handlers).ListMetaproducts-fm (4 handlers)
+[GIN-debug] GET    /api/v1/products/:id      --> portaldata-api/internal/modules/metaproduct.(*Handlers).GetMetaproduct-fm (4 handlers)
+[GIN-debug] PUT    /api/v1/products/:id      --> portaldata-api/internal/modules/metaproduct.(*Handlers).UpdateMetaproduct-fm (4 handlers)
+[GIN-debug] DELETE /api/v1/products/:id      --> portaldata-api/internal/modules/metaproduct.(*Handlers).DeleteMetaproduct-fm (4 handlers)
+[GIN-debug] POST   /api/v1/products/batch    --> portaldata-api/internal/modules/metaproduct.(*Handlers).CreateMetaproducts-fm (4 handlers)
+[GIN-debug] POST   /api/v1/offers            --> portaldata-api/internal/modules/offer.(*Handlers).CreateOffer-fm (4 handlers)
+[GIN-debug] PUT    /api/v1/offers/:id        --> portaldata-api/internal/modules/offer.(*Handlers).UpdateOffer-fm (4 handlers)
+[GIN-debug] DELETE /api/v1/offers/:id        --> portaldata-api/internal/modules/offer.(*Handlers).DeleteOffer-fm (4 handlers)
+[GIN-debug] GET    /api/v1/offers            --> portaldata-api/internal/modules/offer.(*Handlers).ListOffers-fm (4 handlers)
+[GIN-debug] GET    /api/v1/offers/:id        --> portaldata-api/internal/modules/offer.(*Handlers).GetOffer-fm (4 handlers)
+[GIN-debug] GET    /api/v1/offers/wb_stock   --> portaldata-api/internal/modules/offer.(*Handlers).WBStock-fm (4 handlers)
+[GIN-debug] GET    /api/v1/orders/:id        --> portaldata-api/internal/modules/order.(*Handlers).GetOrder-fm (4 handlers)
+[GIN-debug] GET    /api/v1/orders            --> portaldata-api/internal/modules/order.(*Handlers).ListOrders-fm (4 handlers)
+[GIN-debug] POST   /api/v1/orders            --> portaldata-api/internal/modules/order.(*Handlers).CreateOrder-fm (4 handlers)
+[GIN-debug] PUT    /api/v1/orders/:id/status --> portaldata-api/internal/modules/order.(*Handlers).UpdateOrderStatus-fm (4 handlers)
+[GIN-debug] POST   /api/v1/warehouses        --> portaldata-api/internal/modules/warehouse.(*Handlers).CreateWarehouse-fm (4 handlers)
+[GIN-debug] PUT    /api/v1/warehouses/:id    --> portaldata-api/internal/modules/warehouse.(*Handlers).UpdateWarehouse-fm (4 handlers)
+[GIN-debug] DELETE /api/v1/warehouses/:id    --> portaldata-api/internal/modules/warehouse.(*Handlers).DeleteWarehouse-fm (4 handlers)
+[GIN-debug] GET    /api/v1/warehouses        --> portaldata-api/internal/modules/warehouse.(*Handlers).ListWarehouses-fm (4 handlers)
+[GIN-debug] GET    /api/v1/offers/public     --> portaldata-api/internal/modules/offer.(*Handlers).PublicListOffers-fm (3 handlers)
+2025/07/22 18:57:32 listen: listen tcp :8095: bind: address already in use
+exit status 1
