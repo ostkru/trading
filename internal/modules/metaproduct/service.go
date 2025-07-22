@@ -16,8 +16,8 @@ func NewService(db *database.DB) *Service {
 }
 
 func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Product, error) {
-	query := `INSERT INTO products (name, vendor_article, recommend_price, brand, category, description, user_id) 
-	          VALUES (?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO products (name, vendor_article, recommend_price, brand, category, description, user_id, category_id, brand_id) 
+	          VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL)`
 	
 	result, err := s.db.Exec(query, req.Name, req.VendorArticle, req.RecommendPrice, req.Brand, req.Category, req.Description, userID)
 	if err != nil {
@@ -35,7 +35,7 @@ func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Produc
 
 func (s *Service) GetProduct(id int64) (*Product, error) {
 	var product Product
-	err := s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, description, created_at, updated_at, user_id FROM products WHERE id = ?", id).Scan(
+	err := s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, description, created_at, updated_at, user_id, category_id, brand_id FROM products WHERE id = ?", id).Scan(
 		&product.ID,
 		&product.Name,
 		&product.VendorArticle,
@@ -46,6 +46,8 @@ func (s *Service) GetProduct(id int64) (*Product, error) {
 		&product.CreatedAt,
 		&product.UpdatedAt,
 		&product.UserID,
+		&product.CategoryID,
+		&product.BrandID,
 	)
 	if err != nil {
 		return nil, err
@@ -69,7 +71,7 @@ func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*Pr
 	}
 
 	query := `
-		SELECT id, name, vendor_article, recommend_price, brand, category, description, created_at, updated_at, user_id
+		SELECT id, name, vendor_article, recommend_price, brand, category, description, created_at, updated_at, user_id, category_id, brand_id
 		FROM products` + where + `
 		ORDER BY created_at DESC 
 		LIMIT ? OFFSET ?
@@ -96,6 +98,8 @@ func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*Pr
 			&product.CreatedAt,
 			&product.UpdatedAt,
 			&product.UserID,
+			&product.CategoryID,
+			&product.BrandID,
 		)
 		if err != nil {
 			return nil, err
@@ -172,8 +176,8 @@ func (s *Service) CreateProducts(req CreateProductsRequest, userID int64) ([]Pro
 
 	var products []Product
 	for _, productReq := range req.Products {
-		query := `INSERT INTO products (name, vendor_article, recommend_price, brand, category, description, user_id) 
-		          VALUES (?, ?, ?, ?, ?, ?, ?)`
+		query := `INSERT INTO products (name, vendor_article, recommend_price, brand, category, description, user_id, category_id, brand_id) 
+		          VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL)`
 		
 		result, err := tx.Exec(query, productReq.Name, productReq.VendorArticle, productReq.RecommendPrice, productReq.Brand, productReq.Category, productReq.Description, userID)
 		if err != nil {

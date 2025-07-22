@@ -9,7 +9,10 @@ CREATE TABLE products (
     category VARCHAR,
     description TEXT,
     created_at TIMESTAMP,
-    updated_at TIMESTAMP
+    updated_at TIMESTAMP,
+    user_id INTEGER,
+    category_id INTEGER,
+    brand_id INTEGER
 );
 
 CREATE TABLE warehouses (

@@ -13,6 +13,8 @@ type Product struct {
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 	UserID         int64     `json:"user_id"`
+	CategoryID     *int64    `json:"category_id,omitempty"`
+	BrandID        *int64    `json:"brand_id,omitempty"`
 }
 
 type CreateProductRequest struct {
