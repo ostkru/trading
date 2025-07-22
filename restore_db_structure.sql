@@ -73,4 +73,19 @@ CREATE TABLE order_items (
     price_per_unit NUMERIC,
     created_at TIMESTAMP,
     status VARCHAR
+);
+
+CREATE TABLE api_rate_limits (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    api_key VARCHAR(255) NOT NULL,
+    endpoint VARCHAR(255) NOT NULL,
+    request_count INTEGER DEFAULT 1,
+    minute_count INTEGER DEFAULT 1,
+    day_count INTEGER DEFAULT 1,
+    last_request_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    minute_start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    day_start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ); 
