@@ -56,6 +56,10 @@ func (h *Handlers) UpdateOffer(c *gin.Context) {
 	offer, err := h.service.UpdateOffer(id, req, userID.(int64))
 	if err != nil {
 		log.Printf("UpdateOffer error: %v", err)
+		if err.Error() == "Доступ запрещён" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -77,6 +81,10 @@ func (h *Handlers) DeleteOffer(c *gin.Context) {
 		log.Printf("DeleteOffer error: %v", err)
 		if err.Error() == "Нельзя удалить оффер: есть связанные активные заказы" {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
+		if err.Error() == "Доступ запрещён" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

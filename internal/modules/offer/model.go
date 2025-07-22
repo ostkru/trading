@@ -27,7 +27,7 @@ type CreateOfferRequest struct {
 	UnitsPerLot   int    `json:"units_per_lot"`
 	WarehouseID   int64  `json:"warehouse_id"`
 	IsPublic      *bool  `json:"is_public,omitempty"`
-	MaxShippingDays *int `json:"max_shipping_days,omitempty"`
+	MaxShippingDays int `json:"max_shipping_days"`
 }
 
 type UpdateOfferRequest struct {
@@ -37,4 +37,5 @@ type UpdateOfferRequest struct {
 	UnitsPerLot   *int     `json:"units_per_lot,omitempty"`
 	IsPublic      *bool    `json:"is_public,omitempty"`
 	MaxShippingDays *int   `json:"max_shipping_days,omitempty"`
+	WarehouseID   *int64   `json:"warehouse_id,omitempty"`
 } 

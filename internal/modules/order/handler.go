@@ -1,12 +1,13 @@
 package order
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
-	"database/sql"
 )
 
 type Handlers struct {
@@ -32,6 +33,22 @@ func (h *Handlers) CreateOrder(c *gin.Context) {
 	order, err := h.service.CreateOrder(userID.(int64), req)
 	if err != nil {
 		log.Printf("CreateOrder error: %v", err)
+		if err.Error() == "Нельзя создать заказ на собственное предложение" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if err.Error() == "недостаточно лотов. доступно:" || strings.Contains(err.Error(), "недостаточно лотов") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if err.Error() == "Требуются offer_id и lot_count" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if err.Error() == "Предложение не найдено" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -85,4 +102,41 @@ func (h *Handlers) ListOrders(c *gin.Context) {
 		"page":     page,
 		"per_page": perPage,
 	})
+}
+
+func (h *Handlers) UpdateOrderStatus(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		return
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID заказа"})
+		return
+	}
+
+	var req UpdateOrderStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные данные запроса"})
+		return
+	}
+
+	order, err := h.service.UpdateOrderStatus(id, userID.(int64), req)
+	if err != nil {
+		log.Printf("UpdateOrderStatus error: %v", err)
+		if strings.Contains(err.Error(), "недостаточно прав") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if strings.Contains(err.Error(), "недопустимый статус") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, order)
 } 

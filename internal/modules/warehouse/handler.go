@@ -55,6 +55,10 @@ func (h *Handlers) UpdateWarehouse(c *gin.Context) {
 	warehouse, err := h.service.UpdateWarehouse(id, req, userID.(int64))
 	if err != nil {
 		log.Printf("UpdateWarehouse error: %v", err)
+		if err.Error() == "Доступ запрещён" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -74,6 +78,10 @@ func (h *Handlers) DeleteWarehouse(c *gin.Context) {
 	}
 	if err := h.service.DeleteWarehouse(id, userID.(int64)); err != nil {
 		log.Printf("DeleteWarehouse error: %v", err)
+		if err.Error() == "Доступ запрещён" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

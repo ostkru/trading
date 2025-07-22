@@ -1,12 +1,13 @@
 package metaproduct
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
-	"database/sql"
 )
 type Handlers struct {
 	service *Service
@@ -25,6 +26,12 @@ func (h *Handlers) CreateMetaproduct(c *gin.Context) {
 	var req CreateProductRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	
+	// Валидация обязательных полей
+	if req.Name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Название продукта обязательно"})
 		return
 	}
 	product, err := h.service.CreateProduct(req, userID.(int64))
@@ -68,6 +75,12 @@ func (h *Handlers) ListMetaproducts(c *gin.Context) {
 }
 
 func (h *Handlers) UpdateMetaproduct(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		return
+	}
+	
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
     if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
@@ -78,10 +91,14 @@ func (h *Handlers) UpdateMetaproduct(c *gin.Context) {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-	updatedProduct, err := h.service.UpdateProduct(id, req)
+	updatedProduct, err := h.service.UpdateProduct(id, req, userID.(int64))
     if err != nil {
 		if err == sql.ErrNoRows {
 			c.JSON(http.StatusNotFound, gin.H{"error": "продукт не найден"})
+			return
+		}
+		if strings.Contains(err.Error(), "недостаточно прав") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
 		log.Printf("UpdateMetaproduct error: %v", err)
@@ -92,12 +109,22 @@ func (h *Handlers) UpdateMetaproduct(c *gin.Context) {
 }
 
 func (h *Handlers) DeleteMetaproduct(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		return
+	}
+	
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
     if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
         return
     }
-	if err := h.service.DeleteProduct(id); err != nil {
+	if err := h.service.DeleteProduct(id, userID.(int64)); err != nil {
+		if strings.Contains(err.Error(), "недостаточно прав") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }

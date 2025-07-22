@@ -20,13 +20,18 @@ func (s *Service) CreateWarehouse(req CreateWarehouseRequest, userID int64) (*Wa
 	if req.Name == "" {
 		return nil, errors.New("Требуется name")
 	}
-	query := `INSERT INTO warehouses (user_id, name, address, latitude, longitude, working_hours) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at`
-	var wh Warehouse
-	err := s.db.QueryRow(query, userID, req.Name, req.Address, req.Latitude, req.Longitude, req.WorkingHours).Scan(&wh.ID, &wh.UserID, &wh.Name, &wh.Address, &wh.Latitude, &wh.Longitude, &wh.WorkingHours, &wh.WBID, &wh.CreatedAt, &wh.UpdatedAt)
+	query := `INSERT INTO warehouses (user_id, name, address, latitude, longitude, working_hours) VALUES (?, ?, ?, ?, ?, ?)`
+	result, err := s.db.Exec(query, userID, req.Name, req.Address, req.Latitude, req.Longitude, req.WorkingHours)
 	if err != nil {
 		return nil, err
 	}
-	return &wh, nil
+	
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+	
+	return s.GetWarehouseByID(id)
 }
 
 func (s *Service) UpdateWarehouse(id int64, req UpdateWarehouseRequest, userID int64) (*Warehouse, error) {
@@ -34,19 +39,20 @@ func (s *Service) UpdateWarehouse(id int64, req UpdateWarehouseRequest, userID i
 		return nil, errors.New("Требуется id")
 	}
 	var dbUserID int64
-	err := s.db.QueryRow("SELECT user_id FROM warehouses WHERE id = $1", id).Scan(&dbUserID)
+	err := s.db.QueryRow("SELECT user_id FROM warehouses WHERE id = ?", id).Scan(&dbUserID)
 	if err == sql.ErrNoRows || dbUserID != userID {
 		return nil, errors.New("Доступ запрещён")
 	} else if err != nil {
 		return nil, err
 	}
-	query := `UPDATE warehouses SET name = $1, address = $2, latitude = $3, longitude = $4, working_hours = $5 WHERE id = $6 RETURNING id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at`
-	var wh Warehouse
-	err = s.db.QueryRow(query, utils.Coalesce(req.Name, ""), utils.Coalesce(req.Address, ""), utils.Coalesce(req.Latitude, 0.0), utils.Coalesce(req.Longitude, 0.0), utils.Coalesce(req.WorkingHours, ""), id).Scan(&wh.ID, &wh.UserID, &wh.Name, &wh.Address, &wh.Latitude, &wh.Longitude, &wh.WorkingHours, &wh.WBID, &wh.CreatedAt, &wh.UpdatedAt)
+	
+	query := `UPDATE warehouses SET name = ?, address = ?, latitude = ?, longitude = ?, working_hours = ? WHERE id = ?`
+	_, err = s.db.Exec(query, utils.Coalesce(req.Name, ""), utils.Coalesce(req.Address, ""), utils.Coalesce(req.Latitude, 0.0), utils.Coalesce(req.Longitude, 0.0), utils.Coalesce(req.WorkingHours, ""), id)
 	if err != nil {
 		return nil, err
 	}
-	return &wh, nil
+	
+	return s.GetWarehouseByID(id)
 }
 
 func (s *Service) DeleteWarehouse(id int64, userID int64) error {
@@ -54,31 +60,31 @@ func (s *Service) DeleteWarehouse(id int64, userID int64) error {
 		return errors.New("Требуется id")
 	}
 	var dbUserID int64
-	err := s.db.QueryRow("SELECT user_id FROM warehouses WHERE id = $1", id).Scan(&dbUserID)
+	err := s.db.QueryRow("SELECT user_id FROM warehouses WHERE id = ?", id).Scan(&dbUserID)
 	if err == sql.ErrNoRows || dbUserID != userID {
 		return errors.New("Доступ запрещён")
 	} else if err != nil {
 		return err
 	}
-	_, err = s.db.Exec("DELETE FROM warehouses WHERE id = $1", id)
+	_, err = s.db.Exec("DELETE FROM warehouses WHERE id = ?", id)
 	return err
 }
 
 type WarehouseListResponse struct {
 	Warehouses []Warehouse `json:"warehouses"`
-	Total      int                `json:"total"`
-	Page       int                `json:"page"`
-	Limit      int                `json:"limit"`
+	Total      int         `json:"total"`
+	Page       int         `json:"page"`
+	Limit      int         `json:"limit"`
 }
 
 func (s *Service) ListWarehouses(userID int64, page, limit int) (*WarehouseListResponse, error) {
 	offset := (page - 1) * limit
 	var total int
-	err := s.db.QueryRow("SELECT COUNT(*) FROM warehouses WHERE user_id = $1", userID).Scan(&total)
+	err := s.db.QueryRow("SELECT COUNT(*) FROM warehouses WHERE user_id = ?", userID).Scan(&total)
 	if err != nil {
 		return nil, err
 	}
-	query := `SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at FROM warehouses WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	query := `SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at FROM warehouses WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	rows, err := s.db.Query(query, userID, limit, offset)
 	if err != nil {
 		return nil, err
@@ -102,7 +108,7 @@ func (s *Service) ListWarehouses(userID int64, page, limit int) (*WarehouseListR
 }
 
 func (s *Service) GetWarehouseByID(id int64) (*Warehouse, error) {
-	row := s.db.QueryRow(`SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at FROM warehouses WHERE id = $1`, id)
+	row := s.db.QueryRow(`SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at FROM warehouses WHERE id = ?`, id)
 	wh := Warehouse{}
 	err := row.Scan(&wh.ID, &wh.UserID, &wh.Name, &wh.Address, &wh.Latitude, &wh.Longitude, &wh.WorkingHours, &wh.WBID, &wh.CreatedAt, &wh.UpdatedAt)
 	if err != nil {

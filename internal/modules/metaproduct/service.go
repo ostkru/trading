@@ -1,6 +1,7 @@
 package metaproduct
 
 import (
+	"fmt"
 	"log"
 
 	"portaldata-api/internal/pkg/database"
@@ -110,8 +111,20 @@ func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*Pr
 	}, nil
 }
 
-func (s *Service) UpdateProduct(id int64, req UpdateProductRequest) (*Product, error) {
-	query := `UPDATE products SET 
+func (s *Service) UpdateProduct(id int64, req UpdateProductRequest, userID int64) (*Product, error) {
+	// Проверяем, что продукт принадлежит пользователю
+	var existingProduct Product
+	query := `SELECT id, user_id FROM products WHERE id = ?`
+	err := s.db.QueryRow(query, id).Scan(&existingProduct.ID, &existingProduct.UserID)
+	if err != nil {
+		return nil, err
+	}
+	
+	if existingProduct.UserID != userID {
+		return nil, fmt.Errorf("недостаточно прав для обновления продукта")
+	}
+	
+	query = `UPDATE products SET 
 		name = COALESCE(?, name),
 		vendor_article = COALESCE(?, vendor_article),
 		recommend_price = COALESCE(?, recommend_price),
@@ -119,9 +132,9 @@ func (s *Service) UpdateProduct(id int64, req UpdateProductRequest) (*Product, e
 		category = COALESCE(?, category),
 		description = COALESCE(?, description),
 		updated_at = CURRENT_TIMESTAMP
-		WHERE id = ?`
+		WHERE id = ? AND user_id = ?`
 	
-	_, err := s.db.Exec(query, req.Name, req.VendorArticle, req.RecommendPrice, req.Brand, req.Category, req.Description, id)
+	_, err = s.db.Exec(query, req.Name, req.VendorArticle, req.RecommendPrice, req.Brand, req.Category, req.Description, id, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -129,8 +142,20 @@ func (s *Service) UpdateProduct(id int64, req UpdateProductRequest) (*Product, e
 	return s.GetProduct(id)
 }
 
-func (s *Service) DeleteProduct(id int64) error {
-	_, err := s.db.Exec("DELETE FROM products WHERE id = ?", id)
+func (s *Service) DeleteProduct(id int64, userID int64) error {
+	// Проверяем, что продукт принадлежит пользователю
+	var existingProduct Product
+	query := `SELECT id, user_id FROM products WHERE id = ?`
+	err := s.db.QueryRow(query, id).Scan(&existingProduct.ID, &existingProduct.UserID)
+	if err != nil {
+		return err
+	}
+	
+	if existingProduct.UserID != userID {
+		return fmt.Errorf("недостаточно прав для удаления продукта")
+	}
+	
+	_, err = s.db.Exec("DELETE FROM products WHERE id = ? AND user_id = ?", id, userID)
 	return err
 }
 

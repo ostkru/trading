@@ -1,11 +1,25 @@
 package order
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
+
+// Константы статусов заказов
+const (
+	OrderStatusPending    = "pending"
+	OrderStatusConfirmed  = "confirmed"
+	OrderStatusProcessing = "processing"
+	OrderStatusShipped    = "shipped"
+	OrderStatusDelivered  = "delivered"
+	OrderStatusCancelled  = "cancelled"
+	OrderStatusRejected   = "rejected"
+)
 
 type Order struct {
 	OrderID            int64      `json:"order_id"`
 	TotalAmount        float64    `json:"total_amount"`
-	IsMulti            bool       `json:"is_multi"`
+	IsMulti            sql.NullBool `json:"is_multi"`
 	OfferID            *int64     `json:"offer_id,omitempty"`
 	InitiatorUserID    int64      `json:"initiator_user_id"`
 	CounterpartyUserID *int64     `json:"counterparty_user_id,omitempty"`
@@ -14,12 +28,15 @@ type Order struct {
 	UnitsPerLot        int        `json:"units_per_lot"`
 	LotCount           int        `json:"lot_count"`
 	Notes              *string    `json:"notes,omitempty"`
-	OrderType          string     `json:"order_type"`
+	OrderType          *string    `json:"order_type,omitempty"`
 	PaymentMethod      *string    `json:"payment_method,omitempty"`
-	OrderStatus        string     `json:"order_status"`
+	OrderStatus        *string    `json:"order_status,omitempty"`
+	StatusReason       *string    `json:"status_reason,omitempty"`
+	StatusChangedAt    *time.Time `json:"status_changed_at,omitempty"`
+	StatusChangedBy    *int64     `json:"status_changed_by,omitempty"`
 	ShippingAddress    *string    `json:"shipping_address,omitempty"`
 	TrackingNumber     *string    `json:"tracking_number,omitempty"`
-	MaxShippingDays    int        `json:"max_shipping_days"`
+	MaxShippingDays    *int       `json:"max_shipping_days,omitempty"`
 	CreatedAt          time.Time  `json:"created_at,omitempty"`
 	UpdatedAt          time.Time  `json:"updated_at,omitempty"`
 }
@@ -42,4 +59,9 @@ type CreateOrderRequest struct {
 type GetOrderResponse struct {
 	Order      Order       `json:"order"`
 	OrderItems []OrderItem `json:"order_items"`
+}
+
+type UpdateOrderStatusRequest struct {
+	Status string `json:"status" binding:"required"`
+	Reason string `json:"reason,omitempty"`
 } 

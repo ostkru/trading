@@ -21,10 +21,20 @@ func (s *Service) CreateOffer(req CreateOfferRequest, userID int64) (*Offer, err
 		return nil, errors.New("Требуются product_id, offer_type, price_per_unit, available_lots, tax_nds, units_per_lot, warehouse_id")
 	}
 	
-	query := `INSERT INTO offers (user_id, product_id, offer_type, price_per_unit, available_lots, tax_nds, units_per_lot, warehouse_id, is_public, max_shipping_days) 
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	// Получаем координаты склада
+	var latitude, longitude *float64
+	err := s.db.QueryRow("SELECT latitude, longitude FROM warehouses WHERE id = ?", req.WarehouseID).Scan(&latitude, &longitude)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("Склад не найден")
+		}
+		return nil, err
+	}
 	
-	result, err := s.db.Exec(query, userID, req.ProductID, req.OfferType, req.PricePerUnit, req.AvailableLots, req.TaxNDS, req.UnitsPerLot, req.WarehouseID, req.IsPublic, req.MaxShippingDays)
+	query := `INSERT INTO offers (user_id, product_id, offer_type, price_per_unit, available_lots, tax_nds, units_per_lot, warehouse_id, is_public, max_shipping_days, latitude, longitude) 
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	
+	result, err := s.db.Exec(query, userID, req.ProductID, req.OfferType, req.PricePerUnit, req.AvailableLots, req.TaxNDS, req.UnitsPerLot, req.WarehouseID, req.IsPublic, req.MaxShippingDays, latitude, longitude)
 	if err != nil {
 		return nil, err
 	}
@@ -75,6 +85,22 @@ func (s *Service) UpdateOffer(id int64, req UpdateOfferRequest, userID int64) (*
 	if req.MaxShippingDays != nil {
 		setClauses = append(setClauses, "max_shipping_days = ?")
 		params = append(params, *req.MaxShippingDays)
+	}
+	
+	// Если изменяется warehouse_id, обновляем координаты
+	if req.WarehouseID != nil {
+		// Получаем координаты нового склада
+		var latitude, longitude *float64
+		err := s.db.QueryRow("SELECT latitude, longitude FROM warehouses WHERE id = ?", *req.WarehouseID).Scan(&latitude, &longitude)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return nil, errors.New("Склад не найден")
+			}
+			return nil, err
+		}
+		
+		setClauses = append(setClauses, "warehouse_id = ?", "latitude = ?", "longitude = ?")
+		params = append(params, *req.WarehouseID, latitude, longitude)
 	}
 	
 	if len(setClauses) == 0 {
