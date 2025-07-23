@@ -34,7 +34,18 @@ func (s *Service) CreateOffer(req CreateOfferRequest, userID int64) (*Offer, err
 	query := `INSERT INTO offers (user_id, product_id, offer_type, price_per_unit, available_lots, tax_nds, units_per_lot, warehouse_id, is_public, max_shipping_days, latitude, longitude) 
 	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	
-	result, err := s.db.Exec(query, userID, req.ProductID, req.OfferType, req.PricePerUnit, req.AvailableLots, req.TaxNDS, req.UnitsPerLot, req.WarehouseID, req.IsPublic, req.MaxShippingDays, latitude, longitude)
+	// Устанавливаем значение по умолчанию для is_public если не указано
+	isPublic := true
+	if req.IsPublic != nil {
+		isPublic = *req.IsPublic
+	}
+	
+
+	
+	query = `INSERT INTO offers (user_id, product_id, offer_type, price_per_unit, available_lots, tax_nds, units_per_lot, warehouse_id, is_public, max_shipping_days, latitude, longitude) 
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	
+	result, err := s.db.Exec(query, userID, req.ProductID, req.OfferType, req.PricePerUnit, req.AvailableLots, req.TaxNDS, req.UnitsPerLot, req.WarehouseID, isPublic, req.MaxShippingDays, latitude, longitude)
 	if err != nil {
 		return nil, err
 	}
@@ -285,4 +296,99 @@ func (s *Service) WBStock(productID, warehouseID, supplierID int64) (int, error)
 		return 0, err
 	}
 	return stock, nil
+}
+
+func (s *Service) CreateOffers(req CreateOffersRequest, userID int64) ([]Offer, error) {
+	// Проверяем количество офферов
+	if len(req.Offers) == 0 {
+		return nil, errors.New("Список офферов не может быть пустым")
+	}
+	if len(req.Offers) > 100 {
+		return nil, errors.New("Максимальное количество офферов за один запрос: 100")
+	}
+
+	// Начинаем транзакцию
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	var createdOffers []Offer
+
+	// Подготавливаем запрос для вставки
+	query := `INSERT INTO offers (user_id, product_id, offer_type, price_per_unit, available_lots, tax_nds, units_per_lot, warehouse_id, is_public, max_shipping_days, latitude, longitude) 
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+	for _, offerReq := range req.Offers {
+		// Проверяем обязательные поля
+		if offerReq.ProductID == 0 || offerReq.OfferType == "" || offerReq.PricePerUnit == 0 || offerReq.AvailableLots == 0 || offerReq.TaxNDS == 0 || offerReq.UnitsPerLot == 0 || offerReq.WarehouseID == 0 {
+			return nil, errors.New("Требуются product_id, offer_type, price_per_unit, available_lots, tax_nds, units_per_lot, warehouse_id")
+		}
+
+		// Получаем координаты склада
+		var latitude, longitude *float64
+		err := tx.QueryRow("SELECT latitude, longitude FROM warehouses WHERE id = ?", offerReq.WarehouseID).Scan(&latitude, &longitude)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return nil, errors.New("Склад не найден")
+			}
+			return nil, err
+		}
+
+		// Устанавливаем значение по умолчанию для is_public если не указано
+		isPublic := true
+		if offerReq.IsPublic != nil {
+			isPublic = *offerReq.IsPublic
+		}
+
+		// Вставляем оффер
+		result, err := tx.Exec(query, userID, offerReq.ProductID, offerReq.OfferType, offerReq.PricePerUnit, offerReq.AvailableLots, offerReq.TaxNDS, offerReq.UnitsPerLot, offerReq.WarehouseID, isPublic, offerReq.MaxShippingDays, latitude, longitude)
+		if err != nil {
+			return nil, err
+		}
+
+		// Получаем ID созданного оффера
+		offerID, err := result.LastInsertId()
+		if err != nil {
+			return nil, err
+		}
+
+		// Получаем полные данные созданного оффера
+		var offer Offer
+		err = tx.QueryRow(`SELECT offer_id, user_id, updated_at, created_at, is_public, product_id, price_per_unit, tax_nds, units_per_lot, available_lots, latitude, longitude, warehouse_id, offer_type, max_shipping_days 
+		                   FROM offers WHERE offer_id = ?`, offerID).Scan(
+			&offer.OfferID,
+			&offer.UserID,
+			&offer.UpdatedAt,
+			&offer.CreatedAt,
+			&offer.IsPublic,
+			&offer.ProductID,
+			&offer.PricePerUnit,
+			&offer.TaxNDS,
+			&offer.UnitsPerLot,
+			&offer.AvailableLots,
+			&offer.Latitude,
+			&offer.Longitude,
+			&offer.WarehouseID,
+			&offer.OfferType,
+			&offer.MaxShippingDays,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		createdOffers = append(createdOffers, offer)
+	}
+
+	// Фиксируем транзакцию
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return createdOffers, nil
 }

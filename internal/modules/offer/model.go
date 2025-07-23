@@ -5,7 +5,7 @@ type Offer struct {
 	UserID         int64    `json:"user_id"`
 	UpdatedAt      *string  `json:"updated_at,omitempty"`
 	CreatedAt      *string  `json:"created_at,omitempty"`
-	IsPublic       *bool    `json:"is_public,omitempty"`
+	IsPublic       bool     `json:"is_public"`
 	ProductID      *int64   `json:"product_id,omitempty"`
 	PricePerUnit   float64  `json:"price_per_unit"`
 	TaxNDS         int      `json:"tax_nds"`
@@ -38,4 +38,8 @@ type UpdateOfferRequest struct {
 	IsPublic      *bool    `json:"is_public,omitempty"`
 	MaxShippingDays *int   `json:"max_shipping_days,omitempty"`
 	WarehouseID   *int64   `json:"warehouse_id,omitempty"`
+}
+
+type CreateOffersRequest struct {
+	Offers []CreateOfferRequest `json:"offers" validate:"required,dive,min=1,max=100"`
 } 

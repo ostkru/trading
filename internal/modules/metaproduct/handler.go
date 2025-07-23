@@ -37,7 +37,12 @@ func (h *Handlers) CreateMetaproduct(c *gin.Context) {
 	product, err := h.service.CreateProduct(req, userID.(int64))
 	if err != nil {
 		log.Printf("CreateMetaproduct error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// Проверяем, является ли ошибка ошибкой валидации
+		if strings.Contains(err.Error(), "уже существует") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
 		return
 	}
 	c.JSON(http.StatusCreated, product)
@@ -101,6 +106,10 @@ func (h *Handlers) UpdateMetaproduct(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
+		if strings.Contains(err.Error(), "уже существует") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		log.Printf("UpdateMetaproduct error: %v", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
@@ -144,7 +153,11 @@ func (h *Handlers) CreateMetaproducts(c *gin.Context) {
     }
 	products, err := h.service.CreateProducts(req, userID.(int64))
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if strings.Contains(err.Error(), "уже существует") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
         return
     }
     c.JSON(http.StatusCreated, products)

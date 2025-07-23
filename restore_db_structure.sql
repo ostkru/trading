@@ -88,4 +88,34 @@ CREATE TABLE api_rate_limits (
     day_start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE media (
+    id SERIAL PRIMARY KEY,
+    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    image_urls JSON, -- ссылки на изображения товара (массив URL)
+    video_urls JSON, -- ссылки на видео обзоры (массив URL)
+    model_3d_urls JSON, -- ссылки на 3д модели (массив URL)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE media (
+    id SERIAL PRIMARY KEY,
+    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    media_type VARCHAR(50) NOT NULL CHECK (media_type IN ('image', 'video', '3d_model')),
+    url VARCHAR(500) NOT NULL,
+    title VARCHAR(255),
+    description TEXT,
+    sort_order INTEGER DEFAULT 0,
+    is_primary BOOLEAN DEFAULT FALSE,
+    file_size BIGINT,
+    mime_type VARCHAR(100),
+    duration INTEGER, -- для видео в секундах
+    width INTEGER, -- ширина изображения/видео
+    height INTEGER, -- высота изображения/видео
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by INTEGER,
+    UNIQUE(product_id, url)
 ); 

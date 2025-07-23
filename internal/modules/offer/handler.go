@@ -3,6 +3,7 @@ package offer
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"github.com/gin-gonic/gin"
 	"log"
 	"database/sql"
@@ -173,4 +174,37 @@ func (h *Handlers) WBStock(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, stock)
+}
+
+func (h *Handlers) CreateOffers(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		return
+	}
+	
+	var req CreateOffersRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	
+	// Проверяем количество офферов (максимум 100)
+	if len(req.Offers) > 100 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Максимальное количество офферов за один запрос: 100"})
+		return
+	}
+	
+	offers, err := h.service.CreateOffers(req, userID.(int64))
+	if err != nil {
+		log.Printf("CreateOffers error: %v", err)
+		if strings.Contains(err.Error(), "уже существует") || strings.Contains(err.Error(), "не может быть пустым") || strings.Contains(err.Error(), "Максимальное количество") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+	
+	c.JSON(http.StatusCreated, offers)
 } 
