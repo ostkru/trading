@@ -29,7 +29,7 @@ CREATE TABLE warehouses (
 CREATE TABLE offers (
     offer_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
-    is_public BOOLEAN,
+    is_public BOOLEAN DEFAULT 1,
     product_id INT,
     price_per_unit DECIMAL(10,2),
     tax_nds INT,

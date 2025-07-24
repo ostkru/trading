@@ -69,7 +69,7 @@ $batchData = json_encode([
         ],
         [
             'product_id' => 3,
-            'offer_type' => 'rent',
+            'offer_type' => 'sale',
             'price_per_unit' => 50.00,
             'available_lots' => 20,
             'tax_nds' => 20,

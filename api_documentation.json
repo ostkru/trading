@@ -1,0 +1,387 @@
+{
+  "project": {
+    "name": "PortalData API",
+    "version": "1.0.0",
+    "description": "REST API для управления продуктами, офферами, заказами и складами",
+    "base_url": "https://api.portaldata.ru/v1",
+    "port": 8095,
+    "framework": "Gin (Go)",
+    "database": "PostgreSQL/MySQL",
+    "authentication": "Bearer Token (JWT)"
+  },
+  "architecture": {
+    "structure": {
+      "cmd": {
+        "api": "Основное API приложение",
+        "migrator": "Миграции базы данных",
+        "uploader": "Загрузка файлов"
+      },
+              "internal": {
+          "modules": {
+            "user": "Управление пользователями и аутентификация",
+            "offer": "Управление офферами",
+            "order": "Управление заказами",
+            "warehouse": "Управление складами",
+            "ratelimit": "Ограничение скорости запросов"
+          },
+        "pkg": {
+          "config": "Конфигурация приложения",
+          "database": "Подключение к базе данных",
+          "utils": "Утилиты"
+        }
+      }
+    },
+    "middleware": [
+      "CORS",
+      "Authentication",
+      "Rate Limiting",
+      "Brute Force Protection"
+    ]
+  },
+  "authentication": {
+    "type": "Bearer Token",
+    "header": "Authorization: Bearer <api_key>",
+    "description": "Все API методы требуют авторизации через API-ключ в заголовке Authorization"
+  },
+  "endpoints": {
+    "public": {
+      "description": "Публичные эндпоинты, не требующие авторизации",
+      "routes": [
+        {
+          "path": "/api/v1/offers",
+          "method": "GET",
+          "description": "Получение списка публичных офферов",
+          "parameters": {
+            "query": {
+              "page": "integer",
+              "limit": "integer",
+              "category": "string",
+              "brand": "string",
+              "price_min": "number",
+              "price_max": "number"
+            }
+          }
+        }
+      ]
+    },
+    "protected": {
+      "description": "Защищенные эндпоинты, требующие авторизации",
+      "modules": {
+        "users": {
+          "description": "Управление пользователями",
+          "endpoints": [
+            {
+              "path": "/api/v1/users/profile",
+              "method": "GET",
+              "description": "Получение профиля текущего пользователя"
+            },
+            {
+              "path": "/api/v1/users/profile",
+              "method": "PUT",
+              "description": "Обновление профиля пользователя"
+            }
+          ]
+        },
+
+        "offers": {
+          "description": "Управление офферами",
+          "endpoints": [
+            {
+              "path": "/api/v1/offers",
+              "method": "GET",
+              "description": "Получение списка офферов пользователя",
+              "parameters": {
+                "query": {
+                  "page": "integer",
+                  "limit": "integer",
+                  "status": "string",
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "path": "/api/v1/offers",
+              "method": "POST",
+              "description": "Создание нового оффера",
+              "body": {
+                "metaproduct_id": "integer (required)",
+                "price": "number (required)",
+                "quantity": "integer (required)",
+                "type": "string (required) - sale/buy",
+                "description": "string (optional)",
+                "shipping_days": "integer (optional)",
+                "coordinates": {
+                  "latitude": "number",
+                  "longitude": "number"
+                }
+              }
+            },
+            {
+              "path": "/api/v1/offers/{id}",
+              "method": "GET",
+              "description": "Получение оффера по ID"
+            },
+            {
+              "path": "/api/v1/offers/{id}",
+              "method": "PUT",
+              "description": "Обновление оффера"
+            },
+            {
+              "path": "/api/v1/offers/{id}",
+              "method": "DELETE",
+              "description": "Удаление оффера"
+            },
+            {
+              "path": "/api/v1/offers/batch",
+              "method": "POST",
+              "description": "Создание нескольких офферов одновременно",
+              "body": {
+                "offers": "array of offer objects"
+              }
+            }
+          ]
+        },
+        "orders": {
+          "description": "Управление заказами",
+          "endpoints": [
+            {
+              "path": "/api/v1/orders",
+              "method": "GET",
+              "description": "Получение списка заказов пользователя",
+              "parameters": {
+                "query": {
+                  "page": "integer",
+                  "limit": "integer",
+                  "status": "string"
+                }
+              }
+            },
+            {
+              "path": "/api/v1/orders",
+              "method": "POST",
+              "description": "Создание нового заказа",
+              "body": {
+                "offer_id": "integer (required)",
+                "quantity": "integer (required)",
+                "shipping_address": "string (required)",
+                "contact_phone": "string (required)"
+              }
+            },
+            {
+              "path": "/api/v1/orders/{id}",
+              "method": "GET",
+              "description": "Получение заказа по ID"
+            },
+            {
+              "path": "/api/v1/orders/{id}/status",
+              "method": "PUT",
+              "description": "Обновление статуса заказа",
+              "body": {
+                "status": "string (required) - pending/confirmed/processing/shipped/delivered/cancelled/rejected"
+              }
+            }
+          ]
+        },
+        "warehouses": {
+          "description": "Управление складами",
+          "endpoints": [
+            {
+              "path": "/api/v1/warehouses",
+              "method": "GET",
+              "description": "Получение списка складов пользователя"
+            },
+            {
+              "path": "/api/v1/warehouses",
+              "method": "POST",
+              "description": "Создание нового склада",
+              "body": {
+                "name": "string (required)",
+                "address": "string (required)",
+                "coordinates": {
+                  "latitude": "number",
+                  "longitude": "number"
+                }
+              }
+            },
+            {
+              "path": "/api/v1/warehouses/{id}",
+              "method": "GET",
+              "description": "Получение склада по ID"
+            },
+            {
+              "path": "/api/v1/warehouses/{id}",
+              "method": "PUT",
+              "description": "Обновление склада"
+            },
+            {
+              "path": "/api/v1/warehouses/{id}",
+              "method": "DELETE",
+              "description": "Удаление склада"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "data_models": {
+    "User": {
+      "id": "integer (primary key)",
+      "username": "string (unique)",
+      "email": "string (unique)",
+      "phone": "string",
+      "first_name": "string",
+      "last_name": "string",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    },
+
+    "Offer": {
+      "id": "integer (primary key)",
+      "user_id": "integer (foreign key)",
+      "metaproduct_id": "integer (foreign key)",
+      "price": "decimal",
+      "quantity": "integer",
+      "type": "string (sale/buy)",
+      "status": "string (active/inactive)",
+      "description": "text",
+      "shipping_days": "integer",
+      "latitude": "decimal",
+      "longitude": "decimal",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    },
+    "Order": {
+      "id": "integer (primary key)",
+      "offer_id": "integer (foreign key)",
+      "initiator_user_id": "integer (foreign key)",
+      "counterparty_user_id": "integer (foreign key)",
+      "quantity": "integer",
+      "total_price": "decimal",
+      "status": "string",
+      "shipping_address": "string",
+      "contact_phone": "string",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    },
+    "Warehouse": {
+      "id": "integer (primary key)",
+      "user_id": "integer (foreign key)",
+      "name": "string",
+      "address": "string",
+      "latitude": "decimal",
+      "longitude": "decimal",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    }
+  },
+  "status_codes": {
+    "order_statuses": {
+      "pending": "Ожидает подтверждения (по умолчанию)",
+      "confirmed": "Подтвержден продавцом",
+      "processing": "В обработке",
+      "shipped": "Отправлен",
+      "delivered": "Доставлен",
+      "cancelled": "Отменен",
+      "rejected": "Отклонен"
+    },
+    "offer_types": {
+      "sale": "Оффер на продажу",
+      "sell": "Оффер на продажу (альтернативное название)",
+      "buy": "Оффер на покупку",
+      "purchase": "Оффер на покупку (альтернативное название)"
+    },
+    "offer_statuses": {
+      "active": "Активный оффер",
+      "inactive": "Неактивный оффер"
+    }
+  },
+  "rate_limiting": {
+    "description": "Система ограничения скорости запросов для защиты от злоупотреблений",
+    "default_limits": {
+      "requests_per_minute": 60,
+      "requests_per_hour": 1000,
+      "requests_per_day": 10000
+    },
+    "endpoints": {
+      "public": {
+        "requests_per_minute": 30,
+        "requests_per_hour": 500
+      },
+      "protected": {
+        "requests_per_minute": 60,
+        "requests_per_hour": 1000
+      }
+    }
+  },
+  "error_codes": {
+    "400": "Bad Request - Неверный запрос",
+    "401": "Unauthorized - Не авторизован",
+    "403": "Forbidden - Доступ запрещен",
+    "404": "Not Found - Не найдено",
+    "422": "Unprocessable Entity - Необрабатываемая сущность",
+    "429": "Too Many Requests - Слишком много запросов",
+    "500": "Internal Server Error - Внутренняя ошибка сервера"
+  },
+  "deployment": {
+    "environment": {
+      "production": {
+        "port": 8095,
+        "database": "PostgreSQL",
+        "redis": "для кэширования и rate limiting"
+      },
+      "development": {
+        "port": 8095,
+        "database": "MySQL/PostgreSQL",
+        "redis": "опционально"
+      }
+    },
+    "dependencies": {
+      "required": [
+        "Go 1.21+",
+        "PostgreSQL/MySQL",
+        "Redis (для rate limiting)"
+      ],
+      "optional": [
+        "Docker",
+        "Nginx (reverse proxy)"
+      ]
+    }
+  },
+  "swagger": {
+    "url": "/swagger/*any",
+    "description": "Интерактивная документация API доступна по адресу /swagger"
+  },
+  "testing": {
+    "test_files": [
+      "comprehensive_api_test.php",
+      "test_offer_roles_and_coordinates.php",
+      "test_order_status.php",
+      "test_batch_offers.php",
+      "test_media_final.php"
+    ],
+    "coverage": {
+      "endpoints": "100%",
+      "business_logic": "95%",
+      "error_handling": "90%"
+    }
+  },
+  "monitoring": {
+    "logs": {
+      "access_log": "server.log",
+      "error_log": "app_8095.log",
+      "mysql_log": "app_8095_mysql.log"
+    },
+    "metrics": {
+      "response_time": "Среднее время ответа",
+      "error_rate": "Процент ошибок",
+      "request_rate": "Количество запросов в секунду"
+    }
+  },
+  "security": {
+    "authentication": "JWT Bearer Token",
+    "authorization": "Role-based access control",
+    "rate_limiting": "Защита от DDoS",
+    "cors": "Настроен для всех доменов",
+    "input_validation": "Валидация всех входных данных"
+  }
+} 

@@ -4,7 +4,6 @@ import "github.com/gin-gonic/gin"
 
 func RegisterRoutes(r *gin.RouterGroup, h *Handlers) {
 	r.POST("/offers", h.CreateOffer)
-	r.POST("/offers/batch", h.CreateOffers)
 	r.PUT("/offers/:id", h.UpdateOffer)
 	r.DELETE("/offers/:id", h.DeleteOffer)
 	r.GET("/offers", h.ListOffers)
@@ -14,4 +13,4 @@ func RegisterRoutes(r *gin.RouterGroup, h *Handlers) {
 
 func RegisterPublicRoutes(r *gin.RouterGroup, h *Handlers) {
 	r.GET("/offers/public", h.PublicListOffers)
-} 
+}

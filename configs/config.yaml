@@ -3,11 +3,8 @@ server:
 
 database:
   host: "localhost"
-  port: "5432"
-  user: "postgres"
-  password: "your_password"
   dbname: "portaldata"
-  sslmode: "disable"
+
 
 data_path: "/var/www/api.portaldata.ru/data"
 api_key: "f428fbc16a97b9e2a55717bd34e97537ec34cb8c04a5f32eeb4e88c9ee998a53" 

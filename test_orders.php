@@ -42,7 +42,7 @@ $apiKeyUserC = 'f456d094d3581bc14bd4f5d9bd474db9cfe8966583412b9dea6a7abc00bfa8df
 echo "Шаг 1: Пользователь A создает оффер...\n";
 $offerData = [
     'product_id' => 1,
-    'offer_type' => 'sell',
+            'offer_type' => 'sale',
     'price_per_unit' => 150.75,
     'available_lots' => 10,
     'tax_nds' => 20,

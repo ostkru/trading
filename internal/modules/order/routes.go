@@ -6,5 +6,4 @@ func RegisterRoutes(router *gin.RouterGroup, handler *Handlers) {
 	router.GET("/orders/:id", handler.GetOrder)
 	router.GET("/orders", handler.ListOrders)
 	router.POST("/orders", handler.CreateOrder)
-	router.PUT("/orders/:id/status", handler.UpdateOrderStatus)
-} 
+}

@@ -252,7 +252,7 @@ class OfferRolesAndCoordinatesTest {
                     }
                     
                     if (isset($response['data']['order_type'])) {
-                        $this->assertTest('Тип заказа покупки', $response['data']['order_type'] === 'sell', $response);
+                        $this->assertTest('Тип заказа покупки', $response['data']['order_type'] === 'sale', $response);
                     }
                 }
             }

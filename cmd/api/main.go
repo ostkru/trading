@@ -13,8 +13,8 @@ import (
 	metaproduct "portaldata-api/internal/modules/metaproduct"
 	offer "portaldata-api/internal/modules/offer"
 	order "portaldata-api/internal/modules/order"
-	warehouse "portaldata-api/internal/modules/warehouse"
 	user "portaldata-api/internal/modules/user"
+	warehouse "portaldata-api/internal/modules/warehouse"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"

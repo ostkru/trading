@@ -68,22 +68,28 @@
         ],
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Название продукта (обязательное поле)"
           },
           "vendor_article": {
-            "type": "string"
+            "type": "string",
+            "description": "Артикул поставщика/производителя (обязательное поле)"
           },
           "recommend_price": {
-            "type": "number"
+            "type": "number",
+            "description": "Рекомендуемая цена за единицу товара (обязательное поле)"
           },
           "brand": {
-            "type": "string"
+            "type": "string",
+            "description": "Бренд/производитель продукта (обязательное поле)"
           },
           "category": {
-            "type": "string"
+            "type": "string",
+            "description": "Категория товара (обязательное поле)"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Описание продукта (необязательное поле)"
           }
         },
         "description": "Поля created_at и updated_at выставляются сервером автоматически."
@@ -92,22 +98,28 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Название продукта"
           },
           "vendor_article": {
-            "type": "string"
+            "type": "string",
+            "description": "Артикул поставщика/производителя"
           },
           "recommend_price": {
-            "type": "number"
+            "type": "number",
+            "description": "Рекомендуемая цена за единицу товара"
           },
           "brand": {
-            "type": "string"
+            "type": "string",
+            "description": "Бренд/производитель продукта"
           },
           "category": {
-            "type": "string"
+            "type": "string",
+            "description": "Категория товара"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Описание продукта"
           }
         }
       },
@@ -121,7 +133,8 @@
             "type": "integer"
           },
           "is_public": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Публичный оффер или нет"
           },
           "product_id": {
             "type": "integer"
@@ -129,10 +142,10 @@
           "price_per_unit": {
             "type": "number"
           },
-          "tax_nds": {
+          "units_per_lot": {
             "type": "integer"
           },
-          "units_per_lot": {
+          "tax_nds": {
             "type": "integer"
           },
           "available_lots": {
@@ -153,11 +166,9 @@
             "type": "string",
             "enum": [
               "sale",
-              "sell",
-              "buy",
-              "purchase"
+              "buy"
             ],
-            "description": "Тип оффера: sale/sell - продажа, buy/purchase - покупка"
+            "description": "Тип оффера: sale - продажа, buy - покупка"
           },
           "max_shipping_days": {
             "type": "integer",
@@ -180,44 +191,48 @@
           "product_id",
           "offer_type",
           "price_per_unit",
+          "units_per_lot",
           "available_lots",
           "tax_nds",
-          "units_per_lot",
           "warehouse_id"
         ],
         "properties": {
           "product_id": {
-            "type": "integer"
+            "type": "integer",
+            "description": "ID продукта для создания оффера (обязательное поле)"
           },
           "offer_type": {
             "type": "string",
             "enum": [
               "sale",
-              "sell",
-              "buy",
-              "purchase"
+              "buy"
             ],
-            "description": "Тип оффера: sale/sell - продажа, buy/purchase - покупка"
+            "description": "Тип оффера: sale - продажа, buy - покупка (обязательное поле)"
           },
           "price_per_unit": {
-            "type": "number"
-          },
-          "available_lots": {
-            "type": "integer"
-          },
-          "tax_nds": {
-            "type": "integer"
+            "type": "number",
+            "description": "Цена за единицу товара (обязательное поле)"
           },
           "units_per_lot": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Количество единиц товара в одном лоте (обязательное поле)"
+          },
+          "available_lots": {
+            "type": "integer",
+            "description": "Количество доступных лотов (обязательное поле)"
+          },
+          "tax_nds": {
+            "type": "integer",
+            "description": "НДС в процентах (обязательное поле)"
           },
           "warehouse_id": {
             "type": "integer",
-            "description": "Координаты будут автоматически подтянуты из склада"
+            "description": "ID склада, координаты будут автоматически подтянуты из склада"
           },
           "is_public": {
             "type": "boolean",
-            "description": "Публичный оффер или нет"
+            "default": true,
+            "description": "Публичный оффер или нет. По умолчанию true."
           },
           "max_shipping_days": {
             "type": "integer",
@@ -231,22 +246,28 @@
         "type": "object",
         "properties": {
           "price_per_unit": {
-            "type": "number"
-          },
-          "available_lots": {
-            "type": "integer"
-          },
-          "tax_nds": {
-            "type": "integer"
+            "type": "number",
+            "description": "Цена за единицу товара"
           },
           "units_per_lot": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Количество единиц товара в одном лоте"
+          },
+          "available_lots": {
+            "type": "integer",
+            "description": "Количество доступных лотов"
+          },
+          "tax_nds": {
+            "type": "integer",
+            "description": "НДС в процентах"
           },
           "is_public": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Новый статус публичности оффера"
           },
           "max_shipping_days": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Максимальное количество дней доставки"
           },
           "warehouse_id": {
             "type": "integer",
@@ -305,10 +326,10 @@
           "order_type": {
             "type": "string",
             "enum": [
-              "buy",
-              "sell"
+              "sale",
+              "buy"
             ],
-            "description": "buy - покупка, sell - продажа"
+            "description": "sale - продажа, buy - покупка"
           },
           "payment_method": {
             "type": "string"
@@ -525,6 +546,99 @@
             "type": "string"
           }
         }
+      },
+      "ProductUpdateResponse": {
+        "type": "object",
+        "description": "Ответ с обновленными полями продукта",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "ID обновленного продукта"
+          },
+          "updated_fields": {
+            "type": "object",
+            "description": "Обновленные поля продукта"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Время последнего обновления"
+          }
+        }
+      },
+      "OfferUpdateResponse": {
+        "type": "object",
+        "description": "Ответ с обновленными полями оффера",
+        "properties": {
+          "offer_id": {
+            "type": "integer",
+            "description": "ID обновленного оффера"
+          },
+          "updated_fields": {
+            "type": "object",
+            "description": "Обновленные поля оффера"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Время последнего обновления"
+          }
+        }
+      },
+      "OrderStatusUpdateResponse": {
+        "type": "object",
+        "description": "Ответ с обновленным статусом заказа",
+        "properties": {
+          "order_id": {
+            "type": "integer",
+            "description": "ID заказа"
+          },
+          "order_status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "processing",
+              "shipped",
+              "delivered",
+              "cancelled",
+              "rejected"
+            ],
+            "description": "Новый статус заказа"
+          },
+          "status_reason": {
+            "type": "string",
+            "description": "Причина изменения статуса"
+          },
+          "status_changed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Время изменения статуса"
+          },
+          "status_changed_by": {
+            "type": "integer",
+            "description": "ID пользователя, изменившего статус"
+          }
+        }
+      },
+      "WarehouseUpdateResponse": {
+        "type": "object",
+        "description": "Ответ с обновленными полями склада",
+        "properties": {
+          "warehouse_id": {
+            "type": "integer",
+            "description": "ID обновленного склада"
+          },
+          "updated_fields": {
+            "type": "object",
+            "description": "Обновленные поля склада"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Время последнего обновления"
+          }
+        }
       }
     }
   },
@@ -606,16 +720,17 @@
               ],
               "default": "all"
             },
-            "description": "Фильтр по производителю: my — только мои, others — чужие, all — все."
+            "description": "Фильтр по владельцу продуктов: 'my' — только мои продукты, 'others' — только чужие продукты, 'all' — все продукты (по умолчанию)"
           },
           {
             "in": "query",
             "name": "page",
             "schema": {
               "type": "integer",
-              "default": 1
+              "default": 1,
+              "minimum": 1
             },
-            "description": "Номер страницы (начиная с 1)"
+            "description": "Номер страницы для пагинации (начиная с 1, по умолчанию 1)"
           },
           {
             "in": "query",
@@ -623,9 +738,10 @@
             "schema": {
               "type": "integer",
               "default": 10,
+              "minimum": 1,
               "maximum": 100
             },
-            "description": "Количество позиций на страницу (максимум 100)"
+            "description": "Количество продуктов на страницу (от 1 до 100, по умолчанию 10)"
           }
         ],
         "responses": {
@@ -660,8 +776,10 @@
             "name": "id",
             "required": true,
             "schema": {
-              "type": "integer"
-            }
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор продукта (целое число больше 0)"
           }
         ],
         "responses": {
@@ -689,8 +807,10 @@
             "name": "id",
             "required": true,
             "schema": {
-              "type": "integer"
-            }
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор продукта для обновления (целое число больше 0)"
           }
         ],
         "requestBody": {
@@ -709,7 +829,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Product"
+                  "$ref": "#/components/schemas/ProductUpdateResponse"
                 }
               }
             }
@@ -728,8 +848,10 @@
             "name": "id",
             "required": true,
             "schema": {
-              "type": "integer"
-            }
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор продукта для удаления (целое число больше 0)"
           }
         ],
         "responses": {
@@ -742,188 +864,8 @@
         }
       }
     },
-    "/metaproduct": {
-      "post": {
-        "summary": "Создать metaproduct",
-        "description": "Создаёт новый metaproduct (бывший продукт). Все поля обязательны, кроме description.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateProductRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Metaproduct создан",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Product"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Ошибка валидации"
-          }
-        }
-      },
-      "get": {
-        "summary": "Список metaproduct",
-        "description": "Возвращает список metaproduct с пагинацией. Можно фильтровать по производителю: my (мои), others (чужие), all (все).",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "owner",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "my",
-                "others",
-                "all"
-              ],
-              "default": "all"
-            },
-            "description": "Фильтр по производителю: my — только мои, others — чужие, all — все."
-          },
-          {
-            "in": "query",
-            "name": "page",
-            "schema": {
-              "type": "integer",
-              "default": 1
-            },
-            "description": "Номер страницы (начиная с 1)"
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "schema": {
-              "type": "integer",
-              "default": 10,
-              "maximum": 100
-            },
-            "description": "Количество позиций на страницу (максимум 100)"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Список metaproduct",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Product"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/metaproduct/{id}": {
-      "get": {
-        "summary": "Получить metaproduct по ID",
-        "description": "Возвращает metaproduct по его уникальному идентификатору.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Metaproduct найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Product"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Не найден"
-          }
-        }
-      },
-      "put": {
-        "summary": "Обновить metaproduct",
-        "description": "Обновляет данные metaproduct по ID.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateProductRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Metaproduct обновлён",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Product"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Не найден"
-          }
-        }
-      },
-      "delete": {
-        "summary": "Удалить metaproduct",
-        "description": "Удаляет metaproduct по ID.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Удалено"
-          },
-          "404": {
-            "description": "Не найден"
-          }
-        }
-      }
-    },
+
+
     "/offers": {
       "post": {
         "summary": "Создать оффер",
@@ -1015,8 +957,10 @@
             "name": "id",
             "required": true,
             "schema": {
-              "type": "integer"
-            }
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор оффера для обновления (целое число больше 0)"
           }
         ],
         "requestBody": {
@@ -1047,7 +991,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Offer"
+                  "$ref": "#/components/schemas/OfferUpdateResponse"
                 }
               }
             }
@@ -1066,8 +1010,10 @@
             "name": "id",
             "required": true,
             "schema": {
-              "type": "integer"
-            }
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор оффера для удаления (целое число больше 0)"
           }
         ],
         "responses": {
@@ -1090,24 +1036,30 @@
             "name": "product_id",
             "required": true,
             "schema": {
-              "type": "integer"
-            }
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Идентификатор продукта для проверки остатков (целое число больше 0)"
           },
           {
             "in": "query",
             "name": "warehouse_id",
             "required": true,
             "schema": {
-              "type": "integer"
-            }
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Идентификатор склада WB для проверки остатков (целое число больше 0)"
           },
           {
             "in": "query",
             "name": "supplier_id",
             "required": true,
             "schema": {
-              "type": "integer"
-            }
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Идентификатор поставщика/поставки для проверки остатков (целое число больше 0)"
           }
         ],
         "responses": {
@@ -1171,9 +1123,10 @@
             "name": "page",
             "schema": {
               "type": "integer",
-              "default": 1
+              "default": 1,
+              "minimum": 1
             },
-            "description": "Номер страницы (начиная с 1)"
+            "description": "Номер страницы для пагинации списка заказов (начиная с 1, по умолчанию 1)"
           },
           {
             "in": "query",
@@ -1181,9 +1134,10 @@
             "schema": {
               "type": "integer",
               "default": 20,
+              "minimum": 1,
               "maximum": 100
             },
-            "description": "Количество позиций на страницу (максимум 100)"
+            "description": "Количество заказов на страницу (от 1 до 100, по умолчанию 20)"
           },
           {
             "in": "query",
@@ -1200,7 +1154,7 @@
                 "rejected"
               ]
             },
-            "description": "Фильтр по статусу заказа"
+            "description": "Фильтр по статусу заказа: 'pending' — ожидает подтверждения, 'confirmed' — подтвержден продавцом, 'processing' — в обработке, 'shipped' — отправлен, 'delivered' — доставлен, 'cancelled' — отменен, 'rejected' — отклонен"
           }
         ],
         "responses": {
@@ -1244,8 +1198,10 @@
             "name": "id",
             "required": true,
             "schema": {
-              "type": "integer"
-            }
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор заказа (целое число больше 0)"
           }
         ],
         "responses": {
@@ -1275,8 +1231,10 @@
             "name": "id",
             "required": true,
             "schema": {
-              "type": "integer"
-            }
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор заказа для изменения статуса (целое число больше 0)"
           }
         ],
         "requestBody": {
@@ -1303,7 +1261,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Order"
+                  "$ref": "#/components/schemas/OrderStatusUpdateResponse"
                 }
               }
             }
@@ -1385,8 +1343,10 @@
             "name": "id",
             "required": true,
             "schema": {
-              "type": "integer"
-            }
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор склада для обновления (целое число больше 0)"
           }
         ],
         "requestBody": {
@@ -1416,7 +1376,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Warehouse"
+                  "$ref": "#/components/schemas/WarehouseUpdateResponse"
                 }
               }
             }
@@ -1435,8 +1395,10 @@
             "name": "id",
             "required": true,
             "schema": {
-              "type": "integer"
-            }
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор склада для удаления (целое число больше 0)"
           }
         ],
         "responses": {
@@ -1455,7 +1417,7 @@
           {
             "name": "filter",
             "in": "query",
-            "description": "Фильтр офферов: my (только мои), others (чужие), all (все)",
+            "description": "Фильтр офферов: 'my' — только мои офферы, 'others' — только чужие офферы, 'all' — все офферы (по умолчанию 'my')",
             "required": false,
             "schema": {
               "type": "string",

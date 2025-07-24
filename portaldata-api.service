@@ -1,0 +1,33 @@
+[Unit]
+Description=PortalData API Server
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/go
+ExecStart=/var/www/go/app_8095_improved
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=portaldata-api
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Ограничения ресурсов
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Переменные окружения
+Environment=GIN_MODE=release
+Environment=DB_HOST=localhost
+Environment=DB_PORT=3306
+Environment=DB_USER=root
+Environment=DB_PASSWORD=123456
+Environment=DB_NAME=portaldata
+
+[Install]
+WantedBy=multi-user.target 
