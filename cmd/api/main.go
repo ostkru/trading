@@ -55,19 +55,32 @@ func main() {
 	warehouseService := warehouse.NewService(db)
 	warehouseHandlers := warehouse.NewHandlers(warehouseService)
 
+	// Основной endpoint для проверки доступности
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message":  "PortalData API доступен",
+			"version":  "v1",
+			"database": "MySQL",
+			"status":   "running",
+		})
+	})
+
 	// Swagger
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// Публичные маршруты (без авторизации)
+	publicGroup := router.Group("/api/v1")
+
+	// Публичные офферы
+	offer.RegisterPublicRoutes(publicGroup, offerHandlers)
+
+	// Защищенные маршруты (с авторизацией)
 	apiGroup := router.Group("/api/v1")
 	apiGroup.Use(authMiddleware)
 	metaproduct.RegisterRoutes(apiGroup, metaproductHandlers)
 	offer.RegisterRoutes(apiGroup, offerHandlers)
 	order.RegisterRoutes(apiGroup, orderHandlers)
 	warehouse.RegisterRoutes(apiGroup, warehouseHandlers)
-
-	// Register public routes separately
-	publicOfferRoutes := router.Group("/api/v1")
-	offer.RegisterPublicRoutes(publicOfferRoutes, offerHandlers)
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},

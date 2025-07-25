@@ -1,12 +1,14 @@
 package metaproduct
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"log"
+	"net/url"
+	"strings"
 
-	"github.com/lib/pq"
 	"portaldata-api/internal/pkg/database"
-	"database/sql"
 )
 
 type Service struct {
@@ -17,18 +19,113 @@ func NewService(db *database.DB) *Service {
 	return &Service{db: db}
 }
 
+// validateMediaURLs проверяет корректность URL медиа файлов
+func (s *Service) validateMediaURLs(imageURLs, videoURLs, model3DURLs []string) error {
+	// Проверяем изображения
+	for _, url := range imageURLs {
+		if err := s.validateURL(url, []string{".jpg", ".jpeg", ".png", ".gif", ".webp"}); err != nil {
+			return fmt.Errorf("некорректный URL изображения %s: %v", url, err)
+		}
+	}
+
+	// Проверяем видео
+	for _, url := range videoURLs {
+		if err := s.validateURL(url, []string{".mp4", ".avi", ".mov", ".wmv", ".flv"}); err != nil {
+			return fmt.Errorf("некорректный URL видео %s: %v", url, err)
+		}
+	}
+
+	// Проверяем 3D модели
+	for _, url := range model3DURLs {
+		if err := s.validateURL(url, []string{".obj", ".fbx", ".3ds", ".dae", ".stl"}); err != nil {
+			return fmt.Errorf("некорректный URL 3D модели %s: %v", url, err)
+		}
+	}
+
+	return nil
+}
+
+// validateURL проверяет корректность URL и расширения файла
+func (s *Service) validateURL(urlStr string, allowedExtensions []string) error {
+	parsedURL, err := url.Parse(urlStr)
+	if err != nil {
+		return fmt.Errorf("некорректный формат URL: %v", err)
+	}
+
+	// Проверяем протокол
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		return fmt.Errorf("неподдерживаемый протокол: %s", parsedURL.Scheme)
+	}
+
+	// Проверяем наличие хоста
+	if parsedURL.Host == "" {
+		return fmt.Errorf("отсутствует хост в URL")
+	}
+
+	// Проверяем расширение файла
+	path := strings.ToLower(parsedURL.Path)
+	hasValidExtension := false
+	for _, ext := range allowedExtensions {
+		if strings.HasSuffix(path, ext) {
+			hasValidExtension = true
+			break
+		}
+	}
+
+	if !hasValidExtension {
+		return fmt.Errorf("неподдерживаемое расширение файла. Разрешены: %v", allowedExtensions)
+	}
+
+	return nil
+}
+
 func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Product, error) {
-	query := `INSERT INTO products (name, vendor_article, recommend_price, user_brand, user_category, brand_id, category_id, description, user_id) 
-	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
-	          RETURNING id, name, vendor_article, recommend_price, user_brand, user_category, brand_id, category_id, description, created_at, updated_at, user_id`
+	if req.Name == "" {
+		return nil, errors.New("Требуется name")
+	}
+
+	// Валидация медиа URL
+	if err := s.validateMediaURLs(req.ImageURLs, req.VideoURLs, req.Model3DURLs); err != nil {
+		return nil, err
+	}
+
+	query := `INSERT INTO products (name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, user_id) 
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+	// Обработка NULL значений для brand_id и category_id
+	var brandID, categoryID interface{}
+	if req.BrandID != nil {
+		brandID = *req.BrandID
+	} else {
+		brandID = nil
+	}
+	if req.CategoryID != nil {
+		categoryID = *req.CategoryID
+	} else {
+		categoryID = nil
+	}
+
+	result, err := s.db.Exec(query, req.Name, req.VendorArticle, req.RecommendPrice, req.Brand, req.Category, brandID, categoryID, req.Description, userID)
+	if err != nil {
+		log.Printf("Error creating product: %v", err)
+		return nil, err
+	}
+
+	productID, err := result.LastInsertId()
+	if err != nil {
+		log.Printf("Error getting last insert id: %v", err)
+		return nil, err
+	}
+
+	// Получаем созданный продукт
 	var product Product
-	err := s.db.QueryRow(query, req.Name, req.VendorArticle, req.RecommendPrice, req.UserBrand, req.UserCategory, req.BrandID, req.CategoryID, req.Description, userID).Scan(
+	err = s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, created_at, updated_at, user_id FROM products WHERE id = ?", productID).Scan(
 		&product.ID,
 		&product.Name,
 		&product.VendorArticle,
 		&product.RecommendPrice,
-		&product.UserBrand,
-		&product.UserCategory,
+		&product.Brand,
+		&product.Category,
 		&product.BrandID,
 		&product.CategoryID,
 		&product.Description,
@@ -45,13 +142,13 @@ func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Produc
 
 func (s *Service) GetProduct(id int64) (*Product, error) {
 	var product Product
-	err := s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, user_brand, user_category, brand_id, category_id, description, created_at, updated_at, user_id FROM products WHERE id = $1", id).Scan(
+	err := s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, created_at, updated_at, user_id FROM products WHERE id = ?", id).Scan(
 		&product.ID,
 		&product.Name,
 		&product.VendorArticle,
 		&product.RecommendPrice,
-		&product.UserBrand,
-		&product.UserCategory,
+		&product.Brand,
+		&product.Category,
 		&product.BrandID,
 		&product.CategoryID,
 		&product.Description,
@@ -70,7 +167,7 @@ func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*Pr
 	var where string
 	var args []interface{}
 	if owner == "my" {
-		where = " WHERE user_id = $1"
+		where = " WHERE user_id = ?"
 		args = append(args, userID)
 	}
 
@@ -81,18 +178,12 @@ func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*Pr
 	}
 
 	query := `
-		SELECT id, name, vendor_article, recommend_price, user_brand, user_category, brand_id, category_id, description, created_at, updated_at, user_id
+		SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, created_at, updated_at, user_id
 		FROM products` + where + `
 		ORDER BY created_at DESC 
-		LIMIT $%d OFFSET $%d
+		LIMIT ? OFFSET ?
 	`
-	if where == "" {
-		query = fmt.Sprintf(query, 1, 2)
-		args = []interface{}{limit, offset}
-	} else {
-		query = fmt.Sprintf(query, 2, 3)
-		args = append(args, limit, offset)
-	}
+	args = append(args, limit, offset)
 
 	rows, err := s.db.Query(query, args...)
 	if err != nil {
@@ -103,7 +194,7 @@ func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*Pr
 	products := []Product{}
 	for rows.Next() {
 		var product Product
-		if err := rows.Scan(&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice, &product.UserBrand, &product.UserCategory, &product.BrandID, &product.CategoryID, &product.Description, &product.CreatedAt, &product.UpdatedAt, &product.UserID); err != nil {
+		if err := rows.Scan(&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice, &product.Brand, &product.Category, &product.BrandID, &product.CategoryID, &product.Description, &product.CreatedAt, &product.UpdatedAt, &product.UserID); err != nil {
 			return nil, err
 		}
 		products = append(products, product)
@@ -117,107 +208,175 @@ func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*Pr
 	}, nil
 }
 
-func (s *Service) UpdateProduct(id int64, req UpdateProductRequest) (*Product, error) {
-	var product Product
-	query := "UPDATE products SET "
-	args := []interface{}{}
+func (s *Service) UpdateProduct(id int64, req UpdateProductRequest, userID int64) (*Product, error) {
+	if id == 0 {
+		return nil, errors.New("Требуется id")
+	}
+
+	// Проверяем, что продукт принадлежит пользователю
+	var productUserID int64
+	err := s.db.QueryRow("SELECT user_id FROM products WHERE id = ?", id).Scan(&productUserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("Product not found")
+		}
+		return nil, err
+	}
+	if productUserID != userID {
+		return nil, errors.New("Access denied")
+	}
+
+	// Валидация медиа URL если они предоставлены
+	if req.ImageURLs != nil || req.VideoURLs != nil || req.Model3DURLs != nil {
+		imageURLs := []string{}
+		videoURLs := []string{}
+		model3DURLs := []string{}
+
+		if req.ImageURLs != nil {
+			imageURLs = *req.ImageURLs
+		}
+		if req.VideoURLs != nil {
+			videoURLs = *req.VideoURLs
+		}
+		if req.Model3DURLs != nil {
+			model3DURLs = *req.Model3DURLs
+		}
+
+		if err := s.validateMediaURLs(imageURLs, videoURLs, model3DURLs); err != nil {
+			return nil, err
+		}
+	}
+
+	var setParts []string
+	var args []interface{}
 	argId := 1
 
 	if req.Name != nil {
-		query += fmt.Sprintf("name = $%d, ", argId)
+		setParts = append(setParts, "name = ?")
 		args = append(args, *req.Name)
 		argId++
 	}
 	if req.VendorArticle != nil {
-		query += fmt.Sprintf("vendor_article = $%d, ", argId)
+		setParts = append(setParts, "vendor_article = ?")
 		args = append(args, *req.VendorArticle)
 		argId++
 	}
 	if req.RecommendPrice != nil {
-		query += fmt.Sprintf("recommend_price = $%d, ", argId)
+		setParts = append(setParts, "recommend_price = ?")
 		args = append(args, *req.RecommendPrice)
 		argId++
 	}
-	if req.UserBrand != nil {
-		query += fmt.Sprintf("user_brand = $%d, ", argId)
-		args = append(args, *req.UserBrand)
+	if req.Brand != nil {
+		setParts = append(setParts, "brand = ?")
+		args = append(args, *req.Brand)
 		argId++
 	}
-	if req.UserCategory != nil {
-		query += fmt.Sprintf("user_category = $%d, ", argId)
-		args = append(args, *req.UserCategory)
+	if req.Category != nil {
+		setParts = append(setParts, "category = ?")
+		args = append(args, *req.Category)
 		argId++
 	}
 	if req.BrandID != nil {
-		query += fmt.Sprintf("brand_id = $%d, ", argId)
+		setParts = append(setParts, "brand_id = ?")
 		args = append(args, *req.BrandID)
 		argId++
 	}
 	if req.CategoryID != nil {
-		query += fmt.Sprintf("category_id = $%d, ", argId)
+		setParts = append(setParts, "category_id = ?")
 		args = append(args, *req.CategoryID)
 		argId++
 	}
 	if req.Description != nil {
-		query += fmt.Sprintf("description = $%d, ", argId)
+		setParts = append(setParts, "description = ?")
 		args = append(args, *req.Description)
 		argId++
 	}
 
-	query += "updated_at = NOW() WHERE id = $" + fmt.Sprintf("%d", argId) + " RETURNING id, name, vendor_article, recommend_price, user_brand, user_category, brand_id, category_id, description, created_at, updated_at, user_id"
-	args = append(args, id)
-
-	err := s.db.QueryRow(query, args...).Scan(&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice, &product.UserBrand, &product.UserCategory, &product.BrandID, &product.CategoryID, &product.Description, &product.CreatedAt, &product.UpdatedAt, &product.UserID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, err
-		}
-		return nil, fmt.Errorf("ошибка при обновлении продукта: %w", err)
+	if len(setParts) == 0 {
+		return nil, nil
 	}
 
+	args = append(args, id)
+	query := "UPDATE products SET " + strings.Join(setParts, ", ") + " WHERE id = ?"
+	_, err = s.db.Exec(query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Получаем обновленный продукт
+	var product Product
+	err = s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, created_at, updated_at, user_id FROM products WHERE id = ?", id).Scan(&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice, &product.Brand, &product.Category, &product.BrandID, &product.CategoryID, &product.Description, &product.CreatedAt, &product.UpdatedAt, &product.UserID)
+	if err != nil {
+		return nil, err
+	}
 	return &product, nil
 }
 
-func (s *Service) DeleteProduct(id int64) error {
-	_, err := s.db.Exec("DELETE FROM products WHERE id = $1", id)
+func (s *Service) DeleteProduct(id int64, userID int64) error {
+	if id == 0 {
+		return errors.New("Требуется id")
+	}
+
+	// Проверяем, что продукт принадлежит пользователю
+	var productUserID int64
+	err := s.db.QueryRow("SELECT user_id FROM products WHERE id = ?", id).Scan(&productUserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("Product not found")
+		}
+		return err
+	}
+	if productUserID != userID {
+		return errors.New("Access denied")
+	}
+
+	_, err = s.db.Exec("DELETE FROM products WHERE id = ?", id)
 	return err
 }
 
 func (s *Service) CreateProducts(req CreateProductsRequest, userID int64) ([]Product, error) {
+	if len(req.Products) == 0 {
+		return nil, errors.New("Требуется хотя бы один продукт")
+	}
+
 	tx, err := s.db.Begin()
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
 
-	stmt, err := tx.Prepare(pq.CopyIn("products", "name", "vendor_article", "recommend_price", "user_brand", "user_category", "brand_id", "category_id", "description", "user_id"))
-	if err != nil {
-		return nil, err
-	}
+	var createdProducts []Product
 
 	for _, p := range req.Products {
-		_, err = stmt.Exec(p.Name, p.VendorArticle, p.RecommendPrice, p.UserBrand, p.UserCategory, p.BrandID, p.CategoryID, p.Description, userID)
+		// Валидация медиа URL
+		if err := s.validateMediaURLs(p.ImageURLs, p.VideoURLs, p.Model3DURLs); err != nil {
+			return nil, err
+		}
+
+		query := `INSERT INTO products (name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, user_id) 
+	              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		result, err := tx.Exec(query, p.Name, p.VendorArticle, p.RecommendPrice, p.Brand, p.Category, p.BrandID, p.CategoryID, p.Description, userID)
 		if err != nil {
 			return nil, err
 		}
+
+		productID, err := result.LastInsertId()
+		if err != nil {
+			return nil, err
+		}
+
+		// Получаем созданный продукт
+		var product Product
+		err = tx.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, created_at, updated_at, user_id FROM products WHERE id = ?", productID).Scan(&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice, &product.Brand, &product.Category, &product.BrandID, &product.CategoryID, &product.Description, &product.CreatedAt, &product.UpdatedAt, &product.UserID)
+		if err != nil {
+			return nil, err
+		}
+		createdProducts = append(createdProducts, product)
 	}
 
-	_, err = stmt.Exec()
-	if err != nil {
+	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 
-	err = stmt.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return nil, err
-	}
-
-	// This part is problematic as we don't get the created products back from COPY
-	// For simplicity, returning an empty slice for now.
-	return []Product{}, nil
-} 
+	return createdProducts, nil
+}

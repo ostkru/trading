@@ -2,7 +2,6 @@ package offer
 
 type Offer struct {
 	OfferID         int64    `json:"offer_id"`
-	WBID            *int64   `json:"wb_id,omitempty"`
 	UserID          int64    `json:"user_id"`
 	UpdatedAt       *string  `json:"updated_at,omitempty"`
 	CreatedAt       *string  `json:"created_at,omitempty"`
@@ -12,14 +11,17 @@ type Offer struct {
 	TaxNDS          int      `json:"tax_nds"`
 	UnitsPerLot     int      `json:"units_per_lot"`
 	AvailableLots   int      `json:"available_lots"`
-	CategoryID      *int64   `json:"category_id,omitempty"`
 	Latitude        *float64 `json:"latitude,omitempty"`
 	Longitude       *float64 `json:"longitude,omitempty"`
 	WarehouseID     *int64   `json:"warehouse_id,omitempty"`
 	OfferType       string   `json:"offer_type"`
-	OfferName       *string  `json:"offer_name,omitempty"`
-	Status          *string  `json:"status,omitempty"`
 	MaxShippingDays int      `json:"max_shipping_days"`
+	// Дополнительные поля для публичных офферов
+	ProductName      *string  `json:"product_name,omitempty"`
+	VendorArticle    *string  `json:"vendor_article,omitempty"`
+	RecommendPrice   *float64 `json:"recommend_price,omitempty"`
+	WarehouseName    *string  `json:"warehouse_name,omitempty"`
+	WarehouseAddress *string  `json:"warehouse_address,omitempty"`
 }
 
 type CreateOfferRequest struct {
@@ -41,4 +43,27 @@ type UpdateOfferRequest struct {
 	UnitsPerLot     *int     `json:"units_per_lot,omitempty"`
 	IsPublic        *bool    `json:"is_public,omitempty"`
 	MaxShippingDays *int     `json:"max_shipping_days,omitempty"`
+	WarehouseID     *int64   `json:"warehouse_id,omitempty"`
+}
+
+type CreateOffersRequest struct {
+	Offers []CreateOfferRequest `json:"offers" validate:"required,dive"`
+}
+
+// GeographicFilter представляет прямоугольную область для фильтрации
+type GeographicFilter struct {
+	MinLatitude  float64 `json:"min_latitude"`
+	MaxLatitude  float64 `json:"max_latitude"`
+	MinLongitude float64 `json:"min_longitude"`
+	MaxLongitude float64 `json:"max_longitude"`
+}
+
+// OfferFilterRequest содержит все параметры фильтрации
+type OfferFilterRequest struct {
+	Filter        string            `json:"filter,omitempty"`         // my, others, all
+	OfferType     string            `json:"offer_type,omitempty"`     // buy, sell
+	Geographic    *GeographicFilter `json:"geographic,omitempty"`     // Географический фильтр
+	PriceMin      *float64          `json:"price_min,omitempty"`      // Минимальная цена
+	PriceMax      *float64          `json:"price_max,omitempty"`      // Максимальная цена
+	AvailableLots *int              `json:"available_lots,omitempty"` // Минимальное количество лотов
 }

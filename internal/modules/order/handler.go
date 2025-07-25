@@ -32,6 +32,18 @@ func (h *Handlers) CreateOrder(c *gin.Context) {
 
 	order, err := h.service.CreateOrder(userID.(int64), req)
 	if err != nil {
+		if err.Error() == "offer not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Offer not found"})
+			return
+		}
+		if err.Error() == "Нельзя создать заказ на собственное предложение" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if err.Error()[:len("not enough lots available")] == "not enough lots available" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		log.Printf("CreateOrder error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -86,4 +98,43 @@ func (h *Handlers) ListOrders(c *gin.Context) {
 		"page":     page,
 		"per_page": perPage,
 	})
+}
+
+func (h *Handlers) UpdateOrderStatus(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		return
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	var req struct {
+		Status string `json:"status"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	order, err := h.service.UpdateOrderStatus(id, userID.(int64), req.Status)
+	if err != nil {
+		if err.Error() == "Order not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
+			return
+		}
+		if err.Error() == "Access denied" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+			return
+		}
+		log.Printf("UpdateOrderStatus error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, order)
 }

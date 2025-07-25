@@ -1,0 +1,35 @@
+Тест 1: Получение всех продуктов без авторизации...
+*   Trying 127.0.0.1:8095...
+* TCP_NODELAY set
+* connect to 127.0.0.1 port 8095 failed: Connection refused
+* Failed to connect to 127.0.0.1 port 8095: Connection refused
+* Closing connection 0
+Curl error: Failed to connect to 127.0.0.1 port 8095: Connection refusedПРОВАЛ (Код: 0)
+Тест 2: Получение 'своих' продуктов (User A)...
+*   Trying 127.0.0.1:8095...
+* TCP_NODELAY set
+* connect to 127.0.0.1 port 8095 failed: Connection refused
+* Failed to connect to 127.0.0.1 port 8095: Connection refused
+* Closing connection 0
+Curl error: Failed to connect to 127.0.0.1 port 8095: Connection refusedПРОВАЛ (Код: 0)
+Тест 3: Получение 'чужих' продуктов (User A)...
+*   Trying 127.0.0.1:8095...
+* TCP_NODELAY set
+* connect to 127.0.0.1 port 8095 failed: Connection refused
+* Failed to connect to 127.0.0.1 port 8095: Connection refused
+* Closing connection 0
+Curl error: Failed to connect to 127.0.0.1 port 8095: Connection refusedПРОВАЛ (Код: 0)
+Тест 4: Поиск по артикулу 'test-article'...
+*   Trying 127.0.0.1:8095...
+* TCP_NODELAY set
+* connect to 127.0.0.1 port 8095 failed: Connection refused
+* Failed to connect to 127.0.0.1 port 8095: Connection refused
+* Closing connection 0
+Curl error: Failed to connect to 127.0.0.1 port 8095: Connection refusedПРОВАЛ (Код: 0)
+Тест 5: Поиск по штрихкоду '123456789'...
+*   Trying 127.0.0.1:8095...
+* TCP_NODELAY set
+* connect to 127.0.0.1 port 8095 failed: Connection refused
+* Failed to connect to 127.0.0.1 port 8095: Connection refused
+* Closing connection 0
+Curl error: Failed to connect to 127.0.0.1 port 8095: Connection refusedПРОВАЛ (Код: 0)

@@ -64,6 +64,9 @@ class ComprehensiveAPITest {
         // 10. Тестирование специальных методов
         $this->testSpecialMethods();
         
+        // 11. Тестирование географических фильтров
+        $this->testGeographicFilters();
+        
         $totalEndTime = microtime(true);
         $this->performanceMetrics['total_time'] = round(($totalEndTime - $totalStartTime) * 1000, 2);
         
@@ -77,14 +80,14 @@ class ComprehensiveAPITest {
         
         // Проверка основного endpoint (используем правильный путь)
         $startTime = microtime(true);
-        $response = $this->makeRequest('GET', '', null, null);
+        $response = $this->makeRequest('GET', '/', null, null, true); // Используем корневой URL
         $endTime = microtime(true);
         $this->performanceMetrics['Основной endpoint'] = round(($endTime - $startTime) * 1000, 2);
         $this->assertTest('Основной endpoint', $response['status'] === 200, $response);
         
         // Проверка доступности API
         $startTime = microtime(true);
-        $response = $this->makeRequest('GET', '/products', null, $this->users['user1']['api_token']);
+        $response = $this->makeRequest('GET', '/offers/public', null, null);
         $endTime = microtime(true);
         $this->performanceMetrics['API доступен'] = round(($endTime - $startTime) * 1000, 2);
         $this->assertTest('API доступен', $response['status'] === 200, $response);
@@ -452,7 +455,7 @@ class ComprehensiveAPITest {
             ];
             
             $startTime = microtime(true);
-            $response = $this->makeRequest('PUT', '/orders/' . $this->createdOrders['user2'] . '/status', $statusData, $this->users['user1']['api_token']);
+            $response = $this->makeRequest('PUT', '/orders/' . $this->createdOrders['user2'] . '/status', $statusData, $this->users['user2']['api_token']);
             $endTime = microtime(true);
             $this->performanceMetrics['Обновление статуса заказа'] = round(($endTime - $startTime) * 1000, 2);
             $this->assertTest('Обновление статуса заказа', $response['status'] === 200, $response);
@@ -657,8 +660,8 @@ class ComprehensiveAPITest {
             // Получаем исходные координаты
             $response = $this->makeRequest('GET', '/offers/' . $this->createdOffers['user1'], null, $this->users['user1']['api_token']);
             if ($response['status'] === 200) {
-                $originalLatitude = $response['data']['latitude'];
-                $originalLongitude = $response['data']['longitude'];
+                $originalLatitude = isset($response['data']['latitude']) ? $response['data']['latitude'] : 0;
+                $originalLongitude = isset($response['data']['longitude']) ? $response['data']['longitude'] : 0;
                 
                 // Меняем склад
                 $updateData = [
@@ -672,8 +675,8 @@ class ComprehensiveAPITest {
                 $this->assertTest('Обновление координат при смене склада', $response['status'] === 200, $response);
                 
                 if ($response['status'] === 200) {
-                    $newLatitude = $response['data']['latitude'];
-                    $newLongitude = $response['data']['longitude'];
+                    $newLatitude = isset($response['data']['latitude']) ? $response['data']['latitude'] : 0;
+                    $newLongitude = isset($response['data']['longitude']) ? $response['data']['longitude'] : 0;
                     
                     // Проверяем, что координаты изменились
                     $coordinatesChanged = ($newLatitude != $originalLatitude) || ($newLongitude != $originalLongitude);
@@ -685,8 +688,90 @@ class ComprehensiveAPITest {
         echo "\n";
     }
 
-    private function makeRequest($method, $endpoint, $data = null, $apiToken = null) {
-        $url = $this->baseUrl . $endpoint;
+    private function testGeographicFilters() {
+        echo "🗺️ 11. ТЕСТИРОВАНИЕ ГЕОГРАФИЧЕСКИХ ФИЛЬТРОВ\n";
+        echo "-----------------------------------------------\n";
+        
+        // Тест базового географического фильтра
+        $startTime = microtime(true);
+        $filters = [
+            'filter' => 'all',
+            'geographic' => [
+                'min_latitude' => 55.0,
+                'max_latitude' => 56.0,
+                'min_longitude' => 37.0,
+                'max_longitude' => 38.0
+            ]
+        ];
+        $response = $this->makeRequest('POST', '/offers/filter', $filters, $this->users['user1']['api_token']);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Географический фильтр (Москва)'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Географический фильтр (Москва)', $response['status'] === 200, $response);
+        
+        // Тест фильтра по цене
+        $startTime = microtime(true);
+        $filters = [
+            'filter' => 'all',
+            'price_min' => 100,
+            'price_max' => 5000
+        ];
+        $response = $this->makeRequest('POST', '/offers/filter', $filters, $this->users['user1']['api_token']);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Фильтр по цене (100-5000)'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Фильтр по цене (100-5000)', $response['status'] === 200, $response);
+        
+        // Тест комбинированных фильтров
+        $startTime = microtime(true);
+        $filters = [
+            'filter' => 'all',
+            'offer_type' => 'sale',
+            'geographic' => [
+                'min_latitude' => 0,
+                'max_latitude' => 90,
+                'min_longitude' => 0,
+                'max_longitude' => 180
+            ],
+            'price_min' => 500,
+            'available_lots' => 1
+        ];
+        $response = $this->makeRequest('POST', '/offers/filter', $filters, $this->users['user1']['api_token']);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Комбинированный фильтр'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Комбинированный фильтр', $response['status'] === 200, $response);
+        
+        // Тест публичных офферов с фильтрами
+        $startTime = microtime(true);
+        $filters = [
+            'offer_type' => 'buy',
+            'geographic' => [
+                'min_latitude' => 55.0,
+                'max_latitude' => 56.0,
+                'min_longitude' => 37.0,
+                'max_longitude' => 38.0
+            ],
+            'price_max' => 3000
+        ];
+        $response = $this->makeRequest('POST', '/offers/public/filter', $filters, null);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Публичные офферы с фильтрами'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Публичные офферы с фильтрами', $response['status'] === 200, $response);
+        
+        // Тест некорректных фильтров
+        $startTime = microtime(true);
+        $filters = [
+            'filter' => 'all',
+            'offer_type' => 'invalid_type'
+        ];
+        $response = $this->makeRequest('POST', '/offers/filter', $filters, $this->users['user1']['api_token']);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Некорректный offer_type'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Некорректный offer_type', $response['status'] === 400, $response);
+        
+        echo "\n";
+    }
+
+    private function makeRequest($method, $endpoint, $data = null, $apiToken = null, $useRootUrl = false) {
+        $url = $useRootUrl ? 'http://localhost:8095' . $endpoint : $this->baseUrl . $endpoint;
         
         $headers = [
             'Content-Type: application/json',

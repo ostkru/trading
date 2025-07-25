@@ -14,7 +14,7 @@ func NewService(db *sql.DB) *Service {
 
 func (s *Service) GetUserIDByAPIKey(apiKey string) (int64, error) {
 	var userID int64
-	err := s.db.QueryRow("SELECT id FROM users WHERE api_token = $1", apiKey).Scan(&userID)
+	err := s.db.QueryRow("SELECT id FROM users WHERE api_token = ?", apiKey).Scan(&userID)
 	if err != nil {
 		return 0, err
 	}

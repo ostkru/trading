@@ -1,2 +1,0 @@
-POST /api/v1/orders (HTTP: 500)
-{"error":"cannot create order on your own offer"}

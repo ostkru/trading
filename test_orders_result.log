@@ -1,9 +1,0 @@
-Шаг 1: Пользователь A создает оффер...
-*   Trying 127.0.0.1:8095...
-* TCP_NODELAY set
-* connect to 127.0.0.1 port 8095 failed: Connection refused
-* Failed to connect to localhost port 8095: Connection refused
-* Closing connection 0
-Curl error: Failed to connect to localhost port 8095: Connection refused
-Ошибка: не удалось создать оффер. Код: 0
-Тело: 

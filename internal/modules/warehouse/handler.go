@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Handlers struct {
@@ -54,6 +55,10 @@ func (h *Handlers) UpdateWarehouse(c *gin.Context) {
 	}
 	warehouse, err := h.service.UpdateWarehouse(id, req, userID.(int64))
 	if err != nil {
+		if err.Error() == "Доступ запрещён" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+			return
+		}
 		log.Printf("UpdateWarehouse error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -73,6 +78,10 @@ func (h *Handlers) DeleteWarehouse(c *gin.Context) {
 		return
 	}
 	if err := h.service.DeleteWarehouse(id, userID.(int64)); err != nil {
+		if err.Error() == "Доступ запрещён" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+			return
+		}
 		log.Printf("DeleteWarehouse error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -101,4 +110,4 @@ func (h *Handlers) ListWarehouses(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, warehouses)
-} 
+}

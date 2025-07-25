@@ -4,8 +4,8 @@ import "time"
 
 type Order struct {
 	OrderID            int64     `json:"order_id"`
-	TotalAmount        float64   `json:"total_amount"`
-	IsMulti            bool      `json:"is_multi"`
+	TotalAmount        *float64  `json:"total_amount,omitempty"`
+	IsMulti            *bool     `json:"is_multi,omitempty"`
 	OfferID            *int64    `json:"offer_id,omitempty"`
 	InitiatorUserID    int64     `json:"initiator_user_id"`
 	CounterpartyUserID *int64    `json:"counterparty_user_id,omitempty"`
@@ -16,7 +16,7 @@ type Order struct {
 	Notes              *string   `json:"notes,omitempty"`
 	OrderType          string    `json:"order_type"`
 	PaymentMethod      *string   `json:"payment_method,omitempty"`
-	OrderStatus        string    `json:"order_status"`
+	OrderStatus        *string   `json:"order_status,omitempty"`
 	ShippingAddress    *string   `json:"shipping_address,omitempty"`
 	TrackingNumber     *string   `json:"tracking_number,omitempty"`
 	MaxShippingDays    int       `json:"max_shipping_days"`

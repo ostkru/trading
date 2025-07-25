@@ -28,7 +28,7 @@ func Load() (*Config, error) {
 		log.Println("No .env file found, using environment variables")
 	}
 
-	dbPort, err := strconv.Atoi(getEnv("DB_PORT", "5434"))
+	dbPort, err := strconv.Atoi(getEnv("DB_PORT", "3306"))
 	if err != nil {
 		return nil, err
 	}
@@ -37,8 +37,8 @@ func Load() (*Config, error) {
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     dbPort,
-			User:     getEnv("DB_USER", "dev"),
-			Password: getEnv("DB_PASSWORD", "devpass"),
+			User:     getEnv("DB_USER", "root"),
+			Password: getEnv("DB_PASSWORD", "123456"),
 			DBName:   getEnv("DB_NAME", "portaldata"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},

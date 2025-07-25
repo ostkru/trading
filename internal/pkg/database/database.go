@@ -7,7 +7,7 @@ import (
 
 	"portaldata-api/internal/pkg/config"
 
-	_ "github.com/lib/pq"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type DB struct {
@@ -15,10 +15,10 @@ type DB struct {
 }
 
 func NewConnection(config config.DatabaseConfig) (*DB, error) {
-	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		config.Host, config.Port, config.User, config.Password, config.DBName, config.SSLMode)
+	connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true",
+		config.User, config.Password, config.Host, config.Port, config.DBName)
 
-	db, err := sql.Open("postgres", connStr)
+	db, err := sql.Open("mysql", connStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
@@ -38,27 +38,6 @@ func NewConnection(config config.DatabaseConfig) (*DB, error) {
 }
 
 func createTables(db *sql.DB) error {
-	query := `
-	CREATE TABLE IF NOT EXISTS products (
-		id SERIAL PRIMARY KEY,
-		name VARCHAR(255) NOT NULL,
-		vendor_article VARCHAR(255) NOT NULL,
-		recommend_price DECIMAL(10,2) NOT NULL,
-		brand VARCHAR(255) NOT NULL,
-		category VARCHAR(255) NOT NULL,
-		description TEXT,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		UNIQUE(brand, vendor_article)
-	);
-	
-	CREATE INDEX IF NOT EXISTS idx_products_brand_vendor ON products(brand, vendor_article);
-	CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);
-	CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
-	
-	ALTER TABLE warehouses ADD COLUMN IF NOT EXISTS name VARCHAR(255) NOT NULL;
-	`
-
-	_, err := db.Exec(query)
-	return err
+	// Таблицы уже существуют в базе данных
+	return nil
 }

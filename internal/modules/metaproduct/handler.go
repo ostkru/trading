@@ -31,6 +31,10 @@ func (h *Handlers) CreateMetaproduct(c *gin.Context) {
 	}
 	product, err := h.service.CreateProduct(req, userID.(int64))
 	if err != nil {
+		if err.Error() == "Требуется name" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		log.Printf("CreateMetaproduct error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -70,6 +74,12 @@ func (h *Handlers) ListMetaproducts(c *gin.Context) {
 }
 
 func (h *Handlers) UpdateMetaproduct(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		return
+	}
+
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
@@ -80,8 +90,12 @@ func (h *Handlers) UpdateMetaproduct(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	updatedProduct, err := h.service.UpdateProduct(id, req)
+	updatedProduct, err := h.service.UpdateProduct(id, req, userID.(int64))
 	if err != nil {
+		if err.Error() == "Access denied" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+			return
+		}
 		if err == sql.ErrNoRows {
 			c.JSON(http.StatusNotFound, gin.H{"error": "продукт не найден"})
 			return
@@ -94,12 +108,22 @@ func (h *Handlers) UpdateMetaproduct(c *gin.Context) {
 }
 
 func (h *Handlers) DeleteMetaproduct(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		return
+	}
+
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
 	}
-	if err := h.service.DeleteProduct(id); err != nil {
+	if err := h.service.DeleteProduct(id, userID.(int64)); err != nil {
+		if err.Error() == "Access denied" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
