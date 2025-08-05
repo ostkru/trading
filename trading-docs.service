@@ -1,0 +1,14 @@
+[Unit]
+Description=Trading API Documentation Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/go-mod
+ExecStart=/usr/bin/python3 -m http.server 8090 --bind 0.0.0.0 --directory /var/www/go-mod
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target 
