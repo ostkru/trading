@@ -4,8 +4,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
-	"database/sql"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,12 +44,12 @@ func (h *Handlers) CreateMetaproduct(c *gin.Context) {
 func (h *Handlers) GetMetaproduct(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
 		return
 	}
 	product, err := h.service.GetProduct(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Продукт не найден"})
 		return
 	}
 	c.JSON(http.StatusOK, product)
@@ -82,7 +81,7 @@ func (h *Handlers) UpdateMetaproduct(c *gin.Context) {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
 		return
 	}
 	var req UpdateProductRequest
@@ -92,12 +91,12 @@ func (h *Handlers) UpdateMetaproduct(c *gin.Context) {
 	}
 	updatedProduct, err := h.service.UpdateProduct(id, req, userID.(int64))
 	if err != nil {
-		if err.Error() == "Access denied" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		if strings.Contains(err.Error(), "принадлежит другому пользователю") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		if err == sql.ErrNoRows {
-			c.JSON(http.StatusNotFound, gin.H{"error": "продукт не найден"})
+		if strings.Contains(err.Error(), "не найден") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
 		log.Printf("UpdateMetaproduct error: %v", err)
@@ -116,12 +115,16 @@ func (h *Handlers) DeleteMetaproduct(c *gin.Context) {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
 		return
 	}
 	if err := h.service.DeleteProduct(id, userID.(int64)); err != nil {
-		if err.Error() == "Access denied" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		if strings.Contains(err.Error(), "принадлежит другому пользователю") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if strings.Contains(err.Error(), "не найден") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +26,7 @@ func (h *Handlers) CreateOffer(c *gin.Context) {
 	}
 	var req CreateOfferRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные данные запроса"})
 		return
 	}
 
@@ -47,7 +48,7 @@ func (h *Handlers) UpdateOffer(c *gin.Context) {
 	}
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
 		return
 	}
 	var req UpdateOfferRequest
@@ -58,7 +59,7 @@ func (h *Handlers) UpdateOffer(c *gin.Context) {
 	offer, err := h.service.UpdateOffer(id, req, userID.(int64))
 	if err != nil {
 		if err.Error() == "Доступ запрещён" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "Доступ запрещен"})
 			return
 		}
 		log.Printf("UpdateOffer error: %v", err)
@@ -74,25 +75,27 @@ func (h *Handlers) DeleteOffer(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
 		return
 	}
+
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
 		return
 	}
+
 	if err := h.service.DeleteOffer(id, userID.(int64)); err != nil {
-		if err.Error() == "Доступ запрещён" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		if strings.Contains(err.Error(), "принадлежит другому пользователю") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		if err.Error() == "Нельзя удалить оффер: есть связанные активные заказы" {
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+		if strings.Contains(err.Error(), "не найден") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		log.Printf("DeleteOffer error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.Status(http.StatusNoContent)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Offer deleted"})
 }
 
 func (h *Handlers) ListOffers(c *gin.Context) {
@@ -162,7 +165,7 @@ func (h *Handlers) ListOffersWithFilters(c *gin.Context) {
 	// Парсим JSON с фильтрами
 	var filters OfferFilterRequest
 	if err := c.ShouldBindJSON(&filters); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid filters format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат фильтров"})
 		return
 	}
 
@@ -187,7 +190,7 @@ func (h *Handlers) ListOffersWithFilters(c *gin.Context) {
 func (h *Handlers) GetOffer(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
 		return
 	}
 	offer, err := h.service.GetOfferByID(id)
@@ -206,17 +209,17 @@ func (h *Handlers) GetOffer(c *gin.Context) {
 func (h *Handlers) WBStock(c *gin.Context) {
 	productID, err := strconv.ParseInt(c.Query("product_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product_id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID продукта"})
 		return
 	}
 	warehouseID, err := strconv.ParseInt(c.Query("warehouse_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid warehouse_id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID склада"})
 		return
 	}
 	supplierID, err := strconv.ParseInt(c.Query("supplier_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid supplier_id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID поставщика"})
 		return
 	}
 
@@ -373,7 +376,7 @@ func (h *Handlers) PublicListOffersWithFilters(c *gin.Context) {
 	// Парсим JSON с фильтрами
 	var filters OfferFilterRequest
 	if err := c.ShouldBindJSON(&filters); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid filters format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат фильтров"})
 		return
 	}
 
@@ -401,7 +404,7 @@ func (h *Handlers) CreateOffers(c *gin.Context) {
 
 	var req CreateOffersRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные данные запроса"})
 		return
 	}
 

@@ -25,18 +25,18 @@ func (s *AuthService) AuthMiddleware() gin.HandlerFunc {
 			apiKey = c.GetHeader("X-API-KEY")
 		}
 		if apiKey == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "API key is required (use Authorization: Bearer <token> или X-API-KEY)"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Требуется API ключ (используйте Authorization: Bearer <токен> или X-API-KEY)"})
 			c.Abort()
 			return
 		}
 
 		userID, err := s.userService.GetUserIDByAPIKey(apiKey)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid API key"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Неверный API ключ"})
 			return
 		}
 
 		c.Set("userID", userID)
 		c.Next()
 	}
-} 
+}

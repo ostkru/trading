@@ -213,40 +213,20 @@ func (s *Service) UpdateProduct(id int64, req UpdateProductRequest, userID int64
 		return nil, errors.New("Требуется id")
 	}
 
-	// Проверяем, что продукт принадлежит пользователю
+	// Проверяем существование продукта и права доступа
 	var productUserID int64
 	err := s.db.QueryRow("SELECT user_id FROM products WHERE id = ?", id).Scan(&productUserID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("Product not found")
-		}
-		return nil, err
+	if err == sql.ErrNoRows {
+		return nil, errors.New("Продукт с указанным ID не найден")
+	} else if err != nil {
+		return nil, fmt.Errorf("Ошибка при проверке продукта: %v", err)
 	}
+
 	if productUserID != userID {
-		return nil, errors.New("Access denied")
+		return nil, errors.New("Продукт принадлежит другому пользователю")
 	}
 
-	// Валидация медиа URL если они предоставлены
-	if req.ImageURLs != nil || req.VideoURLs != nil || req.Model3DURLs != nil {
-		imageURLs := []string{}
-		videoURLs := []string{}
-		model3DURLs := []string{}
-
-		if req.ImageURLs != nil {
-			imageURLs = *req.ImageURLs
-		}
-		if req.VideoURLs != nil {
-			videoURLs = *req.VideoURLs
-		}
-		if req.Model3DURLs != nil {
-			model3DURLs = *req.Model3DURLs
-		}
-
-		if err := s.validateMediaURLs(imageURLs, videoURLs, model3DURLs); err != nil {
-			return nil, err
-		}
-	}
-
+	// Формируем SET части запроса
 	var setParts []string
 	var args []interface{}
 	argId := 1
@@ -317,21 +297,37 @@ func (s *Service) DeleteProduct(id int64, userID int64) error {
 		return errors.New("Требуется id")
 	}
 
-	// Проверяем, что продукт принадлежит пользователю
+	// Проверяем существование продукта и права доступа
 	var productUserID int64
 	err := s.db.QueryRow("SELECT user_id FROM products WHERE id = ?", id).Scan(&productUserID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return errors.New("Product not found")
-		}
-		return err
-	}
-	if productUserID != userID {
-		return errors.New("Access denied")
+	if err == sql.ErrNoRows {
+		return errors.New("Продукт с указанным ID не найден")
+	} else if err != nil {
+		return fmt.Errorf("Ошибка при проверке продукта: %v", err)
 	}
 
+	if productUserID != userID {
+		return errors.New("Продукт принадлежит другому пользователю")
+	}
+
+	// Проверяем наличие связанных офферов
+	var offerCount int
+	err = s.db.QueryRow("SELECT COUNT(*) FROM offers WHERE product_id = ?", id).Scan(&offerCount)
+	if err != nil {
+		return fmt.Errorf("Ошибка при проверке связанных офферов: %v", err)
+	}
+
+	if offerCount > 0 {
+		return errors.New("Нельзя удалить продукт: есть связанные офферы")
+	}
+
+	// Удаляем продукт
 	_, err = s.db.Exec("DELETE FROM products WHERE id = ?", id)
-	return err
+	if err != nil {
+		return fmt.Errorf("Ошибка при удалении продукта: %v", err)
+	}
+
+	return nil
 }
 
 func (s *Service) CreateProducts(req CreateProductsRequest, userID int64) ([]Product, error) {

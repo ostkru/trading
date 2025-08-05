@@ -26,14 +26,14 @@ func (h *Handlers) CreateOrder(c *gin.Context) {
 	}
 	var req CreateOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные данные запроса"})
 		return
 	}
 
 	order, err := h.service.CreateOrder(userID.(int64), req)
 	if err != nil {
 		if err.Error() == "offer not found" {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Offer not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "Предложение не найдено"})
 			return
 		}
 		if err.Error() == "Нельзя создать заказ на собственное предложение" {
@@ -60,7 +60,7 @@ func (h *Handlers) GetOrder(c *gin.Context) {
 	}
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
 		return
 	}
 	order, err := h.service.GetOrderByID(id, userID.(int64))
@@ -109,7 +109,7 @@ func (h *Handlers) UpdateOrderStatus(c *gin.Context) {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
 		return
 	}
 
@@ -117,18 +117,18 @@ func (h *Handlers) UpdateOrderStatus(c *gin.Context) {
 		Status string `json:"status"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные данные запроса"})
 		return
 	}
 
 	order, err := h.service.UpdateOrderStatus(id, userID.(int64), req.Status)
 	if err != nil {
-		if err.Error() == "Order not found" {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
+		if err.Error() == "Заказ не найден" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
 			return
 		}
-		if err.Error() == "Access denied" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		if err.Error() == "Доступ запрещен" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Доступ запрещен"})
 			return
 		}
 		log.Printf("UpdateOrderStatus error: %v", err)

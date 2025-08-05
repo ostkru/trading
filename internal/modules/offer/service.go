@@ -141,23 +141,37 @@ func (s *Service) DeleteOffer(id int64, userID int64) error {
 	if id == 0 {
 		return errors.New("Требуется id")
 	}
+
+	// Проверяем существование оффера и права доступа
 	var dbUserID int64
 	err := s.db.QueryRow("SELECT user_id FROM offers WHERE offer_id = ?", id).Scan(&dbUserID)
-	if err == sql.ErrNoRows || dbUserID != userID {
-		return errors.New("Доступ запрещён")
+	if err == sql.ErrNoRows {
+		return errors.New("Оффер с указанным ID не найден")
 	} else if err != nil {
-		return err
+		return fmt.Errorf("Ошибка при проверке оффера: %v", err)
 	}
+
+	if dbUserID != userID {
+		return errors.New("Оффер принадлежит другому пользователю")
+	}
+
+	// Проверяем наличие активных заказов
 	var cnt int
-	err = s.db.QueryRow(`SELECT COUNT(*) FROM orders WHERE offer_id = $1 AND order_status IN ('pending','active')`, id).Scan(&cnt)
+	err = s.db.QueryRow(`SELECT COUNT(*) FROM orders WHERE offer_id = ? AND order_status IN ('pending','active')`, id).Scan(&cnt)
 	if err != nil {
-		return err
+		return fmt.Errorf("Ошибка при проверке заказов: %v", err)
 	}
 	if cnt > 0 {
 		return errors.New("Нельзя удалить оффер: есть связанные активные заказы")
 	}
-	_, err = s.db.Exec("DELETE FROM offers WHERE offer_id = $1", id)
-	return err
+
+	// Удаляем оффер
+	_, err = s.db.Exec("DELETE FROM offers WHERE offer_id = ?", id)
+	if err != nil {
+		return fmt.Errorf("Ошибка при удалении оффера: %v", err)
+	}
+
+	return nil
 }
 
 type OfferListResponse struct {

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"log"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -67,26 +68,32 @@ func (h *Handlers) UpdateWarehouse(c *gin.Context) {
 }
 
 func (h *Handlers) DeleteWarehouse(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID склада"})
-		return
-	}
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
 		return
 	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
+		return
+	}
+
 	if err := h.service.DeleteWarehouse(id, userID.(int64)); err != nil {
-		if err.Error() == "Доступ запрещён" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		if strings.Contains(err.Error(), "принадлежит другому пользователю") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			return
 		}
-		log.Printf("DeleteWarehouse error: %v", err)
+		if strings.Contains(err.Error(), "не найден") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.Status(http.StatusNoContent)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Warehouse deleted"})
 }
 
 func (h *Handlers) ListWarehouses(c *gin.Context) {

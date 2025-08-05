@@ -3,6 +3,7 @@ package warehouse
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"portaldata-api/internal/pkg/database"
 	"portaldata-api/internal/utils"
@@ -76,15 +77,38 @@ func (s *Service) DeleteWarehouse(id int64, userID int64) error {
 	if id == 0 {
 		return errors.New("Требуется id")
 	}
+
+	// Проверяем существование склада и права доступа
 	var dbUserID int64
 	err := s.db.QueryRow("SELECT user_id FROM warehouses WHERE id = ?", id).Scan(&dbUserID)
-	if err == sql.ErrNoRows || dbUserID != userID {
-		return errors.New("Доступ запрещён")
+	if err == sql.ErrNoRows {
+		return errors.New("Склад с указанным ID не найден")
 	} else if err != nil {
-		return err
+		return fmt.Errorf("Ошибка при проверке склада: %v", err)
 	}
+
+	if dbUserID != userID {
+		return errors.New("Склад принадлежит другому пользователю")
+	}
+
+	// Проверяем наличие связанных офферов
+	var offerCount int
+	err = s.db.QueryRow("SELECT COUNT(*) FROM offers WHERE warehouse_id = ?", id).Scan(&offerCount)
+	if err != nil {
+		return fmt.Errorf("Ошибка при проверке связанных офферов: %v", err)
+	}
+
+	if offerCount > 0 {
+		return errors.New("Нельзя удалить склад: есть связанные офферы")
+	}
+
+	// Удаляем склад
 	_, err = s.db.Exec("DELETE FROM warehouses WHERE id = ?", id)
-	return err
+	if err != nil {
+		return fmt.Errorf("Ошибка при удалении склада: %v", err)
+	}
+
+	return nil
 }
 
 type WarehouseListResponse struct {
