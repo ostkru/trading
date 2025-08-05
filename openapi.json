@@ -7,7 +7,12 @@
   },
   "servers": [
     {
-      "url": "https://api.portaldata.ru/v1"
+      "url": "https://api.portaldata.ru/v1/trading",
+      "description": "Production API"
+    },
+    {
+      "url": "http://localhost:8090/api/v1",
+      "description": "Development API"
     }
   ],
   "components": {

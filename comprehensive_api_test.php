@@ -5,7 +5,7 @@
  */
 
 class ComprehensiveAPITest {
-    private $baseUrl = 'http://localhost:8095/api/v1';
+    private $baseUrl = 'https://api.portaldata.ru/v1/trading';
     private $users = [
         'user1' => [
             'name' => 'clear13808',
