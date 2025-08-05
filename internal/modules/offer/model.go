@@ -60,10 +60,18 @@ type GeographicFilter struct {
 
 // OfferFilterRequest содержит все параметры фильтрации
 type OfferFilterRequest struct {
-	Filter        string            `json:"filter,omitempty"`         // my, others, all
-	OfferType     string            `json:"offer_type,omitempty"`     // buy, sell
-	Geographic    *GeographicFilter `json:"geographic,omitempty"`     // Географический фильтр
-	PriceMin      *float64          `json:"price_min,omitempty"`      // Минимальная цена
-	PriceMax      *float64          `json:"price_max,omitempty"`      // Максимальная цена
-	AvailableLots *int              `json:"available_lots,omitempty"` // Минимальное количество лотов
+	Filter          string            `json:"filter,omitempty"`            // my, others, all
+	OfferType       string            `json:"offer_type,omitempty"`        // buy, sell
+	Geographic      *GeographicFilter `json:"geographic,omitempty"`        // Географический фильтр
+	PriceMin        *float64          `json:"price_min,omitempty"`         // Минимальная цена
+	PriceMax        *float64          `json:"price_max,omitempty"`         // Максимальная цена
+	AvailableLots   *int              `json:"available_lots,omitempty"`    // Минимальное количество лотов
+	BrandID         *int64            `json:"brand_id,omitempty"`          // ID бренда
+	CategoryID      *int64            `json:"category_id,omitempty"`       // ID категории
+	ProductName     *string           `json:"product_name,omitempty"`      // Название продукта (поиск)
+	VendorArticle   *string           `json:"vendor_article,omitempty"`    // Артикул производителя
+	WarehouseID     *int64            `json:"warehouse_id,omitempty"`      // ID склада
+	TaxNDS          *int              `json:"tax_nds,omitempty"`           // НДС в процентах
+	UnitsPerLot     *int              `json:"units_per_lot,omitempty"`     // Количество единиц в лоте
+	MaxShippingDays *int              `json:"max_shipping_days,omitempty"` // Максимальные дни доставки
 }

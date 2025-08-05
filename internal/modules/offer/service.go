@@ -340,6 +340,54 @@ func (s *Service) PublicListOffersWithFilters(page, limit int, filters *OfferFil
 		params = append(params, *filters.AvailableLots)
 	}
 
+	// Добавляем фильтр по ID бренда
+	if filters.BrandID != nil {
+		whereConditions = append(whereConditions, "p.brand_id = ?")
+		params = append(params, *filters.BrandID)
+	}
+
+	// Добавляем фильтр по ID категории
+	if filters.CategoryID != nil {
+		whereConditions = append(whereConditions, "p.category_id = ?")
+		params = append(params, *filters.CategoryID)
+	}
+
+	// Добавляем фильтр по названию продукта (поиск)
+	if filters.ProductName != nil && *filters.ProductName != "" {
+		whereConditions = append(whereConditions, "p.name LIKE ?")
+		params = append(params, "%"+*filters.ProductName+"%")
+	}
+
+	// Добавляем фильтр по артикулу производителя
+	if filters.VendorArticle != nil && *filters.VendorArticle != "" {
+		whereConditions = append(whereConditions, "p.vendor_article LIKE ?")
+		params = append(params, "%"+*filters.VendorArticle+"%")
+	}
+
+	// Добавляем фильтр по ID склада
+	if filters.WarehouseID != nil {
+		whereConditions = append(whereConditions, "o.warehouse_id = ?")
+		params = append(params, *filters.WarehouseID)
+	}
+
+	// Добавляем фильтр по НДС
+	if filters.TaxNDS != nil {
+		whereConditions = append(whereConditions, "o.tax_nds = ?")
+		params = append(params, *filters.TaxNDS)
+	}
+
+	// Добавляем фильтр по количеству единиц в лоте
+	if filters.UnitsPerLot != nil {
+		whereConditions = append(whereConditions, "o.units_per_lot = ?")
+		params = append(params, *filters.UnitsPerLot)
+	}
+
+	// Добавляем фильтр по максимальным дням доставки
+	if filters.MaxShippingDays != nil {
+		whereConditions = append(whereConditions, "o.max_shipping_days <= ?")
+		params = append(params, *filters.MaxShippingDays)
+	}
+
 	// Формируем WHERE clause
 	whereClause := ""
 	if len(whereConditions) > 0 {
@@ -349,6 +397,7 @@ func (s *Service) PublicListOffersWithFilters(page, limit int, filters *OfferFil
 	// Получаем общее количество публичных офферов с фильтрами
 	countQuery := fmt.Sprintf(`
 		SELECT COUNT(*) FROM offers o
+		LEFT JOIN products p ON o.product_id = p.id
 		LEFT JOIN warehouses w ON o.warehouse_id = w.id
 		%s`, whereClause)
 	var total int

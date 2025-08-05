@@ -243,7 +243,110 @@ func (h *Handlers) PublicListOffers(c *gin.Context) {
 		limit = 100
 	}
 
-	response, err := h.service.PublicListOffers(page, limit)
+	// Создаем фильтры из query параметров
+	filters := &OfferFilterRequest{}
+
+	// Парсим offer_type
+	if offerType := c.Query("offer_type"); offerType != "" {
+		filters.OfferType = offerType
+	}
+
+	// Парсим ценовые фильтры
+	if priceMinStr := c.Query("price_min"); priceMinStr != "" {
+		if priceMin, err := strconv.ParseFloat(priceMinStr, 64); err == nil {
+			filters.PriceMin = &priceMin
+		}
+	}
+	if priceMaxStr := c.Query("price_max"); priceMaxStr != "" {
+		if priceMax, err := strconv.ParseFloat(priceMaxStr, 64); err == nil {
+			filters.PriceMax = &priceMax
+		}
+	}
+
+	// Парсим available_lots
+	if availableLotsStr := c.Query("available_lots"); availableLotsStr != "" {
+		if availableLots, err := strconv.Atoi(availableLotsStr); err == nil {
+			filters.AvailableLots = &availableLots
+		}
+	}
+
+	// Парсим brand_id
+	if brandIDStr := c.Query("brand_id"); brandIDStr != "" {
+		if brandID, err := strconv.ParseInt(brandIDStr, 10, 64); err == nil {
+			filters.BrandID = &brandID
+		}
+	}
+
+	// Парсим category_id
+	if categoryIDStr := c.Query("category_id"); categoryIDStr != "" {
+		if categoryID, err := strconv.ParseInt(categoryIDStr, 10, 64); err == nil {
+			filters.CategoryID = &categoryID
+		}
+	}
+
+	// Парсим product_name
+	if productName := c.Query("product_name"); productName != "" {
+		filters.ProductName = &productName
+	}
+
+	// Парсим vendor_article
+	if vendorArticle := c.Query("vendor_article"); vendorArticle != "" {
+		filters.VendorArticle = &vendorArticle
+	}
+
+	// Парсим warehouse_id
+	if warehouseIDStr := c.Query("warehouse_id"); warehouseIDStr != "" {
+		if warehouseID, err := strconv.ParseInt(warehouseIDStr, 10, 64); err == nil {
+			filters.WarehouseID = &warehouseID
+		}
+	}
+
+	// Парсим tax_nds
+	if taxNDSStr := c.Query("tax_nds"); taxNDSStr != "" {
+		if taxNDS, err := strconv.Atoi(taxNDSStr); err == nil {
+			filters.TaxNDS = &taxNDS
+		}
+	}
+
+	// Парсим units_per_lot
+	if unitsPerLotStr := c.Query("units_per_lot"); unitsPerLotStr != "" {
+		if unitsPerLot, err := strconv.Atoi(unitsPerLotStr); err == nil {
+			filters.UnitsPerLot = &unitsPerLot
+		}
+	}
+
+	// Парсим max_shipping_days
+	if maxShippingDaysStr := c.Query("max_shipping_days"); maxShippingDaysStr != "" {
+		if maxShippingDays, err := strconv.Atoi(maxShippingDaysStr); err == nil {
+			filters.MaxShippingDays = &maxShippingDays
+		}
+	}
+
+	// Парсим географические фильтры
+	if minLatStr := c.Query("min_latitude"); minLatStr != "" {
+		if minLat, err := strconv.ParseFloat(minLatStr, 64); err == nil {
+			if maxLatStr := c.Query("max_latitude"); maxLatStr != "" {
+				if maxLat, err := strconv.ParseFloat(maxLatStr, 64); err == nil {
+					if minLngStr := c.Query("min_longitude"); minLngStr != "" {
+						if minLng, err := strconv.ParseFloat(minLngStr, 64); err == nil {
+							if maxLngStr := c.Query("max_longitude"); maxLngStr != "" {
+								if maxLng, err := strconv.ParseFloat(maxLngStr, 64); err == nil {
+									filters.Geographic = &GeographicFilter{
+										MinLatitude:  minLat,
+										MaxLatitude:  maxLat,
+										MinLongitude: minLng,
+										MaxLongitude: maxLng,
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	response, err := h.service.PublicListOffersWithFilters(page, limit, filters)
 	if err != nil {
 		log.Printf("PublicListOffers error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

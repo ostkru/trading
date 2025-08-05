@@ -929,7 +929,169 @@
     "/offers/public": {
       "get": {
         "summary": "Публичные офферы",
-        "description": "Возвращает список публичных офферов.",
+        "description": "Возвращает список публичных офферов с возможностью фильтрации.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Номер страницы (по умолчанию: 1)"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "description": "Количество элементов на странице (по умолчанию: 20, максимум: 100)"
+          },
+          {
+            "in": "query",
+            "name": "offer_type",
+            "schema": {
+              "type": "string",
+              "enum": ["buy", "sell"]
+            },
+            "description": "Тип оффера: buy (покупка) или sell (продажа)"
+          },
+          {
+            "in": "query",
+            "name": "price_min",
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            },
+            "description": "Минимальная цена за единицу товара"
+          },
+          {
+            "in": "query",
+            "name": "price_max",
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            },
+            "description": "Максимальная цена за единицу товара"
+          },
+          {
+            "in": "query",
+            "name": "available_lots",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Минимальное количество доступных лотов"
+          },
+          {
+            "in": "query",
+            "name": "brand_id",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "ID бренда для фильтрации"
+          },
+          {
+            "in": "query",
+            "name": "category_id",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "ID категории для фильтрации"
+          },
+          {
+            "in": "query",
+            "name": "product_name",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Название продукта для поиска (частичное совпадение)"
+          },
+          {
+            "in": "query",
+            "name": "vendor_article",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Артикул производителя для поиска (частичное совпадение)"
+          },
+          {
+            "in": "query",
+            "name": "warehouse_id",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "ID склада для фильтрации"
+          },
+          {
+            "in": "query",
+            "name": "tax_nds",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "description": "НДС в процентах для фильтрации"
+          },
+          {
+            "in": "query",
+            "name": "units_per_lot",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Количество единиц в лоте для фильтрации"
+          },
+          {
+            "in": "query",
+            "name": "max_shipping_days",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Максимальные дни доставки"
+          },
+          {
+            "in": "query",
+            "name": "min_latitude",
+            "schema": {
+              "type": "number"
+            },
+            "description": "Минимальная широта для географической фильтрации"
+          },
+          {
+            "in": "query",
+            "name": "max_latitude",
+            "schema": {
+              "type": "number"
+            },
+            "description": "Максимальная широта для географической фильтрации"
+          },
+          {
+            "in": "query",
+            "name": "min_longitude",
+            "schema": {
+              "type": "number"
+            },
+            "description": "Минимальная долгота для географической фильтрации"
+          },
+          {
+            "in": "query",
+            "name": "max_longitude",
+            "schema": {
+              "type": "number"
+            },
+            "description": "Максимальная долгота для географической фильтрации"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Список публичных офферов",
@@ -943,6 +1105,18 @@
                       "items": {
                         "$ref": "#/components/schemas/Offer"
                       }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "description": "Общее количество офферов"
+                    },
+                    "page": {
+                      "type": "integer",
+                      "description": "Текущая страница"
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "description": "Количество элементов на странице"
                     }
                   }
                 }
