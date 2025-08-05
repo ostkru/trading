@@ -5,7 +5,7 @@
  */
 
 class ComprehensiveAPITest {
-    private $baseUrl = 'https://api.portaldata.ru/v1/trading';
+    private $baseUrl = 'http://localhost:8095/api/v1';
     private $users = [
         'user1' => [
             'name' => 'clear13808',
@@ -66,6 +66,12 @@ class ComprehensiveAPITest {
         
         // 11. Тестирование географических фильтров
         $this->testGeographicFilters();
+        
+        // 12. Тестирование фильтров публичных офферов
+        $this->testPublicOfferFilters();
+        
+        // 13. Очистка тестовых данных
+        $this->cleanupTestData();
         
         $totalEndTime = microtime(true);
         $this->performanceMetrics['total_time'] = round(($totalEndTime - $totalStartTime) * 1000, 2);
@@ -770,6 +776,76 @@ class ComprehensiveAPITest {
         echo "\n";
     }
 
+    private function testPublicOfferFilters() {
+        echo "🔍 12. ТЕСТИРОВАНИЕ ФИЛЬТРОВ ПУБЛИЧНЫХ ОФФЕРОВ\n";
+        echo "--------------------------------------------------\n";
+        
+        // Фильтр по типу оффера
+        $startTime = microtime(true);
+        $response = $this->makeRequest('GET', '/offers/public?offer_type=sell&page=1&limit=5', null, null);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Фильтр по типу оффера (sell)'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Фильтр по типу оффера (sell)', $response['status'] === 200, $response);
+        
+        // Фильтр по цене
+        $startTime = microtime(true);
+        $response = $this->makeRequest('GET', '/offers/public?price_min=100&price_max=300&page=1&limit=5', null, null);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Фильтр по цене (100-300)'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Фильтр по цене (100-300)', $response['status'] === 200, $response);
+        
+        // Фильтр по названию продукта
+        $startTime = microtime(true);
+        $response = $this->makeRequest('GET', '/offers/public?product_name=тест&page=1&limit=5', null, null);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Фильтр по названию продукта'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Фильтр по названию продукта', $response['status'] === 200, $response);
+        
+        // Фильтр по артикулу производителя
+        $startTime = microtime(true);
+        $response = $this->makeRequest('GET', '/offers/public?vendor_article=TEST&page=1&limit=5', null, null);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Фильтр по артикулу производителя'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Фильтр по артикулу производителя', $response['status'] === 200, $response);
+        
+        // Фильтр по НДС
+        $startTime = microtime(true);
+        $response = $this->makeRequest('GET', '/offers/public?tax_nds=20&page=1&limit=5', null, null);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Фильтр по НДС (20%)'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Фильтр по НДС (20%)', $response['status'] === 200, $response);
+        
+        // Фильтр по количеству единиц в лоте
+        $startTime = microtime(true);
+        $response = $this->makeRequest('GET', '/offers/public?units_per_lot=1&page=1&limit=5', null, null);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Фильтр по единицам в лоте'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Фильтр по единицам в лоте', $response['status'] === 200, $response);
+        
+        // Фильтр по максимальным дням доставки
+        $startTime = microtime(true);
+        $response = $this->makeRequest('GET', '/offers/public?max_shipping_days=5&page=1&limit=5', null, null);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Фильтр по дням доставки'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Фильтр по дням доставки', $response['status'] === 200, $response);
+        
+        // Фильтр по минимальному количеству лотов
+        $startTime = microtime(true);
+        $response = $this->makeRequest('GET', '/offers/public?available_lots=5&page=1&limit=5', null, null);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Фильтр по доступным лотам'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Фильтр по доступным лотам', $response['status'] === 200, $response);
+        
+        // Комбинированный фильтр
+        $startTime = microtime(true);
+        $response = $this->makeRequest('GET', '/offers/public?offer_type=sell&price_min=100&price_max=400&tax_nds=20&max_shipping_days=5&page=1&limit=5', null, null);
+        $endTime = microtime(true);
+        $this->performanceMetrics['Комбинированный фильтр офферов'] = round(($endTime - $startTime) * 1000, 2);
+        $this->assertTest('Комбинированный фильтр офферов', $response['status'] === 200, $response);
+        
+        echo "\n";
+    }
+
     private function makeRequest($method, $endpoint, $data = null, $apiToken = null, $useRootUrl = false) {
         $url = $useRootUrl ? 'http://localhost:8095' . $endpoint : $this->baseUrl . $endpoint;
         
@@ -878,6 +954,7 @@ class ComprehensiveAPITest {
         echo "✅ Orders: POST, GET, PUT (status)\n";
         echo "✅ Security: Authorization, Validation, Permissions\n";
         echo "✅ Error Handling: 400, 401, 403, 404, 500\n";
+        echo "✅ Filters: Public offers with comprehensive filtering\n";
         echo str_repeat("=", 100) . "\n";
         
         echo "\n📋 ДЕТАЛЬНАЯ СТАТИСТИКА ПО МОДУЛЯМ:\n";
@@ -892,7 +969,8 @@ class ComprehensiveAPITest {
             'Security' => 0,
             'Errors' => 0,
             'Batch' => 0,
-            'Special' => 0
+            'Special' => 0,
+            'Filters' => 0
         ];
         
         foreach ($this->testResults as $test) {
@@ -912,6 +990,8 @@ class ComprehensiveAPITest {
                 $moduleStats['Batch']++;
             } elseif (strpos($test['name'], 'специаль') !== false || strpos($test['name'], 'Special') !== false) {
                 $moduleStats['Special']++;
+            } elseif (strpos($test['name'], 'фильтр') !== false || strpos($test['name'], 'Filter') !== false) {
+                $moduleStats['Filters']++;
             }
         }
         
@@ -960,6 +1040,60 @@ class ComprehensiveAPITest {
         echo str_repeat("=", 100) . "\n";
         echo "🎉 ТЕСТИРОВАНИЕ ЗАВЕРШЕНО\n";
         echo str_repeat("=", 100) . "\n";
+    }
+
+    private function cleanupTestData() {
+        echo "🧹 13. ОЧИСТКА ТЕСТОВЫХ ДАННЫХ\n";
+        echo "----------------------------------\n";
+        
+        // Удаление в правильном порядке (сначала заказы, потом офферы, продукты, склады)
+        // Это необходимо из-за foreign key constraints
+        
+        // 1. Удаление заказов (зависят от офферов)
+        if (!empty($this->createdOrders)) {
+            foreach ($this->createdOrders as $user => $orderId) {
+                $startTime = microtime(true);
+                $response = $this->makeRequest('DELETE', '/orders/' . $orderId, null, $this->users[$user]['api_token']);
+                $endTime = microtime(true);
+                $this->performanceMetrics['Удаление заказа'] = round(($endTime - $startTime) * 1000, 2);
+                $this->assertTest('Удаление заказа (' . $user . ')', $response['status'] === 200 || $response['status'] === 404, $response);
+            }
+        }
+        
+        // 2. Удаление офферов (зависят от продуктов и складов)
+        if (!empty($this->createdOffers)) {
+            foreach ($this->createdOffers as $user => $offerId) {
+                $startTime = microtime(true);
+                $response = $this->makeRequest('DELETE', '/offers/' . $offerId, null, $this->users[$user]['api_token']);
+                $endTime = microtime(true);
+                $this->performanceMetrics['Удаление оффера'] = round(($endTime - $startTime) * 1000, 2);
+                $this->assertTest('Удаление оффера (' . $user . ')', $response['status'] === 200 || $response['status'] === 404, $response);
+            }
+        }
+        
+        // 3. Удаление продуктов (после удаления офферов)
+        if (!empty($this->createdProducts)) {
+            foreach ($this->createdProducts as $user => $productId) {
+                $startTime = microtime(true);
+                $response = $this->makeRequest('DELETE', '/products/' . $productId, null, $this->users[$user]['api_token']);
+                $endTime = microtime(true);
+                $this->performanceMetrics['Удаление продукта'] = round(($endTime - $startTime) * 1000, 2);
+                $this->assertTest('Удаление продукта (' . $user . ')', $response['status'] === 200 || $response['status'] === 404, $response);
+            }
+        }
+        
+        // 4. Удаление складов (после удаления офферов)
+        if (!empty($this->createdWarehouses)) {
+            foreach ($this->createdWarehouses as $user => $warehouseId) {
+                $startTime = microtime(true);
+                $response = $this->makeRequest('DELETE', '/warehouses/' . $warehouseId, null, $this->users[$user]['api_token']);
+                $endTime = microtime(true);
+                $this->performanceMetrics['Удаление склада'] = round(($endTime - $startTime) * 1000, 2);
+                $this->assertTest('Удаление склада (' . $user . ')', $response['status'] === 200 || $response['status'] === 404, $response);
+            }
+        }
+        
+        echo "✅ Очистка тестовых данных завершена\n\n";
     }
 }
 
