@@ -1,0 +1,46 @@
+{
+  "theme": {
+    "colors": {
+      "primary": {
+        "main": "#1890ff"
+      }
+    },
+    "typography": {
+      "fontSize": "14px",
+      "lineHeight": "1.5em",
+      "code": {
+        "fontSize": "13px"
+      }
+    }
+  },
+  "hideDownloadButton": false,
+  "hideHostname": false,
+  "hideInfoSection": false,
+  "hideLoading": false,
+  "hideSchemaPattern": false,
+  "hideSingleRequestSampleTab": false,
+  "jsonSampleExpandLevel": 2,
+  "maxDisplayedEnumValues": 3,
+  "menuToggle": true,
+  "nativeScrollbars": false,
+  "noAutoAuth": false,
+  "pathInMiddlePanel": false,
+  "requiredPropsFirst": false,
+  "scrollYOffset": 0,
+  "showExtensions": true,
+  "showObjectSchemaExamples": true,
+  "sortPropsAlphabetically": false,
+  "suppressWarnings": false,
+  "tagName": "h2",
+  "untrustedSpec": false,
+  "usePathInMiddlePanel": false,
+  "expandResponses": "200,201",
+  "expandSingleSchemaField": false,
+  "expandDefaultServerVariables": true,
+  "showConsole": true,
+  "showRequestHeaders": true,
+  "showRequestSample": true,
+  "showResponseHeaders": true,
+  "showResponseSample": true,
+  "defaultServerUrl": "https://api.portaldata.ru/v1/trading"
+} 
