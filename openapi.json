@@ -11,7 +11,7 @@
       "description": "Production API"
     },
     {
-      "url": "http://localhost:8090/api/v1",
+      "url": "http://localhost:8095/api/v1",
       "description": "Development API"
     }
   ],

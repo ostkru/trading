@@ -72,7 +72,7 @@ go build -o app cmd/api/main.go
 ./app
 ```
 
-Приложение будет доступно по адресу: `http://localhost:8090`
+Приложение будет доступно по адресу: `http://localhost:8095`
 
 ### 5. Настройка nginx для продакшена
 
@@ -103,8 +103,8 @@ sudo systemctl reload nginx
 - **Документация**: `https://api.portaldata.ru/v1/trading/docs`
 
 ### Разработка
-- **Базовый URL**: `http://localhost:8090/api/v1`
-- **Документация**: `http://localhost:8090/redoc-documentation.html`
+- **Базовый URL**: `http://localhost:8095/api/v1`
+- **Документация**: `http://localhost:8095/redoc-documentation.html`
 
 ## Аутентификация
 

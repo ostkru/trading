@@ -177,7 +177,7 @@ netstat -tlnp | grep -E ':(80|443|8090)'
 
 # Тестирование локального API
 curl -H "Authorization: Bearer f428fbc16a97b9e2a55717bd34e97537ec34cb8c04a5f32eeb4e88c9ee998a53" \
-     http://localhost:8090/api/v1/products
+     http://localhost:8095/api/v1/products
 ```
 
 ### Тестирование продакшена

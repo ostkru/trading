@@ -234,3 +234,4 @@
 [GIN] 2025/08/05 - 14:37:23 | 500 |   91.619656ms |       127.0.0.1 | DELETE   "/api/v1/warehouses/252"
 2025/08/05 14:37:23 DeleteWarehouse error: Error 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`portaldata`.`offers`, CONSTRAINT `offers_ibfk_2` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses` (`id`))
 [GIN] 2025/08/05 - 14:37:23 | 500 |   91.341587ms |       127.0.0.1 | DELETE   "/api/v1/warehouses/253"
+[GIN] 2025/08/05 - 14:49:35 | 404 |       2.702µs |  212.102.40.177 | GET      "/api/v1/trading/product"
