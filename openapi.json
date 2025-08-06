@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
     "info": {
-        "title": "PortalData API",
+        "title": "API ПорталДанных.РФ",
         "version": "1.0.0",
-    "description": "Полная документация по REST API для управления продуктами, офферами, заказами и складами.\nАвторизация по API-ключу обязательна для всех методов (заголовок Authorization).\n\n## Система статусов заказов\n- **pending** - Ожидает подтверждения (по умолчанию)\n- **confirmed** - Подтвержден продавцом\n- **processing** - В обработке\n- **shipped** - Отправлен\n- **delivered** - Доставлен\n- **cancelled** - Отменен\n- **rejected** - Отклонен\n\n## Типы офферов\n- **sale/sell** - Оффер на продажу\n- **buy/purchase** - Оффер на покупку\n\n## Роли в заказах\n- **initiator_user_id** - Покупатель (создатель заказа)\n- **counterparty_user_id** - Продавец (владелец оффера)"
+    "description": "Полная документация по REST API для управления продуктами, офферами, заказами и складами.\nАвторизация по API-ключу обязательна для всех методов (заголовок Authorization).\n\n## Основные модули\n- **Products** - Управление продуктами (включая штрих-коды)\n- **Offers** - Управление предложениями (офферами)\n- **Orders** - Управление заказами\n- **Warehouses** - Управление складами\n\n## Система статусов заказов\n- **pending** - Ожидает подтверждения (по умолчанию)\n- **confirmed** - Подтвержден продавцом\n- **processing** - В обработке\n- **shipped** - Отправлен\n- **delivered** - Доставлен\n- **cancelled** - Отменен\n- **rejected** - Отклонен\n\n## Типы офферов\n- **sale/sell** - Оффер на продажу\n- **buy/purchase** - Оффер на покупку\n\n## Роли в заказах\n- **initiator_user_id** - Покупатель (создатель заказа)\n- **counterparty_user_id** - Продавец (владелец оффера)\n\n## Новые возможности\n- **Штрих-коды продуктов** - Опциональное поле barcode для продуктов\n- **Географические фильтры** - Фильтрация офферов по координатам\n- **Пакетные операции** - Массовое создание продуктов и офферов"
   },
   "servers": [
     {
@@ -52,6 +52,10 @@
           "description": {
             "type": "string"
           },
+          "barcode": {
+            "type": "string",
+            "description": "Штрих-код продукта (опциональное поле)"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -95,11 +99,15 @@
           "description": {
             "type": "string",
             "description": "Описание продукта включая характеристики (необязательное поле)"
+          },
+          "barcode": {
+            "type": "string",
+            "description": "Штрих-код продукта (опциональное поле)"
           }
         },
         "description": "Поля created_at и updated_at выставляются сервером автоматически."
             },
-            "UpdateProductRequest": {
+                        "UpdateProductRequest": {
                 "type": "object",
                 "properties": {
           "name": {
@@ -125,8 +133,12 @@
           "description": {
             "type": "string",
             "description": "Описание продукта включая характеристики (необязательное поле)"
+          },
+          "barcode": {
+            "type": "string",
+            "description": "Штрих-код продукта"
           }
-                }
+        }
             },
             "Offer": {
                 "type": "object",
@@ -228,7 +240,7 @@
           },
           "tax_nds": {
             "type": "integer",
-            "description": "НДС в процентах (обязательное поле)"
+            "description": "НДС в цене в процентах (0 - если без НДС, обязательное поле)"
           },
           "warehouse_id": {
             "type": "integer",
@@ -264,7 +276,7 @@
           },
           "tax_nds": {
             "type": "integer",
-            "description": "НДС в процентах"
+            "description": "НДС в цене в процентах (0 - если без НДС)"
           },
           "is_public": {
             "type": "boolean",
@@ -869,12 +881,10 @@
         }
       }
     },
-
-
     "/offers": {
-            "post": {
-                "summary": "Создать оффер",
-        "description": "Создаёт новый оффер. Координаты автоматически подтягиваются из склада.",
+      "post": {
+        "summary": "Создать оффер",
+        "description": "Создаёт новый оффер для продажи или покупки товара.",
         "requestBody": {
           "required": true,
           "content": {
@@ -898,12 +908,56 @@
           },
           "400": {
             "description": "Ошибка валидации"
+          },
+          "404": {
+            "description": "Продукт не найден"
           }
         }
       },
       "get": {
         "summary": "Список офферов пользователя",
         "description": "Возвращает список офферов, созданных текущим пользователем.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1
+            },
+            "description": "Номер страницы для пагинации списка офферов (начиная с 1, по умолчанию 1)"
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Количество офферов на страницу (от 1 до 100, по умолчанию 20)"
+          },
+          {
+            "in": "query",
+            "name": "offer_type",
+            "schema": {
+              "type": "string",
+              "enum": ["buy", "sell"]
+            },
+            "description": "Фильтр по типу оффера: 'buy' — покупка, 'sell' — продажа"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": ["active", "inactive", "completed"]
+            },
+            "description": "Фильтр по статусу оффера: 'active' — активный, 'inactive' — неактивный, 'completed' — завершенный"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Список офферов",
@@ -917,6 +971,15 @@
                       "items": {
                         "$ref": "#/components/schemas/Offer"
                       }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "per_page": {
+                      "type": "integer"
                     }
                   }
                 }
@@ -924,9 +987,9 @@
             }
           }
         }
-            }
-        },
-        "/offers/public": {
+      }
+    },
+    "/offers/public": {
             "get": {
                 "summary": "Публичные офферы",
         "description": "Возвращает список публичных офферов с возможностью фильтрации.",
@@ -1039,7 +1102,7 @@
               "minimum": 0,
               "maximum": 100
             },
-            "description": "НДС в процентах для фильтрации"
+            "description": "НДС в цене в процентах для фильтрации (0 - если без НДС)"
           },
           {
             "in": "query",
@@ -1589,27 +1652,6 @@
           }
         }
       }
-    },
-    "/api/v1/offers": {
-      "get": {
-        "parameters": [
-          {
-            "name": "filter",
-            "in": "query",
-            "description": "Фильтр офферов: 'my' — только мои офферы, 'others' — только чужие офферы, 'all' — все офферы (по умолчанию 'my')",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "my",
-                "others",
-                "all"
-              ],
-              "default": "my"
-            }
-          }
-        ]
-            }
-        }
     }
+  }
 } 

@@ -8,7 +8,7 @@ pkill -f app_8095 2>/dev/null
 sleep 2
 
 # Запуск сервера в фоне
-echo "Запуск PortalData API сервера в фоне..."
+echo "Запуск API ПорталДанных.РФ сервера в фоне..."
 nohup ./app_8095 > server.log 2>&1 &
 SERVER_PID=$!
 

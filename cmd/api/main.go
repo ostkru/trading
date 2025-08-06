@@ -10,9 +10,9 @@ import (
 	"portaldata-api/internal/pkg/config"
 	"portaldata-api/internal/pkg/database"
 
-	metaproduct "portaldata-api/internal/modules/metaproduct"
 	offer "portaldata-api/internal/modules/offer"
 	order "portaldata-api/internal/modules/order"
+	products "portaldata-api/internal/modules/products"
 	user "portaldata-api/internal/modules/user"
 	warehouse "portaldata-api/internal/modules/warehouse"
 
@@ -43,8 +43,8 @@ func main() {
 	authService := user.NewAuthService(userService)
 	authMiddleware := authService.AuthMiddleware()
 
-	metaproductService := metaproduct.NewService(db)
-	metaproductHandlers := metaproduct.NewHandlers(metaproductService)
+	productsService := products.NewService(db)
+	productsHandlers := products.NewHandlers(productsService)
 
 	offerService := offer.NewService(db)
 	offerHandlers := offer.NewHandlers(offerService)
@@ -58,7 +58,7 @@ func main() {
 	// Основной endpoint для проверки доступности
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"message":  "PortalData API доступен",
+			"message":  "API ПорталДанных.РФ доступен",
 			"version":  "v1",
 			"database": "MySQL",
 			"status":   "running",
@@ -77,7 +77,7 @@ func main() {
 	// Защищенные маршруты (с авторизацией)
 	apiGroup := router.Group("/api/v1")
 	apiGroup.Use(authMiddleware)
-	metaproduct.RegisterRoutes(apiGroup, metaproductHandlers)
+	products.RegisterRoutes(apiGroup, productsHandlers)
 	offer.RegisterRoutes(apiGroup, offerHandlers)
 	order.RegisterRoutes(apiGroup, orderHandlers)
 	warehouse.RegisterRoutes(apiGroup, warehouseHandlers)

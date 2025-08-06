@@ -16,7 +16,7 @@
 ```go
 router.GET("/", func(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{
-        "message":  "PortalData API доступен",
+        "message":  "API ПорталДанных.РФ доступен",
         "version":  "v1",
         "database": "MySQL",
         "status":   "running",

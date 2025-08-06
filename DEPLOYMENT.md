@@ -222,7 +222,7 @@ sudo apt install htop -y
 # Создание скрипта мониторинга
 cat > monitor.sh << 'EOF'
 #!/bin/bash
-echo "=== PortalData API Status ==="
+echo "=== API ПорталДанных.РФ Status ==="
 echo "Time: $(date)"
 echo ""
 

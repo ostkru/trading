@@ -1,6 +1,6 @@
 {
   "configuration_guide": {
-    "title": "PortalData API - Руководство по конфигурации",
+    "title": "API ПорталДанных.РФ - Руководство по конфигурации",
     "version": "1.0.0",
     "environment": {
       "development": {

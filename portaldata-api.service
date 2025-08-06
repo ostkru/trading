@@ -1,13 +1,13 @@
 [Unit]
-Description=PortalData API Server
+Description=API ПорталДанных.РФ Server
 After=network.target mysql.service
 Wants=mysql.service
 
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/var/www/go
-ExecStart=/var/www/go/app_8095_improved
+WorkingDirectory=/var/www/go-mod
+ExecStart=/var/www/go-mod/app
 Restart=always
 RestartSec=5
 StandardOutput=journal

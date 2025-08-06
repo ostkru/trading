@@ -37,7 +37,7 @@ class ComprehensiveAPITest {
         // 1. Базовые проверки
         $this->testBasicEndpoints();
         
-        // 2. Тестирование продуктов (Metaproducts)
+        // 2. Тестирование продуктов (Products)
         $this->testProducts();
         
         // 3. Тестирование складов
@@ -102,7 +102,7 @@ class ComprehensiveAPITest {
     }
 
     private function testProducts() {
-        echo "📦 2. ТЕСТИРОВАНИЕ ПРОДУКТОВ (METAPRODUCTS)\n";
+        echo "📦 2. ТЕСТИРОВАНИЕ ПРОДУКТОВ (PRODUCTS)\n";
         echo "-----------------------------------------------\n";
         
         // Создание продукта пользователем 1 с уникальным артикулом
@@ -948,7 +948,7 @@ class ComprehensiveAPITest {
         
         echo "\n" . str_repeat("=", 100) . "\n";
         echo "🎯 ПРОТЕСТИРОВАННЫЕ МЕТОДЫ:\n";
-        echo "✅ Products (Metaproducts): POST, GET, PUT, DELETE, Batch\n";
+        echo "✅ Products: POST, GET, PUT, DELETE, Batch\n";
         echo "✅ Warehouses: POST, GET, PUT, DELETE\n";
         echo "✅ Offers: POST, GET, PUT, DELETE, Batch, Public, WB Stock\n";
         echo "✅ Orders: POST, GET, PUT (status)\n";

@@ -14,7 +14,7 @@ echo "1. Проверка основного endpoint:\n";
 $response = curl_get_contents("$baseUrl/");
 if ($response) {
     $data = json_decode($response, true);
-    if (isset($data['message']) && $data['message'] === 'PortalData API доступен') {
+    if (isset($data['message']) && $data['message'] === 'API ПорталДанных.РФ доступен') {
         echo "✅ Основной endpoint работает\n";
     } else {
         echo "❌ Основной endpoint не работает\n";

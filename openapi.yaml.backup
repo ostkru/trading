@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: PortalData API
+  title: API ПорталДанных.РФ
   version: 1.0.0
   description: |
     Полная документация по REST API для управления продуктами, офферами, заказами и складами.

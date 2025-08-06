@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Скрипт управления PortalData API сервером
+# Скрипт управления API ПорталДанных.РФ сервером
 # Использование: ./manage_server.sh [start|stop|restart|status|logs|test]
 
 PID_FILE="/var/www/go/server.pid"
@@ -9,7 +9,7 @@ SCRIPT_DIR="/var/www/go"
 
 case "$1" in
     start)
-        echo "🚀 Запуск PortalData API сервера..."
+        echo "🚀 Запуск API ПорталДанных.РФ сервера..."
         if [ -f "$PID_FILE" ]; then
             pid=$(cat "$PID_FILE")
             if kill -0 "$pid" 2>/dev/null; then
@@ -38,7 +38,7 @@ case "$1" in
         ;;
         
     stop)
-        echo "🛑 Остановка PortalData API сервера..."
+        echo "🛑 Остановка API ПорталДанных.РФ сервера..."
         if [ -f "$PID_FILE" ]; then
             pid=$(cat "$PID_FILE")
             if kill -0 "$pid" 2>/dev/null; then
@@ -56,14 +56,14 @@ case "$1" in
         ;;
         
     restart)
-        echo "🔄 Перезапуск PortalData API сервера..."
+        echo "🔄 Перезапуск API ПорталДанных.РФ сервера..."
         $0 stop
         sleep 3
         $0 start
         ;;
         
     status)
-        echo "📊 Статус PortalData API сервера:"
+        echo "📊 Статус API ПорталДанных.РФ сервера:"
         if [ -f "$PID_FILE" ]; then
             pid=$(cat "$PID_FILE")
             if kill -0 "$pid" 2>/dev/null; then

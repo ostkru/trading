@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Скрипт для запуска PortalData API сервера
+# Скрипт для запуска API ПорталДанных.РФ сервера
 # Автоматический перезапуск при падении
 
 LOG_FILE="/var/www/go/server.log"
@@ -8,7 +8,7 @@ PID_FILE="/var/www/go/server.pid"
 MAX_RESTARTS=10
 RESTART_DELAY=5
 
-echo "$(date): Запуск PortalData API сервера..." >> "$LOG_FILE"
+echo "$(date): Запуск API ПорталДанных.РФ сервера..." >> "$LOG_FILE"
 
 # Функция для остановки сервера
 stop_server() {
