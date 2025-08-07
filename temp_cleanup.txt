@@ -1,0 +1,59 @@
+    private function cleanupTestData() {
+        echo "🧹 13. ОЧИСТКА ТЕСТОВЫХ ДАННЫХ\n";
+        echo "----------------------------------\n";
+        
+        // Удаление в правильном порядке (сначала заказы, потом офферы, продукты, склады)
+        // Это необходимо из-за foreign key constraints
+        
+        // 1. Удаление заказов (зависят от офферов)
+        if (!empty($this->createdOrders)) {
+            foreach ($this->createdOrders as $user => $orderId) {
+                $startTime = microtime(true);
+                $response = $this->makeRequest('DELETE', '/orders/' . $orderId, null, $this->users[$user]['api_token']);
+                $endTime = microtime(true);
+                $this->performanceMetrics['Удаление заказа'] = round(($endTime - $startTime) * 1000, 2);
+                $this->assertTest('Удаление заказа (' . $user . ')', $response['status'] === 200 || $response['status'] === 404, $response);
+            }
+        }
+        
+        // 2. Удаление офферов (зависят от продуктов и складов)
+        if (!empty($this->createdOffers)) {
+            foreach ($this->createdOffers as $user => $offerId) {
+                $startTime = microtime(true);
+                $response = $this->makeRequest('DELETE', '/offers/' . $offerId, null, $this->users[$user]['api_token']);
+                $endTime = microtime(true);
+                $this->performanceMetrics['Удаление оффера'] = round(($endTime - $startTime) * 1000, 2);
+                $this->assertTest('Удаление оффера (' . $user . ')', $response['status'] === 200 || $response['status'] === 404, $response);
+            }
+        }
+        
+        // 3. Удаление продуктов (после удаления офферов)
+        if (!empty($this->createdProducts)) {
+            foreach ($this->createdProducts as $user => $productId) {
+                $startTime = microtime(true);
+                $response = $this->makeRequest('DELETE', '/products/' . $productId, null, $this->users[$user]['api_token']);
+                $endTime = microtime(true);
+                $this->performanceMetrics['Удаление продукта'] = round(($endTime - $startTime) * 1000, 2);
+                $this->assertTest('Удаление продукта (' . $user . ')', $response['status'] === 200 || $response['status'] === 404, $response);
+            }
+        }
+        
+        // 4. Удаление складов (после удаления офферов)
+        if (!empty($this->createdWarehouses)) {
+            foreach ($this->createdWarehouses as $user => $warehouseId) {
+                $startTime = microtime(true);
+                $response = $this->makeRequest('DELETE', '/warehouses/' . $warehouseId, null, $this->users[$user]['api_token']);
+                $endTime = microtime(true);
+                $this->performanceMetrics['Удаление склада'] = round(($endTime - $startTime) * 1000, 2);
+                $this->assertTest('Удаление склада (' . $user . ')', $response['status'] === 200 || $response['status'] === 404, $response);
+            }
+        }
+        
+        echo "✅ Очистка тестовых данных завершена\n\n";
+    }
+}
+
+// Запуск тестов
+$test = new ComprehensiveAPITest();
+$test->runAllTests();
+?> 
