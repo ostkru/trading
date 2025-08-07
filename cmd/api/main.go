@@ -58,10 +58,13 @@ func main() {
 	// Основной endpoint для проверки доступности
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"message":  "API ПорталДанных.РФ доступен",
-			"version":  "v1",
-			"database": "MySQL",
-			"status":   "running",
+			"success":  true,
+			"data": gin.H{
+				"message":  "API ПорталДанных.РФ доступен",
+				"version":  "v1",
+				"database": "MySQL",
+				"status":   "running",
+			},
 		})
 	})
 

@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"portaldata-api/internal/pkg/response"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,81 +23,81 @@ func NewHandlers(service *Service) *Handlers {
 func (h *Handlers) CreateOffer(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		response.Unauthorized(c, "Пользователь не авторизован")
 		return
 	}
 	var req CreateOfferRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные данные запроса"})
+		response.BadRequest(c, "Некорректные данные запроса")
 		return
 	}
 
 	offer, err := h.service.CreateOffer(req, userID.(int64))
 	if err != nil {
 		log.Printf("CreateOffer error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusCreated, offer)
+	response.SuccessWithData(c, http.StatusCreated, offer)
 }
 
 func (h *Handlers) UpdateOffer(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		response.Unauthorized(c, "Пользователь не авторизован")
 		return
 	}
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
+		response.BadRequest(c, "Некорректный формат ID")
 		return
 	}
 	var req UpdateOfferRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.BadRequest(c, err.Error())
 		return
 	}
 	offer, err := h.service.UpdateOffer(id, req, userID.(int64))
 	if err != nil {
 		if err.Error() == "Доступ запрещён" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Доступ запрещен"})
+			response.Forbidden(c, "Доступ запрещен")
 			return
 		}
 		log.Printf("UpdateOffer error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, offer)
+	response.SuccessWithData(c, http.StatusOK, offer)
 }
 
 func (h *Handlers) DeleteOffer(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		response.Unauthorized(c, "Пользователь не авторизован")
 		return
 	}
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
+		response.BadRequest(c, "Некорректный формат ID")
 		return
 	}
 
 	if err := h.service.DeleteOffer(id, userID.(int64)); err != nil {
 		if strings.Contains(err.Error(), "принадлежит другому пользователю") {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			response.Forbidden(c, err.Error())
 			return
 		}
 		if strings.Contains(err.Error(), "не найден") {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			response.NotFound(c, err.Error())
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Offer deleted"})
+	response.SuccessWithMessage(c, http.StatusOK, "Offer deleted")
 }
 
 func (h *Handlers) ListOffers(c *gin.Context) {
@@ -190,46 +192,46 @@ func (h *Handlers) ListOffersWithFilters(c *gin.Context) {
 func (h *Handlers) GetOffer(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
+		response.BadRequest(c, "Некорректный формат ID")
 		return
 	}
 	offer, err := h.service.GetOfferByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Оффер не найден"})
+			response.NotFound(c, "Оффер не найден")
 			return
 		}
 		log.Printf("GetOffer error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, offer)
+	response.SuccessWithData(c, http.StatusOK, offer)
 }
 
 func (h *Handlers) WBStock(c *gin.Context) {
 	productID, err := strconv.ParseInt(c.Query("product_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID продукта"})
+		response.BadRequest(c, "Некорректный ID продукта")
 		return
 	}
 	warehouseID, err := strconv.ParseInt(c.Query("warehouse_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID склада"})
+		response.BadRequest(c, "Некорректный ID склада")
 		return
 	}
 	supplierID, err := strconv.ParseInt(c.Query("supplier_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID поставщика"})
+		response.BadRequest(c, "Некорректный ID поставщика")
 		return
 	}
 
 	stock, err := h.service.WBStock(productID, warehouseID, supplierID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, stock)
+	response.SuccessWithData(c, http.StatusOK, stock)
 }
 
 func (h *Handlers) PublicListOffers(c *gin.Context) {
@@ -398,22 +400,22 @@ func (h *Handlers) PublicListOffersWithFilters(c *gin.Context) {
 func (h *Handlers) CreateOffers(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		response.Unauthorized(c, "Пользователь не авторизован")
 		return
 	}
 
 	var req CreateOffersRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные данные запроса"})
+		response.BadRequest(c, "Некорректные данные запроса")
 		return
 	}
 
 	offers, err := h.service.CreateOffers(req, userID.(int64))
 	if err != nil {
 		log.Printf("CreateOffers error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"offers": offers})
+	response.SuccessWithData(c, http.StatusCreated, gin.H{"offers": offers})
 }

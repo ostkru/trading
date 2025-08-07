@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"portaldata-api/internal/pkg/response"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,45 +22,45 @@ func NewHandlers(service *Service) *Handlers {
 func (h *Handlers) CreateMetaproduct(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		response.Unauthorized(c, "Пользователь не авторизован")
 		return
 	}
 	var req CreateProductRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.BadRequest(c, err.Error())
 		return
 	}
 	product, err := h.service.CreateProduct(req, userID.(int64))
 	if err != nil {
 		if err.Error() == "Требуется name" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			response.BadRequest(c, err.Error())
 			return
 		}
 		log.Printf("CreateMetaproduct error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusCreated, product)
+	response.SuccessWithData(c, http.StatusCreated, product)
 }
 
 func (h *Handlers) GetMetaproduct(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
+		response.BadRequest(c, "Некорректный формат ID")
 		return
 	}
 	product, err := h.service.GetProduct(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Продукт не найден"})
+		response.NotFound(c, "Продукт не найден")
 		return
 	}
-	c.JSON(http.StatusOK, product)
+	response.SuccessWithData(c, http.StatusOK, product)
 }
 
 func (h *Handlers) ListMetaproducts(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		response.Unauthorized(c, "Пользователь не авторизован")
 		return
 	}
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -78,73 +80,73 @@ func (h *Handlers) ListMetaproducts(c *gin.Context) {
 		owner = "my" // По умолчанию показываем только свои продукты
 	}
 
-	response, err := h.service.ListProducts(page, limit, owner, userID.(int64))
+	productsResponse, err := h.service.ListProducts(page, limit, owner, userID.(int64))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, response)
+	response.SuccessWithData(c, http.StatusOK, productsResponse)
 }
 
 func (h *Handlers) UpdateMetaproduct(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		response.Unauthorized(c, "Пользователь не авторизован")
 		return
 	}
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
+		response.BadRequest(c, "Некорректный формат ID")
 		return
 	}
 	var req UpdateProductRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.BadRequest(c, err.Error())
 		return
 	}
 	updatedProduct, err := h.service.UpdateProduct(id, req, userID.(int64))
 	if err != nil {
 		if strings.Contains(err.Error(), "принадлежит другому пользователю") {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			response.Forbidden(c, err.Error())
 			return
 		}
 		if strings.Contains(err.Error(), "не найден") {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			response.NotFound(c, err.Error())
 			return
 		}
 		log.Printf("UpdateMetaproduct error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, updatedProduct)
+	response.SuccessWithData(c, http.StatusOK, updatedProduct)
 }
 
 func (h *Handlers) DeleteMetaproduct(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		response.Unauthorized(c, "Пользователь не авторизован")
 		return
 	}
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный формат ID"})
+		response.BadRequest(c, "Некорректный формат ID")
 		return
 	}
 	if err := h.service.DeleteProduct(id, userID.(int64)); err != nil {
 		if strings.Contains(err.Error(), "принадлежит другому пользователю") {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			response.Forbidden(c, err.Error())
 			return
 		}
 		if strings.Contains(err.Error(), "не найден") {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			response.NotFound(c, err.Error())
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Product deleted"})
+	response.SuccessWithMessage(c, http.StatusOK, "Product deleted")
 }
 
 func (h *Handlers) CreateMetaproducts(c *gin.Context) {
