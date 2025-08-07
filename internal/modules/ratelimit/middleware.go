@@ -12,18 +12,25 @@ import (
 // RateLimitMiddleware создает middleware для проверки лимитов
 func RateLimitMiddleware(rateLimitService *Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Получаем API ключ из заголовка Authorization
+		// Получаем API ключ из различных источников
+		var token string
+
+		// Проверяем заголовок Authorization
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "API ключ не предоставлен"})
-			c.Abort()
-			return
+		if authHeader != "" && len(authHeader) > 7 && strings.HasPrefix(authHeader, "Bearer ") {
+			token = authHeader[7:]
+		} else {
+			// Проверяем заголовок X-API-KEY
+			token = c.GetHeader("X-API-KEY")
 		}
 
-		// Извлекаем токен из Bearer
-		token := strings.TrimPrefix(authHeader, "Bearer ")
-		if token == authHeader {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный формат API ключа"})
+		// Если токен не найден в заголовках, проверяем GET параметр api_key
+		if token == "" {
+			token = c.Query("api_key")
+		}
+
+		if token == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "API ключ не предоставлен"})
 			c.Abort()
 			return
 		}
@@ -45,7 +52,7 @@ func RateLimitMiddleware(rateLimitService *Service) gin.HandlerFunc {
 
 		// Определяем тип эндпоинта для лимитов
 		endpoint := "all" // по умолчанию для всех методов
-		
+
 		// Для публичных методов используем отдельный лимит
 		if strings.Contains(c.Request.URL.Path, "/offers/public") {
 			endpoint = "public"
@@ -53,9 +60,9 @@ func RateLimitMiddleware(rateLimitService *Service) gin.HandlerFunc {
 
 		// Определяем, является ли запрос GET методом
 		isGetMethod := c.Request.Method == "GET"
-		
+
 		// Добавляем логирование для отладки
-		log.Printf("RateLimit: userID=%d, endpoint=%s, path=%s, method=%s, isGet=%v", 
+		log.Printf("RateLimit: userID=%d, endpoint=%s, path=%s, method=%s, isGet=%v",
 			userID, endpoint, c.Request.URL.Path, c.Request.Method, isGetMethod)
 
 		// Проверяем лимиты
@@ -67,7 +74,7 @@ func RateLimitMiddleware(rateLimitService *Service) gin.HandlerFunc {
 			return
 		}
 
-		log.Printf("RateLimit check: allowed=%v, minute_used=%d/%d, day_used=%d/%d", 
+		log.Printf("RateLimit check: allowed=%v, minute_used=%d/%d, day_used=%d/%d",
 			check.Allowed, check.MinuteUsed, check.MinuteLimit, check.DayUsed, check.DayLimit)
 
 		// Если лимит превышен, возвращаем 429
@@ -97,4 +104,4 @@ func RateLimitMiddleware(rateLimitService *Service) gin.HandlerFunc {
 
 		c.Next()
 	}
-} 
+}

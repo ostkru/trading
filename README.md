@@ -98,6 +98,42 @@ sudo systemctl reload nginx
 
 ## API Документация
 
+### Авторизация
+
+API поддерживает несколько способов передачи API ключа:
+
+1. **Authorization Header (Bearer Token)**:
+   ```
+   Authorization: Bearer <your_api_key>
+   ```
+
+2. **X-API-KEY Header**:
+   ```
+   X-API-KEY: <your_api_key>
+   ```
+
+3. **GET Parameter**:
+   ```
+   GET /api/v1/offers?api_key=<your_api_key>
+   ```
+
+**Примеры использования:**
+
+```bash
+# Способ 1: Authorization header
+curl -H "Authorization: Bearer f428fbc16a97b9e2a55717bd34e97537ec34cb8c04a5f32eeb4e88c9ee998a53" \
+     http://localhost:8095/api/v1/offers
+
+# Способ 2: X-API-KEY header
+curl -H "X-API-KEY: f428fbc16a97b9e2a55717bd34e97537ec34cb8c04a5f32eeb4e88c9ee998a53" \
+     http://localhost:8095/api/v1/offers
+
+# Способ 3: GET parameter
+curl "http://localhost:8095/api/v1/offers?api_key=f428fbc16a97b9e2a55717bd34e97537ec34cb8c04a5f32eeb4e88c9ee998a53"
+```
+
+**Примечание:** Все три способа эквивалентны и могут использоваться в зависимости от ваших потребностей. GET параметры особенно удобны для простых тестов и отладки.
+
 ### Продакшен
 - **Базовый URL**: `https://api.portaldata.ru/v1/trading`
 - **Документация**: `https://api.portaldata.ru/v1/trading/docs`

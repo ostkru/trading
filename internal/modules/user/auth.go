@@ -19,13 +19,22 @@ func (s *AuthService) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		var apiKey string
+
+		// Проверяем заголовок Authorization (Bearer token)
 		if authHeader != "" && len(authHeader) > 7 && strings.HasPrefix(authHeader, "Bearer ") {
 			apiKey = authHeader[7:]
 		} else {
+			// Проверяем заголовок X-API-KEY
 			apiKey = c.GetHeader("X-API-KEY")
 		}
+
+		// Если API ключ не найден в заголовках, проверяем GET параметр api_key
 		if apiKey == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Требуется API ключ (используйте Authorization: Bearer <токен> или X-API-KEY)"})
+			apiKey = c.Query("api_key")
+		}
+
+		if apiKey == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Требуется API ключ (используйте Authorization: Bearer <токен>, X-API-KEY или api_key в GET параметрах)"})
 			c.Abort()
 			return
 		}

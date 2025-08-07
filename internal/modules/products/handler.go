@@ -63,7 +63,21 @@ func (h *Handlers) ListMetaproducts(c *gin.Context) {
 	}
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	owner := c.DefaultQuery("owner", "all")
+	owner := c.DefaultQuery("owner", "my")
+
+	// Валидация параметра owner
+	validOwners := []string{"my", "all", "others", "pending", "not_classified", "classified"}
+	isValidOwner := false
+	for _, validOwner := range validOwners {
+		if owner == validOwner {
+			isValidOwner = true
+			break
+		}
+	}
+	if !isValidOwner {
+		owner = "my" // По умолчанию показываем только свои продукты
+	}
+
 	response, err := h.service.ListProducts(page, limit, owner, userID.(int64))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

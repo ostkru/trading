@@ -89,8 +89,8 @@ func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Produc
 		return nil, err
 	}
 
-	query := `INSERT INTO products (name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, user_id) 
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO products (name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, user_id, status) 
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`
 
 	// Обработка NULL значений для brand_id и category_id
 	var brandID, categoryID interface{}
@@ -127,7 +127,7 @@ func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Produc
 
 	// Получаем созданный продукт
 	var product Product
-	err = s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, created_at, updated_at, user_id FROM products WHERE id = ?", productID).Scan(
+	err = s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, status, created_at, updated_at, user_id FROM products WHERE id = ?", productID).Scan(
 		&product.ID,
 		&product.Name,
 		&product.VendorArticle,
@@ -138,6 +138,7 @@ func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Produc
 		&product.CategoryID,
 		&product.Description,
 		&product.Barcode,
+		&product.Status,
 		&product.CreatedAt,
 		&product.UpdatedAt,
 		&product.UserID,
@@ -151,7 +152,7 @@ func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Produc
 
 func (s *Service) GetProduct(id int64) (*Product, error) {
 	var product Product
-	err := s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, created_at, updated_at, user_id FROM products WHERE id = ?", id).Scan(
+	err := s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, status, created_at, updated_at, user_id FROM products WHERE id = ?", id).Scan(
 		&product.ID,
 		&product.Name,
 		&product.VendorArticle,
@@ -162,6 +163,7 @@ func (s *Service) GetProduct(id int64) (*Product, error) {
 		&product.CategoryID,
 		&product.Description,
 		&product.Barcode,
+		&product.Status,
 		&product.CreatedAt,
 		&product.UpdatedAt,
 		&product.UserID,
@@ -176,9 +178,23 @@ func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*Pr
 	offset := (page - 1) * limit
 	var where string
 	var args []interface{}
+
+	// Обработка фильтров по владельцу и статусу
 	if owner == "my" {
 		where = " WHERE user_id = ?"
 		args = append(args, userID)
+	} else if owner == "others" {
+		where = " WHERE user_id != ?"
+		args = append(args, userID)
+	} else if owner == "pending" {
+		// Показываем продукты со статусом 'pending' (ожидающие классификации)
+		where = " WHERE status = 'pending'"
+	} else if owner == "not_classified" {
+		// Показываем продукты со статусом 'pending', у которых нет category_id или brand_id
+		where = " WHERE status = 'pending' AND (category_id IS NULL OR brand_id IS NULL)"
+	} else if owner == "classified" {
+		// Показываем продукты со статусом 'pending', у которых есть и category_id, и brand_id
+		where = " WHERE status = 'pending' AND category_id IS NOT NULL AND brand_id IS NOT NULL"
 	}
 
 	var total int
@@ -188,7 +204,7 @@ func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*Pr
 	}
 
 	query := `
-		SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, created_at, updated_at, user_id
+		SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, status, created_at, updated_at, user_id
 		FROM products` + where + `
 		ORDER BY created_at DESC 
 		LIMIT ? OFFSET ?
@@ -204,7 +220,7 @@ func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*Pr
 	products := []Product{}
 	for rows.Next() {
 		var product Product
-		if err := rows.Scan(&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice, &product.Brand, &product.Category, &product.BrandID, &product.CategoryID, &product.Description, &product.Barcode, &product.CreatedAt, &product.UpdatedAt, &product.UserID); err != nil {
+		if err := rows.Scan(&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice, &product.Brand, &product.Category, &product.BrandID, &product.CategoryID, &product.Description, &product.Barcode, &product.Status, &product.CreatedAt, &product.UpdatedAt, &product.UserID); err != nil {
 			return nil, err
 		}
 		products = append(products, product)
@@ -300,7 +316,7 @@ func (s *Service) UpdateProduct(id int64, req UpdateProductRequest, userID int64
 
 	// Получаем обновленный продукт
 	var product Product
-	err = s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, created_at, updated_at, user_id FROM products WHERE id = ?", id).Scan(&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice, &product.Brand, &product.Category, &product.BrandID, &product.CategoryID, &product.Description, &product.Barcode, &product.CreatedAt, &product.UpdatedAt, &product.UserID)
+	err = s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, status, created_at, updated_at, user_id FROM products WHERE id = ?", id).Scan(&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice, &product.Brand, &product.Category, &product.BrandID, &product.CategoryID, &product.Description, &product.Barcode, &product.Status, &product.CreatedAt, &product.UpdatedAt, &product.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -382,8 +398,8 @@ func (s *Service) CreateProducts(req CreateProductsRequest, userID int64) ([]Pro
 			barcode = nil
 		}
 
-		query := `INSERT INTO products (name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, user_id) 
-	              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		query := `INSERT INTO products (name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, user_id, status) 
+	              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`
 		result, err := tx.Exec(query, p.Name, p.VendorArticle, p.RecommendPrice, p.Brand, p.Category, brandID, categoryID, p.Description, barcode, userID)
 		if err != nil {
 			return nil, err
@@ -396,7 +412,7 @@ func (s *Service) CreateProducts(req CreateProductsRequest, userID int64) ([]Pro
 
 		// Получаем созданный продукт
 		var product Product
-		err = tx.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, created_at, updated_at, user_id FROM products WHERE id = ?", productID).Scan(&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice, &product.Brand, &product.Category, &product.BrandID, &product.CategoryID, &product.Description, &product.Barcode, &product.CreatedAt, &product.UpdatedAt, &product.UserID)
+		err = tx.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, status, created_at, updated_at, user_id FROM products WHERE id = ?", productID).Scan(&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice, &product.Brand, &product.Category, &product.BrandID, &product.CategoryID, &product.Description, &product.Barcode, &product.Status, &product.CreatedAt, &product.UpdatedAt, &product.UserID)
 		if err != nil {
 			return nil, err
 		}

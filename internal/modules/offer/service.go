@@ -27,6 +27,19 @@ func (s *Service) CreateOffer(req CreateOfferRequest, userID int64) (*Offer, err
 		return nil, errors.New("offer_type должен быть 'sale' или 'buy'")
 	}
 
+	// Проверяем, что у продукта есть category_id и brand_id - только такие продукты могут быть добавлены в офферы
+	var categoryID, brandID sql.NullInt64
+	err := s.db.QueryRow("SELECT category_id, brand_id FROM products WHERE id = ?", req.ProductID).Scan(&categoryID, &brandID)
+	if err == sql.ErrNoRows {
+		return nil, errors.New("Продукт не найден")
+	} else if err != nil {
+		return nil, fmt.Errorf("Ошибка при проверке продукта: %v", err)
+	}
+
+	if !categoryID.Valid || !brandID.Valid {
+		return nil, errors.New("Нельзя создать оффер для продукта без category_id или brand_id. Продукт должен быть классифицирован")
+	}
+
 	// Устанавливаем значение по умолчанию для is_public
 	isPublic := true
 	if req.IsPublic != nil {

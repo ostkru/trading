@@ -13,6 +13,7 @@ type Product struct {
 	CategoryID     *int64    `json:"category_id,omitempty"`
 	Description    string    `json:"description"`
 	Barcode        *string   `json:"barcode,omitempty"`
+	Status         string    `json:"status"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 	UserID         int64     `json:"user_id"`

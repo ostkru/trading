@@ -1,0 +1,14 @@
+[Unit]
+Description=API Documentation Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/gogo/go-mod
+ExecStart=/usr/bin/python3 -m http.server 8090 --bind 0.0.0.0 --directory /var/www/gogo/go-mod
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target 
