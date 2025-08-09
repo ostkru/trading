@@ -50,12 +50,17 @@ func (s *Service) CreateOrder(initiatorUserID int64, req CreateOrderRequest) (*O
 		return nil, err
 	}
 
-	var orderType string
-	if offer.OfferType == "sell" {
-		orderType = "buy"
-	} else {
-		orderType = "sell"
-	}
+    var orderType string
+    switch offer.OfferType {
+    case "sale":
+        // Заказ к офферу на продажу — это покупка
+        orderType = "buy"
+    case "buy":
+        // Заказ к офферу на покупку — это продажа
+        orderType = "sell"
+    default:
+        return nil, errors.New("unsupported offer_type for order: must be 'sale' or 'buy'")
+    }
 
 	// Вычисляем total_amount
 	calculatedTotalAmount := offer.PricePerUnit * float64(req.LotCount) * float64(offer.UnitsPerLot)
