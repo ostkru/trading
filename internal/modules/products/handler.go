@@ -36,6 +36,11 @@ func (h *Handlers) CreateMetaproduct(c *gin.Context) {
 			response.BadRequest(c, err.Error())
 			return
 		}
+		// Проверяем ошибки валидации медиаданных
+		if strings.Contains(err.Error(), "некорректный URL") {
+			response.BadRequest(c, err.Error())
+			return
+		}
 		log.Printf("CreateMetaproduct error: %v", err)
 		response.InternalServerError(c, err.Error())
 		return
@@ -162,6 +167,11 @@ func (h *Handlers) CreateMetaproducts(c *gin.Context) {
 	}
 	products, err := h.service.CreateProducts(req, userID.(int64))
 	if err != nil {
+		// Проверяем ошибки валидации медиаданных
+		if strings.Contains(err.Error(), "некорректный URL") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

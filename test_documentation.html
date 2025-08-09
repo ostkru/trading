@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Тест обновлений документации</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Тест обновлений документации API</h1>
+    
+    <h2>Проверка локального сервера</h2>
+    <div id="local-test">
+        <p>Проверяем локальный сервер на порту 8090...</p>
+    </div>
+    
+    <h2>Проверка спецификации</h2>
+    <div id="spec-test">
+        <p>Проверяем наличие медиаданных в спецификации...</p>
+    </div>
+    
+    <h2>Ссылки на документацию</h2>
+    <ul>
+        <li><a href="http://localhost:8090" target="_blank">Локальная документация (localhost:8090)</a></li>
+        <li><a href="https://порталданных.рф/docs" target="_blank">Официальная документация (порталданных.рф)</a></li>
+    </ul>
+    
+    <h2>Ожидаемые обновления</h2>
+    <div class="info">
+        <h3>В схеме Product должны быть поля:</h3>
+        <ul>
+            <li><code>image_urls</code> - Массив URL изображений</li>
+            <li><code>video_urls</code> - Массив URL видео файлов</li>
+            <li><code>model_3d_urls</code> - Массив URL 3D моделей</li>
+        </ul>
+        
+        <h3>Новый endpoint:</h3>
+        <ul>
+            <li><code>POST /products/batch</code> - Пакетное создание продуктов</li>
+        </ul>
+        
+        <h3>В описании API должен быть раздел:</h3>
+        <pre>## Медиаданные продуктов
+- **image_urls** - Массив URL изображений
+- **video_urls** - Массив URL видео файлов
+- **model_3d_urls** - Массив URL 3D моделей</pre>
+    </div>
+    
+    <script>
+        // Проверка локального сервера
+        fetch('http://localhost:8090/spec.json')
+            .then(response => response.json())
+            .then(data => {
+                const localTest = document.getElementById('local-test');
+                
+                // Проверяем наличие медиаданных
+                const hasMediaData = data.components.schemas.Product.properties.image_urls ||
+                                   data.components.schemas.Product.properties.video_urls ||
+                                   data.components.schemas.Product.properties.model_3d_urls;
+                
+                if (hasMediaData) {
+                    localTest.innerHTML = '<p class="success">✅ Локальный сервер содержит обновления с медиаданными</p>';
+                } else {
+                    localTest.innerHTML = '<p class="error">❌ Локальный сервер НЕ содержит обновления</p>';
+                }
+                
+                // Проверяем новый endpoint
+                const hasBatchEndpoint = data.paths['/products/batch'];
+                if (hasBatchEndpoint) {
+                    localTest.innerHTML += '<p class="success">✅ Новый endpoint /products/batch присутствует</p>';
+                } else {
+                    localTest.innerHTML += '<p class="error">❌ Новый endpoint /products/batch отсутствует</p>';
+                }
+                
+                // Проверяем описание
+                const hasMediaDescription = data.info.description.includes('медиаданные') || 
+                                         data.info.description.includes('image_urls');
+                if (hasMediaDescription) {
+                    localTest.innerHTML += '<p class="success">✅ Описание API содержит информацию о медиаданных</p>';
+                } else {
+                    localTest.innerHTML += '<p class="error">❌ Описание API НЕ содержит информацию о медиаданных</p>';
+                }
+            })
+            .catch(error => {
+                document.getElementById('local-test').innerHTML = 
+                    '<p class="error">❌ Ошибка при проверке локального сервера: ' + error.message + '</p>';
+            });
+    </script>
+</body>
+</html>

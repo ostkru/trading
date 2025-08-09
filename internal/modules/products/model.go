@@ -17,10 +17,10 @@ type Product struct {
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 	UserID         int64     `json:"user_id"`
-	// Медиа поля
-	ImageURLs   []string `json:"image_urls,omitempty"`
-	VideoURLs   []string `json:"video_urls,omitempty"`
-	Model3DURLs []string `json:"model_3d_urls,omitempty"`
+	// Медиа поля (могут быть JSON строками или слайсами)
+	ImageURLs   interface{} `json:"image_urls,omitempty"`
+	VideoURLs   interface{} `json:"video_urls,omitempty"`
+	Model3DURLs interface{} `json:"model_3d_urls,omitempty"`
 }
 
 type CreateProductRequest struct {

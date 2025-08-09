@@ -2,6 +2,7 @@ package products
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -37,7 +38,7 @@ func (s *Service) validateMediaURLs(imageURLs, videoURLs, model3DURLs []string) 
 
 	// Проверяем 3D модели
 	for _, url := range model3DURLs {
-		if err := s.validateURL(url, []string{".obj", ".fbx", ".3ds", ".dae", ".stl"}); err != nil {
+		if err := s.validateURL(url, []string{".obj", ".fbx", ".3ds", ".dae", ".stl", ".glb"}); err != nil {
 			return fmt.Errorf("некорректный URL 3D модели %s: %v", url, err)
 		}
 	}
@@ -79,6 +80,56 @@ func (s *Service) validateURL(urlStr string, allowedExtensions []string) error {
 	return nil
 }
 
+// parseMediaJSON парсит JSON строки медиаданных в слайсы строк
+func (s *Service) parseMediaJSON(product *Product) error {
+	// Парсим ImageURLs
+	if imageURLsStr, ok := product.ImageURLs.(string); ok {
+		var imageURLs []string
+		if err := json.Unmarshal([]byte(imageURLsStr), &imageURLs); err != nil {
+			return fmt.Errorf("error parsing image_urls JSON: %v", err)
+		}
+		product.ImageURLs = imageURLs
+	} else if imageURLsBytes, ok := product.ImageURLs.([]byte); ok {
+		var imageURLs []string
+		if err := json.Unmarshal(imageURLsBytes, &imageURLs); err != nil {
+			return fmt.Errorf("error parsing image_urls JSON: %v", err)
+		}
+		product.ImageURLs = imageURLs
+	}
+
+	// Парсим VideoURLs
+	if videoURLsStr, ok := product.VideoURLs.(string); ok {
+		var videoURLs []string
+		if err := json.Unmarshal([]byte(videoURLsStr), &videoURLs); err != nil {
+			return fmt.Errorf("error parsing video_urls JSON: %v", err)
+		}
+		product.VideoURLs = videoURLs
+	} else if videoURLsBytes, ok := product.VideoURLs.([]byte); ok {
+		var videoURLs []string
+		if err := json.Unmarshal(videoURLsBytes, &videoURLs); err != nil {
+			return fmt.Errorf("error parsing video_urls JSON: %v", err)
+		}
+		product.VideoURLs = videoURLs
+	}
+
+	// Парсим Model3DURLs
+	if model3DURLsStr, ok := product.Model3DURLs.(string); ok {
+		var model3DURLs []string
+		if err := json.Unmarshal([]byte(model3DURLsStr), &model3DURLs); err != nil {
+			return fmt.Errorf("error parsing model_3d_urls JSON: %v", err)
+		}
+		product.Model3DURLs = model3DURLs
+	} else if model3DURLsBytes, ok := product.Model3DURLs.([]byte); ok {
+		var model3DURLs []string
+		if err := json.Unmarshal(model3DURLsBytes, &model3DURLs); err != nil {
+			return fmt.Errorf("error parsing model_3d_urls JSON: %v", err)
+		}
+		product.Model3DURLs = model3DURLs
+	}
+
+	return nil
+}
+
 func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Product, error) {
 	if req.Name == "" {
 		return nil, errors.New("Требуется name")
@@ -88,6 +139,14 @@ func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Produc
 	if err := s.validateMediaURLs(req.ImageURLs, req.VideoURLs, req.Model3DURLs); err != nil {
 		return nil, err
 	}
+
+	// Начинаем транзакцию
+	tx, err := s.db.Begin()
+	if err != nil {
+		log.Printf("Error starting transaction: %v", err)
+		return nil, err
+	}
+	defer tx.Rollback()
 
 	query := `INSERT INTO products (name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, user_id, status) 
 	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`
@@ -113,7 +172,7 @@ func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Produc
 		barcode = nil
 	}
 
-	result, err := s.db.Exec(query, req.Name, req.VendorArticle, req.RecommendPrice, req.Brand, req.Category, brandID, categoryID, req.Description, barcode, userID)
+	result, err := tx.Exec(query, req.Name, req.VendorArticle, req.RecommendPrice, req.Brand, req.Category, brandID, categoryID, req.Description, barcode, userID)
 	if err != nil {
 		log.Printf("Error creating product: %v", err)
 		return nil, err
@@ -125,9 +184,45 @@ func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Produc
 		return nil, err
 	}
 
-	// Получаем созданный продукт
+	// Сохраняем медиаданные в таблицу media
+	if len(req.ImageURLs) > 0 || len(req.VideoURLs) > 0 || len(req.Model3DURLs) > 0 {
+		mediaQuery := `INSERT INTO media (product_id, image_urls, video_urls, model_3d_urls) VALUES (?, ?, ?, ?)`
+
+		// Преобразуем слайсы в JSON строки
+		imageURLsJSON := "[]"
+		videoURLsJSON := "[]"
+		model3DURLsJSON := "[]"
+
+		if len(req.ImageURLs) > 0 {
+			imageURLsJSON = fmt.Sprintf(`["%s"]`, strings.Join(req.ImageURLs, `","`))
+		}
+		if len(req.VideoURLs) > 0 {
+			videoURLsJSON = fmt.Sprintf(`["%s"]`, strings.Join(req.VideoURLs, `","`))
+		}
+		if len(req.Model3DURLs) > 0 {
+			model3DURLsJSON = fmt.Sprintf(`["%s"]`, strings.Join(req.Model3DURLs, `","`))
+		}
+
+		_, err = tx.Exec(mediaQuery, productID, imageURLsJSON, videoURLsJSON, model3DURLsJSON)
+		if err != nil {
+			log.Printf("Error creating media: %v", err)
+			return nil, err
+		}
+	}
+
+	// Получаем созданный продукт с медиаданными
 	var product Product
-	err = s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, status, created_at, updated_at, user_id FROM products WHERE id = ?", productID).Scan(
+	err = tx.QueryRow(`
+		SELECT p.id, p.name, p.vendor_article, p.recommend_price, p.brand, p.category, 
+		       p.brand_id, p.category_id, p.description, p.barcode, p.status, p.created_at, 
+		       p.updated_at, p.user_id,
+		       COALESCE(m.image_urls, '[]') as image_urls,
+		       COALESCE(m.video_urls, '[]') as video_urls,
+		       COALESCE(m.model_3d_urls, '[]') as model_3d_urls
+		FROM products p
+		LEFT JOIN media m ON p.id = m.product_id
+		WHERE p.id = ?
+	`, productID).Scan(
 		&product.ID,
 		&product.Name,
 		&product.VendorArticle,
@@ -142,17 +237,43 @@ func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Produc
 		&product.CreatedAt,
 		&product.UpdatedAt,
 		&product.UserID,
+		&product.ImageURLs,
+		&product.VideoURLs,
+		&product.Model3DURLs,
 	)
 	if err != nil {
-		log.Printf("Error creating product: %v", err)
+		log.Printf("Error getting created product: %v", err)
 		return nil, err
 	}
+
+	// Парсим JSON строки в слайсы
+	if err := s.parseMediaJSON(&product); err != nil {
+		log.Printf("Error parsing media JSON: %v", err)
+		return nil, err
+	}
+
+	// Подтверждаем транзакцию
+	if err := tx.Commit(); err != nil {
+		log.Printf("Error committing transaction: %v", err)
+		return nil, err
+	}
+
 	return &product, nil
 }
 
 func (s *Service) GetProduct(id int64) (*Product, error) {
 	var product Product
-	err := s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, status, created_at, updated_at, user_id FROM products WHERE id = ?", id).Scan(
+	err := s.db.QueryRow(`
+		SELECT p.id, p.name, p.vendor_article, p.recommend_price, p.brand, p.category, 
+		       p.brand_id, p.category_id, p.description, p.barcode, p.status, p.created_at, 
+		       p.updated_at, p.user_id,
+		       COALESCE(m.image_urls, '[]') as image_urls,
+		       COALESCE(m.video_urls, '[]') as video_urls,
+		       COALESCE(m.model_3d_urls, '[]') as model_3d_urls
+		FROM products p
+		LEFT JOIN media m ON p.id = m.product_id
+		WHERE p.id = ?
+	`, id).Scan(
 		&product.ID,
 		&product.Name,
 		&product.VendorArticle,
@@ -167,10 +288,19 @@ func (s *Service) GetProduct(id int64) (*Product, error) {
 		&product.CreatedAt,
 		&product.UpdatedAt,
 		&product.UserID,
+		&product.ImageURLs,
+		&product.VideoURLs,
+		&product.Model3DURLs,
 	)
 	if err != nil {
 		return nil, err
 	}
+
+	// Парсим JSON строки в слайсы
+	if err := s.parseMediaJSON(&product); err != nil {
+		return nil, err
+	}
+
 	return &product, nil
 }
 
@@ -181,32 +311,38 @@ func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*Pr
 
 	// Обработка фильтров по владельцу и статусу
 	if owner == "my" {
-		where = " WHERE user_id = ?"
+		where = " WHERE p.user_id = ?"
 		args = append(args, userID)
 	} else if owner == "others" {
-		where = " WHERE user_id != ?"
+		where = " WHERE p.user_id != ?"
 		args = append(args, userID)
 	} else if owner == "pending" {
 		// Показываем продукты со статусом 'pending' (ожидающие классификации)
-		where = " WHERE status = 'pending'"
+		where = " WHERE p.status = 'pending'"
 	} else if owner == "not_classified" {
 		// Показываем продукты со статусом 'pending', у которых нет category_id или brand_id
-		where = " WHERE status = 'pending' AND (category_id IS NULL OR brand_id IS NULL)"
+		where = " WHERE p.status = 'pending' AND (p.category_id IS NULL OR p.brand_id IS NULL)"
 	} else if owner == "classified" {
 		// Показываем продукты со статусом 'pending', у которых есть и category_id, и brand_id
-		where = " WHERE status = 'pending' AND category_id IS NOT NULL AND brand_id IS NOT NULL"
+		where = " WHERE p.status = 'pending' AND p.category_id IS NOT NULL AND p.brand_id IS NOT NULL"
 	}
 
 	var total int
-	err := s.db.QueryRow("SELECT COUNT(*) FROM products"+where, args...).Scan(&total)
+	err := s.db.QueryRow("SELECT COUNT(*) FROM products p"+where, args...).Scan(&total)
 	if err != nil {
 		return nil, err
 	}
 
 	query := `
-		SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, status, created_at, updated_at, user_id
-		FROM products` + where + `
-		ORDER BY created_at DESC 
+		SELECT p.id, p.name, p.vendor_article, p.recommend_price, p.brand, p.category, 
+		       p.brand_id, p.category_id, p.description, p.barcode, p.status, p.created_at, 
+		       p.updated_at, p.user_id,
+		       COALESCE(m.image_urls, '[]') as image_urls,
+		       COALESCE(m.video_urls, '[]') as video_urls,
+		       COALESCE(m.model_3d_urls, '[]') as model_3d_urls
+		FROM products p
+		LEFT JOIN media m ON p.id = m.product_id` + where + `
+		ORDER BY p.created_at DESC 
 		LIMIT ? OFFSET ?
 	`
 	args = append(args, limit, offset)
@@ -220,9 +356,21 @@ func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*Pr
 	products := []Product{}
 	for rows.Next() {
 		var product Product
-		if err := rows.Scan(&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice, &product.Brand, &product.Category, &product.BrandID, &product.CategoryID, &product.Description, &product.Barcode, &product.Status, &product.CreatedAt, &product.UpdatedAt, &product.UserID); err != nil {
+		if err := rows.Scan(
+			&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice,
+			&product.Brand, &product.Category, &product.BrandID, &product.CategoryID,
+			&product.Description, &product.Barcode, &product.Status, &product.CreatedAt,
+			&product.UpdatedAt, &product.UserID,
+			&product.ImageURLs, &product.VideoURLs, &product.Model3DURLs,
+		); err != nil {
 			return nil, err
 		}
+
+		// Парсим JSON строки в слайсы
+		if err := s.parseMediaJSON(&product); err != nil {
+			return nil, err
+		}
+
 		products = append(products, product)
 	}
 
@@ -252,74 +400,167 @@ func (s *Service) UpdateProduct(id int64, req UpdateProductRequest, userID int64
 		return nil, errors.New("Продукт принадлежит другому пользователю")
 	}
 
-	// Формируем SET части запроса
+	// Начинаем транзакцию
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	// Формируем SET части запроса для products
 	var setParts []string
 	var args []interface{}
-	argId := 1
 
 	if req.Name != nil {
 		setParts = append(setParts, "name = ?")
 		args = append(args, *req.Name)
-		argId++
 	}
 	if req.VendorArticle != nil {
 		setParts = append(setParts, "vendor_article = ?")
 		args = append(args, *req.VendorArticle)
-		argId++
 	}
 	if req.RecommendPrice != nil {
 		setParts = append(setParts, "recommend_price = ?")
 		args = append(args, *req.RecommendPrice)
-		argId++
 	}
 	if req.Brand != nil {
 		setParts = append(setParts, "brand = ?")
 		args = append(args, *req.Brand)
-		argId++
 	}
 	if req.Category != nil {
 		setParts = append(setParts, "category = ?")
 		args = append(args, *req.Category)
-		argId++
 	}
 	if req.BrandID != nil {
 		setParts = append(setParts, "brand_id = ?")
 		args = append(args, *req.BrandID)
-		argId++
 	}
 	if req.CategoryID != nil {
 		setParts = append(setParts, "category_id = ?")
 		args = append(args, *req.CategoryID)
-		argId++
 	}
 	if req.Description != nil {
 		setParts = append(setParts, "description = ?")
 		args = append(args, *req.Description)
-		argId++
 	}
 	if req.Barcode != nil {
 		setParts = append(setParts, "barcode = ?")
 		args = append(args, *req.Barcode)
-		argId++
 	}
 
-	if len(setParts) == 0 {
-		return nil, nil
+	// Обновляем продукт если есть изменения
+	if len(setParts) > 0 {
+		args = append(args, id)
+		query := "UPDATE products SET " + strings.Join(setParts, ", ") + " WHERE id = ?"
+		_, err = tx.Exec(query, args...)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	args = append(args, id)
-	query := "UPDATE products SET " + strings.Join(setParts, ", ") + " WHERE id = ?"
-	_, err = s.db.Exec(query, args...)
-	if err != nil {
-		return nil, err
+	// Обновляем медиаданные если они предоставлены
+	if req.ImageURLs != nil || req.VideoURLs != nil || req.Model3DURLs != nil {
+		// Проверяем существование записи в media
+		var mediaID int
+		err = tx.QueryRow("SELECT id FROM media WHERE product_id = ?", id).Scan(&mediaID)
+
+		if err == sql.ErrNoRows {
+			// Создаем новую запись в media
+			imageURLsJSON := "[]"
+			videoURLsJSON := "[]"
+			model3DURLsJSON := "[]"
+
+			if req.ImageURLs != nil && len(*req.ImageURLs) > 0 {
+				imageURLsJSON = fmt.Sprintf(`["%s"]`, strings.Join(*req.ImageURLs, `","`))
+			}
+			if req.VideoURLs != nil && len(*req.VideoURLs) > 0 {
+				videoURLsJSON = fmt.Sprintf(`["%s"]`, strings.Join(*req.VideoURLs, `","`))
+			}
+			if req.Model3DURLs != nil && len(*req.Model3DURLs) > 0 {
+				model3DURLsJSON = fmt.Sprintf(`["%s"]`, strings.Join(*req.Model3DURLs, `","`))
+			}
+
+			_, err = tx.Exec("INSERT INTO media (product_id, image_urls, video_urls, model_3d_urls) VALUES (?, ?, ?, ?)",
+				id, imageURLsJSON, videoURLsJSON, model3DURLsJSON)
+			if err != nil {
+				return nil, err
+			}
+		} else if err == nil {
+			// Обновляем существующую запись в media
+			var setMediaParts []string
+			var mediaArgs []interface{}
+
+			if req.ImageURLs != nil {
+				setMediaParts = append(setMediaParts, "image_urls = ?")
+				if len(*req.ImageURLs) > 0 {
+					mediaArgs = append(mediaArgs, fmt.Sprintf(`["%s"]`, strings.Join(*req.ImageURLs, `","`)))
+				} else {
+					mediaArgs = append(mediaArgs, "[]")
+				}
+			}
+			if req.VideoURLs != nil {
+				setMediaParts = append(setMediaParts, "video_urls = ?")
+				if len(*req.VideoURLs) > 0 {
+					mediaArgs = append(mediaArgs, fmt.Sprintf(`["%s"]`, strings.Join(*req.VideoURLs, `","`)))
+				} else {
+					mediaArgs = append(mediaArgs, "[]")
+				}
+			}
+			if req.Model3DURLs != nil {
+				setMediaParts = append(setMediaParts, "model_3d_urls = ?")
+				if len(*req.Model3DURLs) > 0 {
+					mediaArgs = append(mediaArgs, fmt.Sprintf(`["%s"]`, strings.Join(*req.Model3DURLs, `","`)))
+				} else {
+					mediaArgs = append(mediaArgs, "[]")
+				}
+			}
+
+			if len(setMediaParts) > 0 {
+				mediaArgs = append(mediaArgs, id)
+				mediaQuery := "UPDATE media SET " + strings.Join(setMediaParts, ", ") + " WHERE product_id = ?"
+				_, err = tx.Exec(mediaQuery, mediaArgs...)
+				if err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			return nil, err
+		}
 	}
 
-	// Получаем обновленный продукт
+	// Получаем обновленный продукт с медиаданными
 	var product Product
-	err = s.db.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, status, created_at, updated_at, user_id FROM products WHERE id = ?", id).Scan(&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice, &product.Brand, &product.Category, &product.BrandID, &product.CategoryID, &product.Description, &product.Barcode, &product.Status, &product.CreatedAt, &product.UpdatedAt, &product.UserID)
+	err = tx.QueryRow(`
+		SELECT p.id, p.name, p.vendor_article, p.recommend_price, p.brand, p.category, 
+		       p.brand_id, p.category_id, p.description, p.barcode, p.status, p.created_at, 
+		       p.updated_at, p.user_id,
+		       COALESCE(m.image_urls, '[]') as image_urls,
+		       COALESCE(m.video_urls, '[]') as video_urls,
+		       COALESCE(m.model_3d_urls, '[]') as model_3d_urls
+		FROM products p
+		LEFT JOIN media m ON p.id = m.product_id
+		WHERE p.id = ?
+	`, id).Scan(
+		&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice,
+		&product.Brand, &product.Category, &product.BrandID, &product.CategoryID,
+		&product.Description, &product.Barcode, &product.Status, &product.CreatedAt,
+		&product.UpdatedAt, &product.UserID,
+		&product.ImageURLs, &product.VideoURLs, &product.Model3DURLs,
+	)
 	if err != nil {
 		return nil, err
 	}
+
+	// Парсим JSON строки в слайсы
+	if err := s.parseMediaJSON(&product); err != nil {
+		return nil, err
+	}
+
+	// Подтверждаем транзакцию
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
 	return &product, nil
 }
 
@@ -410,12 +651,59 @@ func (s *Service) CreateProducts(req CreateProductsRequest, userID int64) ([]Pro
 			return nil, err
 		}
 
-		// Получаем созданный продукт
+		// Сохраняем медиаданные в таблицу media
+		if len(p.ImageURLs) > 0 || len(p.VideoURLs) > 0 || len(p.Model3DURLs) > 0 {
+			mediaQuery := `INSERT INTO media (product_id, image_urls, video_urls, model_3d_urls) VALUES (?, ?, ?, ?)`
+
+			// Преобразуем слайсы в JSON строки
+			imageURLsJSON := "[]"
+			videoURLsJSON := "[]"
+			model3DURLsJSON := "[]"
+
+			if len(p.ImageURLs) > 0 {
+				imageURLsJSON = fmt.Sprintf(`["%s"]`, strings.Join(p.ImageURLs, `","`))
+			}
+			if len(p.VideoURLs) > 0 {
+				videoURLsJSON = fmt.Sprintf(`["%s"]`, strings.Join(p.VideoURLs, `","`))
+			}
+			if len(p.Model3DURLs) > 0 {
+				model3DURLsJSON = fmt.Sprintf(`["%s"]`, strings.Join(p.Model3DURLs, `","`))
+			}
+
+			_, err = tx.Exec(mediaQuery, productID, imageURLsJSON, videoURLsJSON, model3DURLsJSON)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// Получаем созданный продукт с медиаданными
 		var product Product
-		err = tx.QueryRow("SELECT id, name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, status, created_at, updated_at, user_id FROM products WHERE id = ?", productID).Scan(&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice, &product.Brand, &product.Category, &product.BrandID, &product.CategoryID, &product.Description, &product.Barcode, &product.Status, &product.CreatedAt, &product.UpdatedAt, &product.UserID)
+		err = tx.QueryRow(`
+			SELECT p.id, p.name, p.vendor_article, p.recommend_price, p.brand, p.category, 
+			       p.brand_id, p.category_id, p.description, p.barcode, p.status, p.created_at, 
+			       p.updated_at, p.user_id,
+			       COALESCE(m.image_urls, '[]') as image_urls,
+			       COALESCE(m.video_urls, '[]') as video_urls,
+			       COALESCE(m.model_3d_urls, '[]') as model_3d_urls
+			FROM products p
+			LEFT JOIN media m ON p.id = m.product_id
+			WHERE p.id = ?
+		`, productID).Scan(
+			&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice,
+			&product.Brand, &product.Category, &product.BrandID, &product.CategoryID,
+			&product.Description, &product.Barcode, &product.Status, &product.CreatedAt,
+			&product.UpdatedAt, &product.UserID,
+			&product.ImageURLs, &product.VideoURLs, &product.Model3DURLs,
+		)
 		if err != nil {
 			return nil, err
 		}
+
+		// Парсим JSON строки в слайсы
+		if err := s.parseMediaJSON(&product); err != nil {
+			return nil, err
+		}
+
 		createdProducts = append(createdProducts, product)
 	}
 
