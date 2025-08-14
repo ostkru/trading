@@ -1,3 +1,31 @@
 # Ignore generated/volatile files
 redoc.log
 redoc.pid
+
+# Application logs and temporary files
+app.log
+*.log
+*.tmp
+
+# Test files
+test_*.php
+*_test.php
+
+# Documentation backups
+*_backup.*
+docs.html
+redoc-documentation.html
+
+# Environment files
+.env.local
+.env.production
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
