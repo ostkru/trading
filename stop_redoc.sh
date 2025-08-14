@@ -41,3 +41,4 @@ if ! netstat -tlnp 2>/dev/null | grep -q ":8090"; then
 else
     echo "⚠️  Порт 8090 все еще занят"
 fi
+

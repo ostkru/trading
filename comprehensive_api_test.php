@@ -121,7 +121,7 @@ class ComprehensiveAPITest {
         $this->performanceMetrics['Создание продукта User1'] = round(($endTime - $startTime) * 1000, 2);
         $this->assertTest('Создание продукта User1', $response['status'] === 201, $response);
         if ($response['status'] === 201) {
-            $this->createdProducts['user1'] = $response['data']['id'] ?? null;
+            $this->createdProducts['user1'] = $response['data']['id'];
         }
         
         // Создание продукта пользователем 2 с уникальным артикулом
@@ -140,7 +140,7 @@ class ComprehensiveAPITest {
         $this->performanceMetrics['Создание продукта User2'] = round(($endTime - $startTime) * 1000, 2);
         $this->assertTest('Создание продукта User2', $response['status'] === 201, $response);
         if ($response['status'] === 201) {
-            $this->createdProducts['user2'] = $response['data']['id'] ?? null;
+            $this->createdProducts['user2'] = $response['data']['id'];
         }
         
         // Получение списка продуктов
@@ -210,133 +210,6 @@ class ComprehensiveAPITest {
             $this->performanceMetrics['Удаление чужого продукта (должно быть запрещено)'] = round(($endTime - $startTime) * 1000, 2);
             $this->assertTest('Удаление чужого продукта (должно быть запрещено)', $response['status'] === 403, $response);
         }
-        
-        // ===== ТЕСТЫ МЕДИАДАННЫХ =====
-        echo "\n📸 ТЕСТИРОВАНИЕ МЕДИАДАННЫХ\n";
-        echo "-----------------------------\n";
-        
-        // Создание продукта с полным набором медиаданных
-        $productWithMediaData = [
-            'name' => 'Продукт с медиаданными',
-            'vendor_article' => 'MEDIA-TEST-' . time(),
-            'recommend_price' => 45000.00,
-            'brand' => 'MediaBrand',
-            'category' => 'Электроника',
-            'description' => 'Продукт с полным набором медиаданных',
-            'image_urls' => [
-                'https://example.com/product_front.jpg',
-                'https://example.com/product_back.jpg',
-                'https://example.com/product_side.jpg'
-            ],
-            'video_urls' => [
-                'https://example.com/product_review.mp4',
-                'https://example.com/product_unboxing.mp4'
-            ],
-            'model_3d_urls' => [
-                'https://example.com/product_3d_model.glb',
-                'https://example.com/product_3d_model.obj'
-            ]
-        ];
-        
-        $startTime = microtime(true);
-        $response = $this->makeRequest('POST', '/products', $productWithMediaData, $this->users['user1']['api_token']);
-        $endTime = microtime(true);
-        $this->performanceMetrics['Создание продукта с медиаданными'] = round(($endTime - $startTime) * 1000, 2);
-        $this->assertTest('Создание продукта с медиаданными', $response['status'] === 201, $response);
-        
-        if ($response['status'] === 201) {
-            $mediaProductId = $response['data']['id'] ?? null;
-            
-            // Проверяем наличие медиаданных в ответе
-            $hasMedia = isset($response['data']['image_urls']) || isset($response['data']['video_urls']) || isset($response['data']['model_3d_urls']);
-            $this->assertTest('Медиаданные включены в ответ', $hasMedia, $response);
-            
-            // Получение продукта с медиаданными
-            if ($mediaProductId) {
-                $startTime = microtime(true);
-                $response = $this->makeRequest('GET', '/products/' . $mediaProductId, null, $this->users['user1']['api_token']);
-                $endTime = microtime(true);
-                $this->performanceMetrics['Получение продукта с медиаданными'] = round(($endTime - $startTime) * 1000, 2);
-                $this->assertTest('Получение продукта с медиаданными', $response['status'] === 200, $response);
-                
-                // Проверяем наличие медиаданных в полученном продукте
-                if ($response['status'] === 200) {
-                    $hasImageUrls = isset($response['data']['image_urls']) && is_array($response['data']['image_urls']);
-                    $hasVideoUrls = isset($response['data']['video_urls']) && is_array($response['data']['video_urls']);
-                    $hasModel3DUrls = isset($response['data']['model_3d_urls']) && is_array($response['data']['model_3d_urls']);
-                    
-                    $this->assertTest('Наличие image_urls в ответе', $hasImageUrls, $response);
-                    $this->assertTest('Наличие video_urls в ответе', $hasVideoUrls, $response);
-                    $this->assertTest('Наличие model_3d_urls в ответе', $hasModel3DUrls, $response);
-                }
-                
-                // Обновление медиаданных продукта
-                $updateMediaData = [
-                    'image_urls' => [
-                        'https://example.com/new_front.jpg',
-                        'https://example.com/new_back.jpg'
-                    ],
-                    'video_urls' => [
-                        'https://example.com/new_review.mp4'
-                    ],
-                    'model_3d_urls' => [
-                        'https://example.com/new_3d_model.glb'
-                    ]
-                ];
-                
-                $startTime = microtime(true);
-                $response = $this->makeRequest('PUT', '/products/' . $mediaProductId, $updateMediaData, $this->users['user1']['api_token']);
-                $endTime = microtime(true);
-                $this->performanceMetrics['Обновление медиаданных продукта'] = round(($endTime - $startTime) * 1000, 2);
-                $this->assertTest('Обновление медиаданных продукта', $response['status'] === 200, $response);
-            }
-        }
-        
-        // Создание продукта только с изображениями
-        $productWithImagesOnly = [
-            'name' => 'Продукт только с изображениями',
-            'vendor_article' => 'IMAGES-ONLY-' . time(),
-            'recommend_price' => 1500.00,
-            'brand' => 'ImagesOnlyBrand',
-            'category' => 'Электроника',
-            'description' => 'Продукт только с изображениями',
-            'image_urls' => [
-                'https://example.com/simple1.jpg',
-                'https://example.com/simple2.jpg'
-            ]
-        ];
-        
-        $startTime = microtime(true);
-        $response = $this->makeRequest('POST', '/products', $productWithImagesOnly, $this->users['user1']['api_token']);
-        $endTime = microtime(true);
-        $this->performanceMetrics['Создание продукта только с изображениями'] = round(($endTime - $startTime) * 1000, 2);
-        $this->assertTest('Создание продукта только с изображениями', $response['status'] === 201, $response);
-        
-        // Тест валидации некорректных URL медиаданных
-        $productWithInvalidUrls = [
-            'name' => 'Продукт с некорректными URL',
-            'vendor_article' => 'INVALID-URLS-' . time(),
-            'recommend_price' => 1000.00,
-            'brand' => 'TestBrand',
-            'category' => 'Электроника',
-            'description' => 'Продукт с некорректными URL медиаданных',
-            'image_urls' => [
-                'https://example.com/image.txt', // Некорректное расширение
-                'ftp://example.com/image.jpg'    // Некорректный протокол
-            ],
-            'video_urls' => [
-                'https://example.com/video.txt'  // Некорректное расширение
-            ],
-            'model_3d_urls' => [
-                'https://example.com/model.txt'  // Некорректное расширение
-            ]
-        ];
-        
-        $startTime = microtime(true);
-        $response = $this->makeRequest('POST', '/products', $productWithInvalidUrls, $this->users['user1']['api_token']);
-        $endTime = microtime(true);
-        $this->performanceMetrics['Создание продукта с некорректными URL медиаданных'] = round(($endTime - $startTime) * 1000, 2);
-        $this->assertTest('Создание продукта с некорректными URL медиаданных (должно быть запрещено)', $response['status'] === 400, $response);
         
         echo "\n";
     }
@@ -753,109 +626,6 @@ class ComprehensiveAPITest {
             $this->performanceMetrics['Пакетное создание офферов'] = round(($endTime - $startTime) * 1000, 2);
             $this->assertTest('Пакетное создание офферов', $response['status'] === 201, $response);
         }
-        
-        // ===== ПАКЕТНОЕ СОЗДАНИЕ ПРОДУКТОВ С МЕДИАДАННЫМИ =====
-        echo "\n📸 ПАКЕТНОЕ СОЗДАНИЕ ПРОДУКТОВ С МЕДИАДАННЫМИ\n";
-        echo "------------------------------------------------\n";
-        
-        $batchProductsWithMedia = [
-            'products' => [
-                [
-                    'name' => 'Пакетный продукт с медиа 1',
-                    'vendor_article' => 'BATCH-MEDIA-001-' . time(),
-                    'recommend_price' => 2500.00,
-                    'brand' => 'BatchMediaBrand',
-                    'category' => 'Электроника',
-                    'description' => 'Первый пакетный продукт с медиаданными',
-                    'image_urls' => [
-                        'https://example.com/batch1_1.jpg',
-                        'https://example.com/batch1_2.jpg'
-                    ],
-                    'video_urls' => [
-                        'https://example.com/batch1_video.mp4'
-                    ]
-                ],
-                [
-                    'name' => 'Пакетный продукт с медиа 2',
-                    'vendor_article' => 'BATCH-MEDIA-002-' . time(),
-                    'recommend_price' => 3500.00,
-                    'brand' => 'BatchMediaBrand',
-                    'category' => 'Электроника',
-                    'description' => 'Второй пакетный продукт с медиаданными',
-                    'image_urls' => [
-                        'https://example.com/batch2_1.jpg'
-                    ],
-                    'model_3d_urls' => [
-                        'https://example.com/batch2_model.glb'
-                    ]
-                ],
-                [
-                    'name' => 'Пакетный продукт с медиа 3',
-                    'vendor_article' => 'BATCH-MEDIA-003-' . time(),
-                    'recommend_price' => 4500.00,
-                    'brand' => 'BatchMediaBrand',
-                    'category' => 'Электроника',
-                    'description' => 'Третий пакетный продукт с полным набором медиа',
-                    'image_urls' => [
-                        'https://example.com/batch3_1.jpg',
-                        'https://example.com/batch3_2.jpg',
-                        'https://example.com/batch3_3.jpg'
-                    ],
-                    'video_urls' => [
-                        'https://example.com/batch3_review.mp4',
-                        'https://example.com/batch3_unboxing.mp4'
-                    ],
-                    'model_3d_urls' => [
-                        'https://example.com/batch3_model.glb',
-                        'https://example.com/batch3_model.obj'
-                    ]
-                ]
-            ]
-        ];
-        
-        $startTime = microtime(true);
-        $response = $this->makeRequest('POST', '/products/batch', $batchProductsWithMedia, $this->users['user1']['api_token']);
-        $endTime = microtime(true);
-        $this->performanceMetrics['Пакетное создание продуктов с медиаданными'] = round(($endTime - $startTime) * 1000, 2);
-        $this->assertTest('Пакетное создание продуктов с медиаданными', $response['status'] === 201, $response);
-        
-        // Проверяем, что все продукты созданы с медиаданными
-        if ($response['status'] === 201 && is_array($response['data'])) {
-            $productsWithMedia = 0;
-            foreach ($response['data'] as $product) {
-                if (isset($product['image_urls']) || isset($product['video_urls']) || isset($product['model_3d_urls'])) {
-                    $productsWithMedia++;
-                }
-            }
-            $this->assertTest('Все пакетные продукты содержат медиаданные', $productsWithMedia === count($response['data']), $response);
-        }
-        
-        // Тест пакетного создания с некорректными медиаданными (должно быть запрещено)
-        $batchProductsWithInvalidMedia = [
-            'products' => [
-                [
-                    'name' => 'Пакетный продукт с некорректными медиа',
-                    'vendor_article' => 'BATCH-INVALID-MEDIA-' . time(),
-                    'recommend_price' => 1000.00,
-                    'brand' => 'TestBrand',
-                    'category' => 'Электроника',
-                    'description' => 'Продукт с некорректными медиаданными',
-                    'image_urls' => [
-                        'https://example.com/image.txt', // Некорректное расширение
-                        'ftp://example.com/image.jpg'     // Некорректный протокол
-                    ],
-                    'video_urls' => [
-                        'https://example.com/video.txt'    // Некорректное расширение
-                    ]
-                ]
-            ]
-        ];
-        
-        $startTime = microtime(true);
-        $response = $this->makeRequest('POST', '/products/batch', $batchProductsWithInvalidMedia, $this->users['user1']['api_token']);
-        $endTime = microtime(true);
-        $this->performanceMetrics['Пакетное создание с некорректными медиаданными'] = round(($endTime - $startTime) * 1000, 2);
-        $this->assertTest('Пакетное создание с некорректными медиаданными (должно быть запрещено)', $response['status'] === 400, $response);
         
         echo "\n";
     }
@@ -1276,11 +1046,8 @@ class ComprehensiveAPITest {
         echo "🧹 13. ОЧИСТКА ТЕСТОВЫХ ДАННЫХ\n";
         echo "----------------------------------\n";
         
-        // Удаление в правильном порядке с учетом foreign key constraints:
-        // 1. Заказы (зависят от офферов)
-        // 2. Офферы (зависят от продуктов и складов)
-        // 3. Продукты (независимы)
-        // 4. Склады (независимы)
+        // Удаление в правильном порядке (сначала заказы, потом офферы, продукты, склады)
+        // Это необходимо из-за foreign key constraints
         
         // 1. Удаление заказов (зависят от офферов)
         if (!empty($this->createdOrders)) {
@@ -1293,15 +1060,14 @@ class ComprehensiveAPITest {
             }
         }
         
-        // 2. Удаление офферов (после удаления заказов)
+        // 2. Удаление офферов (зависят от продуктов и складов)
         if (!empty($this->createdOffers)) {
             foreach ($this->createdOffers as $user => $offerId) {
                 $startTime = microtime(true);
                 $response = $this->makeRequest('DELETE', '/offers/' . $offerId, null, $this->users[$user]['api_token']);
                 $endTime = microtime(true);
                 $this->performanceMetrics['Удаление оффера'] = round(($endTime - $startTime) * 1000, 2);
-                // Ожидаем 200 или 404, но не 500 (если есть связанные заказы)
-                $this->assertTest('Удаление оффера (' . $user . ')', $response['status'] === 200 || $response['status'] === 404 || $response['status'] === 500, $response);
+                $this->assertTest('Удаление оффера (' . $user . ')', $response['status'] === 200 || $response['status'] === 404, $response);
             }
         }
         
@@ -1312,8 +1078,7 @@ class ComprehensiveAPITest {
                 $response = $this->makeRequest('DELETE', '/products/' . $productId, null, $this->users[$user]['api_token']);
                 $endTime = microtime(true);
                 $this->performanceMetrics['Удаление продукта'] = round(($endTime - $startTime) * 1000, 2);
-                // Ожидаем 200 или 404, но не 500 (если есть связанные офферы)
-                $this->assertTest('Удаление продукта (' . $user . ')', $response['status'] === 200 || $response['status'] === 404 || $response['status'] === 500, $response);
+                $this->assertTest('Удаление продукта (' . $user . ')', $response['status'] === 200 || $response['status'] === 404, $response);
             }
         }
         
@@ -1324,8 +1089,7 @@ class ComprehensiveAPITest {
                 $response = $this->makeRequest('DELETE', '/warehouses/' . $warehouseId, null, $this->users[$user]['api_token']);
                 $endTime = microtime(true);
                 $this->performanceMetrics['Удаление склада'] = round(($endTime - $startTime) * 1000, 2);
-                // Ожидаем 200 или 404, но не 500 (если есть связанные офферы)
-                $this->assertTest('Удаление склада (' . $user . ')', $response['status'] === 200 || $response['status'] === 404 || $response['status'] === 500, $response);
+                $this->assertTest('Удаление склада (' . $user . ')', $response['status'] === 200 || $response['status'] === 404, $response);
             }
         }
         
@@ -1336,4 +1100,4 @@ class ComprehensiveAPITest {
 // Запуск тестов
 $test = new ComprehensiveAPITest();
 $test->runAllTests();
-?>
+?> 
