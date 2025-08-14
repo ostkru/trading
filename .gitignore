@@ -4,17 +4,11 @@ redoc.pid
 
 # Application logs and temporary files
 app.log
-*.log
 *.tmp
 
-# Test files
+# Test files (only temporary ones)
 test_*.php
 *_test.php
-
-# Documentation backups
-*_backup.*
-docs.html
-redoc-documentation.html
 
 # Environment files
 .env.local
@@ -29,3 +23,9 @@ redoc-documentation.html
 # OS files
 .DS_Store
 Thumbs.db
+
+# Keep important documentation:
+# - docs.html
+# - redoc-documentation.html
+# - *.md files
+# - comprehensive_api_test.php
