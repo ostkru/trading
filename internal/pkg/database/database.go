@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	"portaldata-api/internal/pkg/config"
 
@@ -22,6 +23,12 @@ func NewConnection(config config.DatabaseConfig) (*DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
+
+	// Настройки connection pooling для оптимизации производительности
+	db.SetMaxOpenConns(25)                 // Максимальное количество открытых соединений
+	db.SetMaxIdleConns(10)                 // Максимальное количество неактивных соединений
+	db.SetConnMaxLifetime(5 * time.Minute) // Время жизни соединения
+	db.SetConnMaxIdleTime(3 * time.Minute) // Время неактивности соединения
 
 	// Проверяем подключение
 	if err := db.Ping(); err != nil {

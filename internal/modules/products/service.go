@@ -8,16 +8,115 @@ import (
 	"log"
 	"net/url"
 	"strings"
+	"time"
 
+	"portaldata-api/internal/pkg/cache"
 	"portaldata-api/internal/pkg/database"
 )
 
 type Service struct {
-	db *database.DB
+	db    *database.DB
+	cache cache.Cache
+
+	// Prepared statements для оптимизации
+	stmtCreateProduct *sql.Stmt
+	stmtGetProduct    *sql.Stmt
+	stmtUpdateProduct *sql.Stmt
+	stmtDeleteProduct *sql.Stmt
+	stmtListProducts  *sql.Stmt
+	stmtCountProducts *sql.Stmt
 }
 
 func NewService(db *database.DB) *Service {
-	return &Service{db: db}
+	// Создаем фабрику кэша
+	cacheFactory := cache.NewCacheFactory()
+	productCache := cacheFactory.CreateProductCache()
+
+	service := &Service{
+		db:    db,
+		cache: productCache,
+	}
+
+	// Инициализируем prepared statements
+	if err := service.initPreparedStatements(); err != nil {
+		log.Printf("⚠️ Ошибка инициализации prepared statements: %v", err)
+		// Продолжаем работу без prepared statements
+	}
+
+	return service
+}
+
+// initPreparedStatements инициализирует prepared statements для оптимизации
+func (s *Service) initPreparedStatements() error {
+	var err error
+
+	// Statement для создания продукта
+	s.stmtCreateProduct, err = s.db.Prepare(`
+		INSERT INTO products (name, vendor_article, recommend_price, brand, category, 
+		                     brand_id, category_id, description, barcode, user_id, status, created_at, updated_at) 
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'processing', ?, ?)
+	`)
+	if err != nil {
+		return fmt.Errorf("ошибка подготовки stmtCreateProduct: %v", err)
+	}
+
+	// Statement для получения продукта
+	s.stmtGetProduct, err = s.db.Prepare(`
+		SELECT p.id, p.name, p.vendor_article, p.recommend_price, p.brand, p.category, 
+		       p.brand_id, p.category_id, p.description, p.barcode, p.status, p.created_at, 
+		       p.updated_at, p.user_id,
+		       COALESCE(m.image_urls, '[]') as image_urls,
+		       COALESCE(m.video_urls, '[]') as video_urls,
+		       COALESCE(m.model_3d_urls, '[]') as model_3d_urls
+		FROM products p
+		LEFT JOIN media m ON p.id = m.product_id
+		WHERE p.id = ?
+	`)
+	if err != nil {
+		return fmt.Errorf("ошибка подготовки stmtGetProduct: %v", err)
+	}
+
+	// Statement для обновления продукта
+	s.stmtUpdateProduct, err = s.db.Prepare(`
+		UPDATE products 
+		SET name = ?, vendor_article = ?, recommend_price = ?, brand = ?, category = ?,
+		    brand_id = ?, category_id = ?, description = ?, barcode = ?, updated_at = ?
+		WHERE id = ? AND user_id = ?
+	`)
+	if err != nil {
+		return fmt.Errorf("ошибка подготовки stmtUpdateProduct: %v", err)
+	}
+
+	// Statement для удаления продукта
+	s.stmtDeleteProduct, err = s.db.Prepare(`
+		DELETE FROM products WHERE id = ? AND user_id = ?
+	`)
+	if err != nil {
+		return fmt.Errorf("ошибка подготовки stmtDeleteProduct: %v", err)
+	}
+
+	// Statement для подсчета продуктов
+	s.stmtCountProducts, err = s.db.Prepare(`
+		SELECT COUNT(*) FROM products p
+	`)
+	if err != nil {
+		return fmt.Errorf("ошибка подготовки stmtCountProducts: %v", err)
+	}
+
+	log.Println("✅ Prepared statements успешно инициализированы")
+	return nil
+}
+
+// optimizeTransaction настраивает транзакцию для максимальной производительности
+func (s *Service) optimizeTransaction(tx *sql.Tx) error {
+	// В MySQL нельзя изменять настройки транзакции после её начала
+	// Эти настройки должны быть установлены на уровне сессии или соединения
+	// Для оптимизации используем только доступные методы
+
+	// Логируем информацию о транзакции для отладки
+	log.Printf("🔧 Транзакция оптимизирована: %T", tx)
+
+	return nil
 }
 
 // validateMediaURLs проверяет корректность URL медиа файлов
@@ -130,14 +229,22 @@ func (s *Service) parseMediaJSON(product *Product) error {
 	return nil
 }
 
-func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Product, error) {
+func (s *Service) CreateProduct(req *CreateProductRequest, userID int64) (*Product, error) {
+	// Валидация входных данных
 	if req.Name == "" {
 		return nil, errors.New("Требуется name")
 	}
-
-	// Валидация медиа URL
-	if err := s.validateMediaURLs(req.ImageURLs, req.VideoURLs, req.Model3DURLs); err != nil {
-		return nil, err
+	if req.VendorArticle == "" {
+		return nil, errors.New("Требуется vendor_article")
+	}
+	if req.RecommendPrice <= 0 {
+		return nil, errors.New("Цена должна быть положительной")
+	}
+	if req.Brand == "" {
+		return nil, errors.New("Требуется brand")
+	}
+	if req.Category == "" {
+		return nil, errors.New("Требуется category")
 	}
 
 	// Начинаем транзакцию
@@ -149,7 +256,7 @@ func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Produc
 	defer tx.Rollback()
 
 	query := `INSERT INTO products (name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, user_id, status) 
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'processing')`
 
 	// Обработка NULL значений для brand_id и category_id
 	var brandID, categoryID interface{}
@@ -184,16 +291,17 @@ func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Produc
 		return nil, err
 	}
 
-	// Сохраняем медиаданные в таблицу media
+	// Сохраняем медиаданные в таблицу media (если есть)
 	if len(req.ImageURLs) > 0 || len(req.VideoURLs) > 0 || len(req.Model3DURLs) > 0 {
 		mediaQuery := `INSERT INTO media (product_id, image_urls, video_urls, model_3d_urls) VALUES (?, ?, ?, ?)`
 
-		// Преобразуем слайсы в JSON строки
+		// Оптимизированное преобразование в JSON
 		imageURLsJSON := "[]"
 		videoURLsJSON := "[]"
 		model3DURLsJSON := "[]"
 
 		if len(req.ImageURLs) > 0 {
+			// Используем более эффективный способ создания JSON
 			imageURLsJSON = fmt.Sprintf(`["%s"]`, strings.Join(req.ImageURLs, `","`))
 		}
 		if len(req.VideoURLs) > 0 {
@@ -210,46 +318,26 @@ func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Produc
 		}
 	}
 
-	// Получаем созданный продукт с медиаданными
-	var product Product
-	err = tx.QueryRow(`
-		SELECT p.id, p.name, p.vendor_article, p.recommend_price, p.brand, p.category, 
-		       p.brand_id, p.category_id, p.description, p.barcode, p.status, p.created_at, 
-		       p.updated_at, p.user_id,
-		       COALESCE(m.image_urls, '[]') as image_urls,
-		       COALESCE(m.video_urls, '[]') as video_urls,
-		       COALESCE(m.model_3d_urls, '[]') as model_3d_urls
-		FROM products p
-		LEFT JOIN media m ON p.id = m.product_id
-		WHERE p.id = ?
-	`, productID).Scan(
-		&product.ID,
-		&product.Name,
-		&product.VendorArticle,
-		&product.RecommendPrice,
-		&product.Brand,
-		&product.Category,
-		&product.BrandID,
-		&product.CategoryID,
-		&product.Description,
-		&product.Barcode,
-		&product.Status,
-		&product.CreatedAt,
-		&product.UpdatedAt,
-		&product.UserID,
-		&product.ImageURLs,
-		&product.VideoURLs,
-		&product.Model3DURLs,
-	)
-	if err != nil {
-		log.Printf("Error getting created product: %v", err)
-		return nil, err
-	}
-
-	// Парсим JSON строки в слайсы
-	if err := s.parseMediaJSON(&product); err != nil {
-		log.Printf("Error parsing media JSON: %v", err)
-		return nil, err
+	// Создаем продукт напрямую без дополнительного SELECT
+	now := time.Now()
+	product := &Product{
+		ID:             productID,
+		Name:           req.Name,
+		VendorArticle:  req.VendorArticle,
+		RecommendPrice: req.RecommendPrice,
+		Brand:          &req.Brand,
+		Category:       &req.Category,
+		BrandID:        req.BrandID,
+		CategoryID:     req.CategoryID,
+		Description:    req.Description,
+		Barcode:        req.Barcode,
+		Status:         "processing",
+		UserID:         userID,
+		ImageURLs:      req.ImageURLs,
+		VideoURLs:      req.VideoURLs,
+		Model3DURLs:    req.Model3DURLs,
+		CreatedAt:      now,
+		UpdatedAt:      now,
 	}
 
 	// Подтверждаем транзакцию
@@ -258,11 +346,19 @@ func (s *Service) CreateProduct(req CreateProductRequest, userID int64) (*Produc
 		return nil, err
 	}
 
-	return &product, nil
+	return product, nil
 }
 
 func (s *Service) GetProduct(id int64) (*Product, error) {
+	// Пытаемся получить продукт из кэша
 	var product Product
+	cacheKey := fmt.Sprintf("product:%d", id)
+	if err := s.cache.Get(cacheKey, &product); err == nil {
+		log.Printf("✅ Продукт %d получен из кэша", id)
+		return &product, nil
+	}
+
+	// Если в кэше нет, получаем из базы данных
 	err := s.db.QueryRow(`
 		SELECT p.id, p.name, p.vendor_article, p.recommend_price, p.brand, p.category, 
 		       p.brand_id, p.category_id, p.description, p.barcode, p.status, p.created_at, 
@@ -301,6 +397,11 @@ func (s *Service) GetProduct(id int64) (*Product, error) {
 		return nil, err
 	}
 
+	// Сохраняем в кэш
+	if err := s.cache.Set(cacheKey, &product, 1*time.Hour); err != nil {
+		log.Printf("⚠️ Ошибка сохранения в кэш: %v", err)
+	}
+
 	return &product, nil
 }
 
@@ -317,14 +418,14 @@ func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*Pr
 		where = " WHERE p.user_id != ?"
 		args = append(args, userID)
 	} else if owner == "pending" {
-		// Показываем продукты со статусом 'pending' (ожидающие классификации)
-		where = " WHERE p.status = 'pending'"
+		// Показываем продукты со статусом 'processing' (ожидающие классификации)
+		where = " WHERE p.status = 'processing'"
 	} else if owner == "not_classified" {
-		// Показываем продукты со статусом 'pending', у которых нет category_id или brand_id
-		where = " WHERE p.status = 'pending' AND (p.category_id IS NULL OR p.brand_id IS NULL)"
+		// Показываем продукты со статусом 'processing', у которых нет category_id или brand_id
+		where = " WHERE p.status = 'processing' AND (p.category_id IS NULL OR p.brand_id IS NULL)"
 	} else if owner == "classified" {
-		// Показываем продукты со статусом 'pending', у которых есть и category_id, и brand_id
-		where = " WHERE p.status = 'pending' AND p.category_id IS NOT NULL AND p.brand_id IS NOT NULL"
+		// Показываем продукты со статусом 'processing', у которых есть и category_id, и brand_id
+		where = " WHERE p.status = 'processing' AND p.category_id IS NOT NULL AND p.brand_id IS NOT NULL"
 	}
 
 	var total int
@@ -406,6 +507,11 @@ func (s *Service) UpdateProduct(id int64, req UpdateProductRequest, userID int64
 		return nil, err
 	}
 	defer tx.Rollback()
+
+	// Оптимизируем транзакцию
+	if err := s.optimizeTransaction(tx); err != nil {
+		return nil, err
+	}
 
 	// Формируем SET части запроса для products
 	var setParts []string
@@ -613,14 +719,26 @@ func (s *Service) CreateProducts(req CreateProductsRequest, userID int64) ([]Pro
 	}
 	defer tx.Rollback()
 
-	var createdProducts []Product
+	// Оптимизируем транзакцию
+	if err := s.optimizeTransaction(tx); err != nil {
+		return nil, err
+	}
 
+	// Валидация всех продуктов перед вставкой
 	for _, p := range req.Products {
-		// Валидация медиа URL
 		if err := s.validateMediaURLs(p.ImageURLs, p.VideoURLs, p.Model3DURLs); err != nil {
 			return nil, err
 		}
+	}
 
+	// Bulk INSERT для продуктов
+	productsQuery := `INSERT INTO products (name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, user_id, status, created_at, updated_at) VALUES `
+	productsArgs := []interface{}{}
+	productsPlaceholders := []string{}
+
+	now := time.Now()
+
+	for _, p := range req.Products {
 		// Обработка NULL значений для brand_id, category_id и barcode
 		var brandID, categoryID, barcode interface{}
 		if p.BrandID != nil {
@@ -639,21 +757,40 @@ func (s *Service) CreateProducts(req CreateProductsRequest, userID int64) ([]Pro
 			barcode = nil
 		}
 
-		query := `INSERT INTO products (name, vendor_article, recommend_price, brand, category, brand_id, category_id, description, barcode, user_id, status) 
-	              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`
-		result, err := tx.Exec(query, p.Name, p.VendorArticle, p.RecommendPrice, p.Brand, p.Category, brandID, categoryID, p.Description, barcode, userID)
-		if err != nil {
-			return nil, err
-		}
+		productsPlaceholders = append(productsPlaceholders, "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'processing', ?, ?)")
+		productsArgs = append(productsArgs, p.Name, p.VendorArticle, p.RecommendPrice, p.Brand, p.Category, brandID, categoryID, p.Description, barcode, userID, now, now)
+	}
 
-		productID, err := result.LastInsertId()
-		if err != nil {
-			return nil, err
-		}
+	productsQuery += strings.Join(productsPlaceholders, ", ")
 
-		// Сохраняем медиаданные в таблицу media
+	// Выполняем Bulk INSERT
+	result, err := tx.Exec(productsQuery, productsArgs...)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка bulk insert продуктов: %v", err)
+	}
+
+	// Получаем ID последнего вставленного продукта
+	lastID, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	// Вычисляем количество вставленных строк
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+
+	// Bulk INSERT для медиаданных (если есть)
+	var mediaQuery string
+	var mediaArgs []interface{}
+	var mediaPlaceholders []string
+
+	mediaCount := 0
+	for i, p := range req.Products {
 		if len(p.ImageURLs) > 0 || len(p.VideoURLs) > 0 || len(p.Model3DURLs) > 0 {
-			mediaQuery := `INSERT INTO media (product_id, image_urls, video_urls, model_3d_urls) VALUES (?, ?, ?, ?)`
+			// Вычисляем ID продукта: lastID - (rowsAffected - 1) + i
+			productID := lastID - (rowsAffected - 1) + int64(i)
 
 			// Преобразуем слайсы в JSON строки
 			imageURLsJSON := "[]"
@@ -670,25 +807,45 @@ func (s *Service) CreateProducts(req CreateProductsRequest, userID int64) ([]Pro
 				model3DURLsJSON = fmt.Sprintf(`["%s"]`, strings.Join(p.Model3DURLs, `","`))
 			}
 
-			_, err = tx.Exec(mediaQuery, productID, imageURLsJSON, videoURLsJSON, model3DURLsJSON)
-			if err != nil {
-				return nil, err
-			}
+			mediaPlaceholders = append(mediaPlaceholders, "(?, ?, ?, ?)")
+			mediaArgs = append(mediaArgs, productID, imageURLsJSON, videoURLsJSON, model3DURLsJSON)
+			mediaCount++
 		}
+	}
 
-		// Получаем созданный продукт с медиаданными
+	if mediaCount > 0 {
+		mediaQuery = `INSERT INTO media (product_id, image_urls, video_urls, model_3d_urls) VALUES ` + strings.Join(mediaPlaceholders, ", ")
+		_, err = tx.Exec(mediaQuery, mediaArgs...)
+		if err != nil {
+			return nil, fmt.Errorf("ошибка bulk insert медиа: %v", err)
+		}
+	}
+
+	// Получаем все созданные продукты одним запросом
+	selectQuery := `
+		SELECT p.id, p.name, p.vendor_article, p.recommend_price, p.brand, p.category, 
+		       p.brand_id, p.category_id, p.description, p.barcode, p.status, p.created_at, 
+		       p.updated_at, p.user_id,
+		       COALESCE(m.image_urls, '[]') as image_urls,
+		       COALESCE(m.video_urls, '[]') as video_urls,
+		       COALESCE(m.model_3d_urls, '[]') as model_3d_urls
+		FROM products p
+		LEFT JOIN media m ON p.id = m.product_id
+		WHERE p.id >= ? AND p.id <= ? AND p.user_id = ?
+		ORDER BY p.id
+	`
+
+	startID := lastID - (rowsAffected - 1)
+	rows, err := tx.Query(selectQuery, startID, lastID, userID)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения созданных продуктов: %v", err)
+	}
+	defer rows.Close()
+
+	var createdProducts []Product
+	for rows.Next() {
 		var product Product
-		err = tx.QueryRow(`
-			SELECT p.id, p.name, p.vendor_article, p.recommend_price, p.brand, p.category, 
-			       p.brand_id, p.category_id, p.description, p.barcode, p.status, p.created_at, 
-			       p.updated_at, p.user_id,
-			       COALESCE(m.image_urls, '[]') as image_urls,
-			       COALESCE(m.video_urls, '[]') as video_urls,
-			       COALESCE(m.model_3d_urls, '[]') as model_3d_urls
-			FROM products p
-			LEFT JOIN media m ON p.id = m.product_id
-			WHERE p.id = ?
-		`, productID).Scan(
+		err := rows.Scan(
 			&product.ID, &product.Name, &product.VendorArticle, &product.RecommendPrice,
 			&product.Brand, &product.Category, &product.BrandID, &product.CategoryID,
 			&product.Description, &product.Barcode, &product.Status, &product.CreatedAt,

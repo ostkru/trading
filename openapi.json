@@ -281,7 +281,7 @@
           "max_shipping_days": {
             "type": "integer",
             "default": 0,
-            "description": "Максимальное количество дней доставки"
+            "description": "Максимальный срок поставки на склад в днях"
           },
           "created_at": {
             "type": "string",
@@ -345,7 +345,7 @@
           "max_shipping_days": {
             "type": "integer",
             "default": 0,
-            "description": "Максимальное количество дней доставки"
+            "description": "Максимальный срок поставки на склад в днях"
           }
         },
         "description": "Поля created_at и updated_at выставляются сервером автоматически. Координаты автоматически заполняются из склада."
@@ -375,7 +375,7 @@
           },
           "max_shipping_days": {
             "type": "integer",
-            "description": "Максимальное количество дней доставки"
+            "description": "Максимальный срок поставки на склад в днях"
           },
           "warehouse_id": {
             "type": "integer",
@@ -476,7 +476,7 @@
           },
           "max_shipping_days": {
             "type": "integer",
-            "description": "Максимальное количество дней доставки"
+            "description": "Максимальный срок поставки на склад в днях"
           },
           "created_at": {
             "type": "string",
@@ -1275,7 +1275,7 @@
               "type": "integer",
               "minimum": 1
             },
-            "description": "Максимальные дни доставки"
+            "description": "Максимальный срок поставки на склад в днях"
           },
           {
             "in": "query",

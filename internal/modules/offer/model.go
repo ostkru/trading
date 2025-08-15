@@ -73,5 +73,5 @@ type OfferFilterRequest struct {
 	WarehouseID     *int64            `json:"warehouse_id,omitempty"`      // ID склада
 	TaxNDS          *int              `json:"tax_nds,omitempty"`           // НДС в процентах
 	UnitsPerLot     *int              `json:"units_per_lot,omitempty"`     // Количество единиц в лоте
-	MaxShippingDays *int              `json:"max_shipping_days,omitempty"` // Максимальные дни доставки
+	MaxShippingDays *int              `json:"max_shipping_days,omitempty"` // Максимальный срок поставки на склад в днях
 }

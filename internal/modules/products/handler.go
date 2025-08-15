@@ -1,6 +1,7 @@
 package products
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -30,12 +31,31 @@ func (h *Handlers) CreateMetaproduct(c *gin.Context) {
 		response.BadRequest(c, err.Error())
 		return
 	}
-	product, err := h.service.CreateProduct(req, userID.(int64))
+
+	// Валидация данных
+	if req.Name == "" {
+		response.BadRequest(c, "Требуется name")
+		return
+	}
+	if req.VendorArticle == "" {
+		response.BadRequest(c, "Требуется vendor_article")
+		return
+	}
+	if req.RecommendPrice <= 0 {
+		response.BadRequest(c, "Цена должна быть положительной")
+		return
+	}
+	if req.Brand == "" {
+		response.BadRequest(c, "Требуется brand")
+		return
+	}
+	if req.Category == "" {
+		response.BadRequest(c, "Требуется category")
+		return
+	}
+
+	product, err := h.service.CreateProduct(&req, userID.(int64))
 	if err != nil {
-		if err.Error() == "Требуется name" {
-			response.BadRequest(c, err.Error())
-			return
-		}
 		// Проверяем ошибки валидации медиаданных
 		if strings.Contains(err.Error(), "некорректный URL") {
 			response.BadRequest(c, err.Error())
@@ -110,6 +130,29 @@ func (h *Handlers) UpdateMetaproduct(c *gin.Context) {
 		response.BadRequest(c, err.Error())
 		return
 	}
+
+	// Валидация данных
+	if req.Name != nil && *req.Name == "" {
+		response.BadRequest(c, "Имя не может быть пустым")
+		return
+	}
+	if req.VendorArticle != nil && *req.VendorArticle == "" {
+		response.BadRequest(c, "Артикул не может быть пустым")
+		return
+	}
+	if req.RecommendPrice != nil && *req.RecommendPrice <= 0 {
+		response.BadRequest(c, "Цена должна быть положительной")
+		return
+	}
+	if req.Brand != nil && *req.Brand == "" {
+		response.BadRequest(c, "Бренд не может быть пустым")
+		return
+	}
+	if req.Category != nil && *req.Category == "" {
+		response.BadRequest(c, "Категория не может быть пустым")
+		return
+	}
+
 	updatedProduct, err := h.service.UpdateProduct(id, req, userID.(int64))
 	if err != nil {
 		if strings.Contains(err.Error(), "принадлежит другому пользователю") {
@@ -165,6 +208,31 @@ func (h *Handlers) CreateMetaproducts(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Валидация данных для каждого продукта
+	for i, product := range req.Products {
+		if product.Name == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Продукт %d: требуется name", i+1)})
+			return
+		}
+		if product.VendorArticle == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Продукт %d: требуется vendor_article", i+1)})
+			return
+		}
+		if product.RecommendPrice <= 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Продукт %d: цена должна быть положительной", i+1)})
+			return
+		}
+		if product.Brand == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Продукт %d: требуется brand", i+1)})
+			return
+		}
+		if product.Category == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Продукт %d: требуется category", i+1)})
+			return
+		}
+	}
+
 	products, err := h.service.CreateProducts(req, userID.(int64))
 	if err != nil {
 		// Проверяем ошибки валидации медиаданных

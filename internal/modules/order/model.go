@@ -19,7 +19,7 @@ type Order struct {
 	OrderStatus        *string   `json:"order_status,omitempty"`
 	ShippingAddress    *string   `json:"shipping_address,omitempty"`
 	TrackingNumber     *string   `json:"tracking_number,omitempty"`
-	MaxShippingDays    int       `json:"max_shipping_days"`
+	MaxShippingDays    int       `json:"max_shipping_days"` // Максимальный срок поставки на склад в днях
 	CreatedAt          time.Time `json:"created_at,omitempty"`
 	UpdatedAt          time.Time `json:"updated_at,omitempty"`
 }
