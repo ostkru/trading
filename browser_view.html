@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PortalData API - Просмотр в браузере</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .api-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .api-section h2 {
+            color: #34495e;
+            margin-top: 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .api-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .api-link {
+            display: block;
+            padding: 15px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            text-align: center;
+            transition: background-color 0.3s;
+            font-weight: 500;
+        }
+        .api-link:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        .api-link.special {
+            background: #e74c3c;
+        }
+        .api-link.special:hover {
+            background: #c0392b;
+        }
+        .info-box {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            color: #856404;
+        }
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+        .api-key-info {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #17a2b8;
+        }
+        .copy-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .copy-btn:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 PortalData API - Просмотр в браузере</h1>
+        
+        <div class="info-box success">
+            <strong>✅ Готово!</strong> API поддерживает GET параметр <code>api_key</code> для удобного просмотра в браузере.
+        </div>
+
+        <div class="api-key-info">
+            <strong>🔑 API Ключи для тестирования:</strong><br>
+            <strong>User1:</strong> <code id="user1-key">80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27</code>
+            <button class="copy-btn" onclick="copyToClipboard('user1-key')">Копировать</button><br>
+            <strong>User2:</strong> <code id="user2-key">f9c912b6989eb166ee48ec6d8f07a2b0d29d5efc8ae1c2e44fac9fe8c4d4a0b5</code>
+            <button class="copy-btn" onclick="copyToClipboard('user2-key')">Копировать</button><br>
+            <strong>User3:</strong> <code id="user3-key">00601582c3163466e0fece95d8e2315cb1c66814066ad8e0566d2813614d9001</code>
+            <button class="copy-btn" onclick="copyToClipboard('user3-key')">Копировать</button>
+        </div>
+
+        <div class="api-section">
+            <h2>📦 Продукты</h2>
+            <div class="api-links">
+                <a href="/api/v1/products?api_key=80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27&limit=10" class="api-link" target="_blank">
+                    Все продукты User1 (10 шт)
+                </a>
+                <a href="/api/v1/products?api_key=80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27&upload_status=classified&limit=20" class="api-link" target="_blank">
+                    Классифицированные продукты User1
+                </a>
+                <a href="/api/v1/products?api_key=80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27&upload_status=processing&limit=20" class="api-link" target="_blank">
+                    Продукты в обработке User1
+                </a>
+                <a href="/api/v1/products?api_key=80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27&upload_status=not_classified&limit=20" class="api-link" target="_blank">
+                    Неклассифицированные продукты User1
+                </a>
+                <a href="/api/v1/products?api_key=f9c912b6989eb166ee48ec6d8f07a2b0d29d5efc8ae1c2e44fac9fe8c4d4a0b5&limit=10" class="api-link" target="_blank">
+                    Все продукты User2 (10 шт)
+                </a>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>🏪 Склады</h2>
+            <div class="api-links">
+                <a href="/api/v1/warehouses?api_key=80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27&limit=10" class="api-link" target="_blank">
+                    Склады User1
+                </a>
+                <a href="/api/v1/warehouses?api_key=f9c912b6989eb166ee48ec6d8f07a2b0d29d5efc8ae1c2e44fac9fe8c4d4a0b5&limit=10" class="api-link" target="_blank">
+                    Склады User2
+                </a>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>💰 Офферы</h2>
+            <div class="api-links">
+                <a href="/api/v1/offers?api_key=80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27&limit=10" class="api-link" target="_blank">
+                    Офферы User1
+                </a>
+                <a href="/api/v1/offers?api_key=f9c912b6989eb166ee48ec6d8f07a2b0d29d5efc8ae1c2e44fac9fe8c4d4a0b5&limit=10" class="api-link" target="_blank">
+                    Офферы User2
+                </a>
+                <a href="/api/v1/offers/public?limit=20" class="api-link special" target="_blank">
+                    Публичные офферы (без API ключа)
+                </a>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>📋 Заказы</h2>
+            <div class="api-links">
+                <a href="/api/v1/orders?api_key=80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27&limit=10" class="api-link" target="_blank">
+                    Заказы User1
+                </a>
+                <a href="/api/v1/orders?api_key=f9c912b6989eb166ee48ec6d8f07a2b0d29d5efc8ae1c2e44fac9fe8c4d4a0b5&limit=10" class="api-link" target="_blank">
+                    Заказы User2
+                </a>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>🔍 Фильтрация и поиск</h2>
+            <div class="api-links">
+                <a href="/api/v1/products?api_key=80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27&limit=50&upload_status=classified" class="api-link" target="_blank">
+                    Только классифицированные (upload_status=classified)
+                </a>
+                <a href="/api/v1/products?api_key=80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27&limit=50&upload_status=not_classified" class="api-link" target="_blank">
+                    Только неклассифицированные (upload_status=not_classified)
+                </a>
+                <a href="/api/v1/products?api_key=80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27&limit=50&upload_status=processing" class="api-link" target="_blank">
+                    Только в обработке (upload_status=processing)
+                </a>
+            </div>
+        </div>
+
+        <div class="info-box warning">
+            <strong>⚠️ Важно:</strong> Все ссылки открываются в новой вкладке. Для изменения API ключа замените его в URL.
+        </div>
+
+        <div class="info-box">
+            <strong>💡 Полезные параметры:</strong><br>
+            • <code>limit</code> - количество записей (по умолчанию 10)<br>
+            • <code>page</code> - номер страницы (по умолчанию 1)<br>
+            • <code>status</code> - фильтр по статусу (processing, classified, not_classified)<br>
+            • <code>owner</code> - фильтр по владельцу (my, all, others, pending)<br>
+            • <code>upload_status</code> - фильтр по статусу классификации (processing, classified, not_classified)
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(function() {
+                // Показываем уведомление
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Скопировано!';
+                btn.style.background = '#28a745';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#6c757d';
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Ошибка копирования: ', err);
+            });
+        }
+    </script>
+</body>
+</html>

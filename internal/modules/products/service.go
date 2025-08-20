@@ -11,12 +11,16 @@ import (
 	"time"
 
 	"portaldata-api/internal/pkg/cache"
+	"portaldata-api/internal/pkg/classifier"
 	"portaldata-api/internal/pkg/database"
 )
 
 type Service struct {
 	db    *database.DB
 	cache cache.Cache
+
+	// Классификатор продуктов
+	classifier classifier.ProductClassifier
 
 	// Prepared statements для оптимизации
 	stmtCreateProduct *sql.Stmt
@@ -32,9 +36,16 @@ func NewService(db *database.DB) *Service {
 	cacheFactory := cache.NewCacheFactory()
 	productCache := cacheFactory.CreateProductCache()
 
+	// Создаем обработчик результатов классификации
+	resultHandler := classifier.NewProductResultHandler(db.DB)
+
+	// Создаем классификатор OSTK
+	ostkClassifier := classifier.NewOSTKClassifier("https://api.ostk.ru", resultHandler)
+
 	service := &Service{
-		db:    db,
-		cache: productCache,
+		db:         db,
+		cache:      productCache,
+		classifier: ostkClassifier,
 	}
 
 	// Инициализируем prepared statements
@@ -346,6 +357,9 @@ func (s *Service) CreateProduct(req *CreateProductRequest, userID int64) (*Produ
 		return nil, err
 	}
 
+	// Запускаем асинхронную классификацию продукта
+	go s.classifyProductAsync(productID, req, userID)
+
 	return product, nil
 }
 
@@ -405,12 +419,12 @@ func (s *Service) GetProduct(id int64) (*Product, error) {
 	return &product, nil
 }
 
-func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*ProductListResponse, error) {
+func (s *Service) ListProducts(page, limit int, owner string, uploadStatus string, userID int64) (*ProductListResponse, error) {
 	offset := (page - 1) * limit
 	var where string
 	var args []interface{}
 
-	// Обработка фильтров по владельцу и статусу
+	// Обработка фильтров по владельцу
 	if owner == "my" {
 		where = " WHERE p.user_id = ?"
 		args = append(args, userID)
@@ -420,12 +434,16 @@ func (s *Service) ListProducts(page, limit int, owner string, userID int64) (*Pr
 	} else if owner == "pending" {
 		// Показываем продукты со статусом 'processing' (ожидающие классификации)
 		where = " WHERE p.status = 'processing'"
-	} else if owner == "not_classified" {
-		// Показываем продукты со статусом 'processing', у которых нет category_id или brand_id
-		where = " WHERE p.status = 'processing' AND (p.category_id IS NULL OR p.brand_id IS NULL)"
-	} else if owner == "classified" {
-		// Показываем продукты со статусом 'processing', у которых есть и category_id, и brand_id
-		where = " WHERE p.status = 'processing' AND p.category_id IS NOT NULL AND p.brand_id IS NOT NULL"
+	}
+
+	// Добавляем фильтр по статусу классификации
+	if uploadStatus != "" {
+		if where != "" {
+			where += " AND p.status = ?"
+		} else {
+			where = " WHERE p.status = ?"
+		}
+		args = append(args, uploadStatus)
 	}
 
 	var total int
@@ -869,4 +887,24 @@ func (s *Service) CreateProducts(req CreateProductsRequest, userID int64) ([]Pro
 	}
 
 	return createdProducts, nil
+}
+
+// classifyProductAsync запускает асинхронную классификацию продукта
+func (s *Service) classifyProductAsync(productID int64, req *CreateProductRequest, userID int64) {
+	// Создаем запрос на классификацию
+	classificationReq := classifier.ProductClassificationRequest{
+		ProductID:    productID,
+		ProductName:  req.Name,
+		UserCategory: req.Category,
+		UserID:       userID,
+		Brand:        req.Brand,
+		Category:     req.Category,
+	}
+
+	// Добавляем задачу в очередь классификации
+	if err := s.classifier.ClassifyProductAsync(classificationReq); err != nil {
+		log.Printf("❌ Ошибка добавления задачи классификации для продукта %d: %v", productID, err)
+	} else {
+		log.Printf("🚀 Задача классификации добавлена для продукта %d: %s", productID, req.Name)
+	}
 }

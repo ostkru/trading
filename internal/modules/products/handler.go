@@ -91,9 +91,10 @@ func (h *Handlers) ListMetaproducts(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	owner := c.DefaultQuery("owner", "my")
+	uploadStatus := c.DefaultQuery("upload_status", "")
 
 	// Валидация параметра owner
-	validOwners := []string{"my", "all", "others", "pending", "not_classified", "classified"}
+	validOwners := []string{"my", "all", "others", "pending"}
 	isValidOwner := false
 	for _, validOwner := range validOwners {
 		if owner == validOwner {
@@ -105,7 +106,20 @@ func (h *Handlers) ListMetaproducts(c *gin.Context) {
 		owner = "my" // По умолчанию показываем только свои продукты
 	}
 
-	productsResponse, err := h.service.ListProducts(page, limit, owner, userID.(int64))
+	// Валидация параметра upload_status
+	validUploadStatuses := []string{"", "processing", "classified", "not_classified"}
+	isValidUploadStatus := false
+	for _, validStatus := range validUploadStatuses {
+		if uploadStatus == validStatus {
+			isValidUploadStatus = true
+			break
+		}
+	}
+	if !isValidUploadStatus {
+		uploadStatus = "" // По умолчанию без фильтра по статусу
+	}
+
+	productsResponse, err := h.service.ListProducts(page, limit, owner, uploadStatus, userID.(int64))
 	if err != nil {
 		response.InternalServerError(c, err.Error())
 		return

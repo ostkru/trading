@@ -58,7 +58,7 @@ func main() {
 	// Основной endpoint для проверки доступности
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"success":  true,
+			"success": true,
 			"data": gin.H{
 				"message":  "API ПорталДанных.РФ доступен",
 				"version":  "v1",
@@ -66,6 +66,11 @@ func main() {
 				"status":   "running",
 			},
 		})
+	})
+
+	// Страница для просмотра API в браузере
+	router.GET("/browser", func(c *gin.Context) {
+		c.File("browser_view.html")
 	})
 
 	// Swagger
