@@ -14,17 +14,21 @@ type Warehouse struct {
 }
 
 type CreateWarehouseRequest struct {
-	Name         string  `json:"name"`
-	Address      string  `json:"address"`
-	Latitude     float64 `json:"latitude"`
-	Longitude    float64 `json:"longitude"`
-	WorkingHours string  `json:"working_hours"`
+	Name         string  `json:"name" binding:"required,min=1,max=255"`
+	Address      string  `json:"address" binding:"required,min=1,max=500"`
+	Latitude     float64 `json:"latitude" binding:"required,min=-90,max=90"`
+	Longitude    float64 `json:"longitude" binding:"required,min=-180,max=180"`
+	WorkingHours string  `json:"working_hours" binding:"required,min=1,max=100"`
 }
 
 type UpdateWarehouseRequest struct {
-	Name         *string  `json:"name,omitempty"`
-	Address      *string  `json:"address,omitempty"`
-	Latitude     *float64 `json:"latitude,omitempty"`
-	Longitude    *float64 `json:"longitude,omitempty"`
-	WorkingHours *string  `json:"working_hours,omitempty"`
+	Name         *string  `json:"name,omitempty" binding:"omitempty,min=1,max=255"`
+	Address      *string  `json:"address,omitempty" binding:"omitempty,min=1,max=500"`
+	Latitude     *float64 `json:"latitude,omitempty" binding:"omitempty,min=-90,max=90"`
+	Longitude    *float64 `json:"longitude,omitempty" binding:"omitempty,min=-180,max=180"`
+	WorkingHours *string  `json:"working_hours,omitempty" binding:"omitempty,min=1,max=100"`
+}
+
+type CreateBatchWarehouseRequest struct {
+	Warehouses []CreateWarehouseRequest `json:"warehouses" binding:"required,min=1,max=100"`
 }

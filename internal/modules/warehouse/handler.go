@@ -102,6 +102,7 @@ func (h *Handlers) ListWarehouses(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
 		return
 	}
+
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	if page < 1 {
@@ -110,11 +111,40 @@ func (h *Handlers) ListWarehouses(c *gin.Context) {
 	if limit < 1 {
 		limit = 10
 	}
+
 	warehouses, err := h.service.ListWarehouses(userID.(int64), page, limit)
 	if err != nil {
 		log.Printf("ListWarehouses error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сервера: " + err.Error()})
 		return
 	}
+
 	c.JSON(http.StatusOK, warehouses)
+}
+
+// CreateBatchWarehouses создает несколько складов одновременно
+func (h *Handlers) CreateBatchWarehouses(c *gin.Context) {
+	var req CreateBatchWarehouseRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные данные запроса: " + err.Error()})
+		return
+	}
+
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		return
+	}
+
+	warehouses, err := h.service.CreateBatchWarehouses(req.Warehouses, userID.(int64))
+	if err != nil {
+		log.Printf("CreateBatchWarehouses error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сервера: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"warehouses": warehouses,
+		"count":      len(warehouses),
+	})
 }

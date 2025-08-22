@@ -65,7 +65,10 @@ class ComprehensiveAPITestImproved {
             // 10. Тестирование специальных методов
             $this->testSpecialMethods();
             
-            // 11. Тестирование неправильных алгоритмов (должны провалиться)
+            // 11. Тестирование Redis Rate Limiting
+            $this->testRedisRateLimiting();
+            
+            // 12. Тестирование неправильных алгоритмов (должны провалиться)
             $this->testIncorrectAlgorithms();
             
         } finally {
@@ -1531,8 +1534,83 @@ class ComprehensiveAPITestImproved {
         echo "\n";
     }
 
+    private function testRedisRateLimiting() {
+        echo "🔄 11. ТЕСТИРОВАНИЕ REDIS RATE LIMITING\n";
+        echo "---------------------------------------\n";
+        
+        // Включаем отдельный тестер Redis Rate Limiting
+        require_once 'test_redis_rate_limiting.php';
+        
+        try {
+            $redisRateLimitTester = new RedisRateLimitingTest('http://localhost:8095');
+            
+            echo "   📊 Запуск тестов Redis Rate Limiting...\n";
+            $startTime = microtime(true);
+            
+            // Запускаем основные тесты Redis Rate Limiting
+            $redisTests = [
+                'testBasicRateLimit' => 'Базовый rate limiting',
+                'testMinuteLimits' => 'Минутные лимиты',
+                'testDayLimits' => 'Дневные лимиты',
+                'testPublicEndpointLimits' => 'Лимиты публичных эндпоинтов',
+                'testAPIKeySearch' => 'Поиск API ключей',
+                'testAPIKeyInfo' => 'Информация об API ключе',
+                'testAPIKeyStats' => 'Статистика API ключа',
+                'testRateLimitHeaders' => 'Заголовки rate limit',
+                'testMultipleAPIKeys' => 'Множественные API ключи',
+                'testEdgeCases' => 'Граничные случаи'
+            ];
+            
+            $redisPassedTests = 0;
+            $redisFailedTests = 0;
+            
+            foreach ($redisTests as $method => $description) {
+                try {
+                    $testStartTime = microtime(true);
+                    
+                    // Вызываем приватный метод через рефлексию
+                    $reflection = new ReflectionClass($redisRateLimitTester);
+                    $testMethod = $reflection->getMethod($method);
+                    $testMethod->setAccessible(true);
+                    $testMethod->invoke($redisRateLimitTester);
+                    
+                    $testEndTime = microtime(true);
+                    $testTime = round(($testEndTime - $testStartTime) * 1000, 2);
+                    
+                    $this->performanceMetrics["Redis: $description"] = $testTime;
+                    $this->assertTest("Redis: $description", true, ['status' => 200]);
+                    $redisPassedTests++;
+                    
+                } catch (Exception $e) {
+                    $this->assertTest("Redis: $description", false, [
+                        'status' => 500,
+                        'data' => ['error' => $e->getMessage()]
+                    ]);
+                    $redisFailedTests++;
+                }
+            }
+            
+            $endTime = microtime(true);
+            $this->performanceMetrics['Redis Rate Limiting общее время'] = round(($endTime - $startTime) * 1000, 2);
+            
+            echo "   📈 Redis Rate Limiting результаты:\n";
+            echo "      Пройдено: $redisPassedTests\n";
+            echo "      Провалено: $redisFailedTests\n";
+            echo "      Время: " . $this->performanceMetrics['Redis Rate Limiting общее время'] . " мс\n";
+            
+        } catch (Exception $e) {
+            echo "   ⚠️  Redis Rate Limiting не доступен: " . $e->getMessage() . "\n";
+            $this->assertTest('Redis Rate Limiting доступность', false, [
+                'status' => 500,
+                'data' => ['error' => $e->getMessage()]
+            ]);
+        }
+        
+        echo "\n";
+    }
+
     private function testIncorrectAlgorithms() {
-        echo "❌ 11. ТЕСТИРОВАНИЕ НЕПРАВИЛЬНЫХ АЛГОРИТМОВ (ДОЛЖНЫ ПРОВАЛИТЬСЯ)\n";
+        echo "❌ 12. ТЕСТИРОВАНИЕ НЕПРАВИЛЬНЫХ АЛГОРИТМОВ (ДОЛЖНЫ ПРОВАЛИТЬСЯ)\n";
         echo "------------------------------------------------------------------------\n";
         
         // Эти тесты НЕ ДОЛЖНЫ выполняться - они проверяют неправильную логику
@@ -1749,6 +1827,7 @@ class ComprehensiveAPITestImproved {
         echo "✅ Warehouses: POST, GET, PUT, DELETE\n";
         echo "✅ Offers: POST, GET, PUT, DELETE, Batch, Public, WB Stock\n";
         echo "✅ Orders: POST, GET, PUT (status)\n";
+        echo "✅ Redis Rate Limiting: API Keys, Search, Stats, Limits, Headers\n";
         echo "✅ Security: Authorization, Validation, Permissions\n";
         echo "✅ Error Handling: 400, 401, 403, 404, 500\n";
         echo "✅ Cleanup: Полная очистка всех созданных сущностей\n";

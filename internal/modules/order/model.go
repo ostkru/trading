@@ -35,8 +35,8 @@ type OrderItem struct {
 }
 
 type CreateOrderRequest struct {
-	OfferID  int64 `json:"offer_id"`
-	LotCount int   `json:"quantity"`
+	OfferID  int64 `json:"offer_id" binding:"required,min=1"`
+	LotCount int   `json:"quantity" binding:"required,min=1,max=1000"`
 }
 
 type GetOrderResponse struct {

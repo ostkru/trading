@@ -32,4 +32,27 @@ type RateLimitCheck struct {
 	MinuteUsed  int    `json:"minute_used"`
 	DayUsed     int    `json:"day_used"`
 	Message     string `json:"message,omitempty"`
-} 
+}
+
+// APIKeyInfo представляет информацию об API ключе
+type APIKeyInfo struct {
+	APIKey        string                    `json:"api_key"`
+	Endpoints     map[string]*EndpointStats `json:"endpoints"`
+	TotalRequests int                       `json:"total_requests"`
+	LastRequest   time.Time                 `json:"last_request"`
+}
+
+// EndpointStats представляет статистику по эндпоинту
+type EndpointStats struct {
+	MinuteCount int       `json:"minute_count"`
+	DayCount    int       `json:"day_count"`
+	LastRequest time.Time `json:"last_request"`
+}
+
+// RateLimitStats представляет общую статистику rate limiting
+type RateLimitStats struct {
+	TotalAPIKeys  int      `json:"total_api_keys"`
+	TotalKeys     int      `json:"total_keys"`
+	RedisInfo     string   `json:"redis_info"`
+	ActiveAPIKeys []string `json:"active_api_keys"`
+}

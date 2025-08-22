@@ -13,6 +13,7 @@ import (
 	offer "portaldata-api/internal/modules/offer"
 	order "portaldata-api/internal/modules/order"
 	products "portaldata-api/internal/modules/products"
+	ratelimit "portaldata-api/internal/modules/ratelimit"
 	user "portaldata-api/internal/modules/user"
 	warehouse "portaldata-api/internal/modules/warehouse"
 
@@ -55,6 +56,23 @@ func main() {
 	warehouseService := warehouse.NewService(db)
 	warehouseHandlers := warehouse.NewHandlers(warehouseService)
 
+	// Инициализация Redis Rate Limiting
+	redisRateLimitService := ratelimit.NewRedisRateLimitService(
+		"127.0.0.1:6379", // Redis адрес
+		"",               // Redis пароль
+		0,                // Redis база данных
+	)
+
+	if redisRateLimitService == nil {
+		log.Printf("⚠️  Предупреждение: Redis Rate Limiting недоступен, используется MySQL-based rate limiting")
+		// Fallback к MySQL-based rate limiting
+		router.Use(ratelimit.RateLimitMiddleware(ratelimit.NewService(db.DB)))
+	} else {
+		log.Printf("✅ Redis Rate Limiting подключен успешно")
+		// Используем Redis-based rate limiting
+		router.Use(ratelimit.RedisRateLimitMiddleware(redisRateLimitService))
+	}
+
 	// Основной endpoint для проверки доступности
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -90,11 +108,19 @@ func main() {
 	order.RegisterRoutes(apiGroup, orderHandlers)
 	warehouse.RegisterRoutes(apiGroup, warehouseHandlers)
 
+	// Redis Rate Limiting API маршруты (публичные для мониторинга)
+	if redisRateLimitService != nil {
+		redisHandler := ratelimit.NewRedisHandler(redisRateLimitService)
+		rateLimitGroup := router.Group("/api/v1/rate-limit")
+		ratelimit.SetupRedisRoutes(rateLimitGroup, redisHandler)
+		log.Printf("✅ Redis Rate Limiting API маршруты зарегистрированы")
+	}
+
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-API-KEY"},
+		ExposeHeaders:    []string{"Content-Length", "X-RateLimit-Limit-Minute", "X-RateLimit-Limit-Day", "X-RateLimit-Remaining-Minute", "X-RateLimit-Remaining-Day"},
 		AllowCredentials: true,
 	}))
 

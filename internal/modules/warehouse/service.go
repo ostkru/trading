@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"portaldata-api/internal/pkg/database"
 	"portaldata-api/internal/utils"
@@ -18,8 +19,18 @@ func NewService(db *database.DB) *Service {
 }
 
 func (s *Service) CreateWarehouse(req CreateWarehouseRequest, userID int64) (*Warehouse, error) {
-	if req.Name == "" {
+	// Дополнительная валидация на уровне service
+	if strings.TrimSpace(req.Name) == "" {
 		return nil, errors.New("Требуется name")
+	}
+	if strings.TrimSpace(req.Address) == "" {
+		return nil, errors.New("Требуется address")
+	}
+	if req.Latitude < -90 || req.Latitude > 90 {
+		return nil, errors.New("Latitude должен быть в диапазоне от -90 до 90")
+	}
+	if req.Longitude < -180 || req.Longitude > 180 {
+		return nil, errors.New("Longitude должен быть в диапазоне от -180 до 180")
 	}
 
 	// MySQL не поддерживает RETURNING, используем отдельные запросы
@@ -156,4 +167,63 @@ func (s *Service) GetWarehouseByID(id int64) (*Warehouse, error) {
 		return nil, err
 	}
 	return &wh, nil
+}
+
+// CreateBatchWarehouses создает несколько складов одновременно
+func (s *Service) CreateBatchWarehouses(warehouses []CreateWarehouseRequest, userID int64) ([]Warehouse, error) {
+	if len(warehouses) == 0 {
+		return nil, errors.New("Список складов пуст")
+	}
+
+	if len(warehouses) > 100 {
+		return nil, errors.New("Максимальное количество складов в пакете: 100")
+	}
+
+	var createdWarehouses []Warehouse
+
+	// Начинаем транзакцию
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, fmt.Errorf("ошибка начала транзакции: %v", err)
+	}
+	defer tx.Rollback()
+
+	for _, req := range warehouses {
+		// Валидация данных
+		if req.Name == "" {
+			return nil, errors.New("Требуется name для всех складов")
+		}
+		if req.Address == "" {
+			return nil, errors.New("Требуется address для всех складов")
+		}
+
+		// Создаем склад
+		result, err := tx.Exec(`INSERT INTO warehouses (user_id, name, address, latitude, longitude, working_hours) VALUES (?, ?, ?, ?, ?, ?)`,
+			userID, req.Name, req.Address, req.Latitude, req.Longitude, req.WorkingHours)
+		if err != nil {
+			return nil, fmt.Errorf("ошибка создания склада %s: %v", req.Name, err)
+		}
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			return nil, fmt.Errorf("ошибка получения ID склада %s: %v", req.Name, err)
+		}
+
+		// Получаем созданный склад
+		var wh Warehouse
+		err = tx.QueryRow(`SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at FROM warehouses WHERE id = ?`, id).
+			Scan(&wh.ID, &wh.UserID, &wh.Name, &wh.Address, &wh.Latitude, &wh.Longitude, &wh.WorkingHours, &wh.WBID, &wh.CreatedAt, &wh.UpdatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("ошибка получения созданного склада %s: %v", req.Name, err)
+		}
+
+		createdWarehouses = append(createdWarehouses, wh)
+	}
+
+	// Подтверждаем транзакцию
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("ошибка подтверждения транзакции: %v", err)
+	}
+
+	return createdWarehouses, nil
 }
