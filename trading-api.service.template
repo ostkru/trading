@@ -1,0 +1,29 @@
+[Unit]
+Description=Trading API Service
+Documentation=https://github.com/your-repo/trading-api
+After=network.target redis-trading.service
+Requires=redis-trading.service
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory={{WORKING_DIR}}
+ExecStart={{EXEC_PATH}}
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=5
+TimeoutStartSec=30
+TimeoutStopSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=trading-api
+Environment=GIN_MODE=release
+
+# Защита от перезапуска
+StartLimitInterval=60
+StartLimitBurst=3
+
+[Install]
+WantedBy=multi-user.target
