@@ -1,0 +1,79 @@
+PHP Warning:  PHP Startup: Unable to load dynamic library 'pdo_sqlite.so' (tried: /usr/lib/php/20190902/pdo_sqlite.so (/usr/lib/php/20190902/pdo_sqlite.so: undefined symbol: sqlite3_column_table_name), /usr/lib/php/20190902/pdo_sqlite.so.so (/usr/lib/php/20190902/pdo_sqlite.so.so: cannot open shared object file: No such file or directory)) in Unknown on line 0
+🔍 Отладочный тест классификатора продуктов
+==========================================
+
+🌐 Тест 1: Проверка доступности API catformat
+==========================================
+URL: https://api.ostk.ru/products/catformat.php?product_name=%D0%A2%D0%B5%D0%BB%D0%B5%D0%B2%D0%B8%D0%B7%D0%BE%D1%80+Samsung&user=1&user_category=%D0%A2%D0%B5%D0%BB%D0%B5%D0%B2%D0%B8%D0%B7%D0%BE%D1%80%D1%8B&brand=Samsung&findbrand=1&findcat=1
+
+*   Trying 92.53.64.38:443...
+* TCP_NODELAY set
+* Connected to api.ostk.ru (92.53.64.38) port 443 (#0)
+* ALPN, offering h2
+* ALPN, offering http/1.1
+* successfully set certificate verify locations:
+*   CAfile: /etc/ssl/certs/ca-certificates.crt
+  CApath: /etc/ssl/certs
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384
+* ALPN, server accepted to use http/1.1
+* Server certificate:
+*  subject: CN=api.ostk.ru
+*  start date: Jul 16 05:52:07 2025 GMT
+*  expire date: Oct 14 05:52:06 2025 GMT
+*  subjectAltName: host "api.ostk.ru" matched cert's "api.ostk.ru"
+*  issuer: C=US; O=Let's Encrypt; CN=R10
+*  SSL certificate verify ok.
+> GET /products/catformat.php?product_name=%D0%A2%D0%B5%D0%BB%D0%B5%D0%B2%D0%B8%D0%B7%D0%BE%D1%80+Samsung&user=1&user_category=%D0%A2%D0%B5%D0%BB%D0%B5%D0%B2%D0%B8%D0%B7%D0%BE%D1%80%D1%8B&brand=Samsung&findbrand=1&findcat=1 HTTP/1.1
+Host: api.ostk.ru
+Accept: */*
+
+* old SSL session ID is stale, removing
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< Server: nginx/1.18.0 (Ubuntu)
+< Date: Sun, 31 Aug 2025 16:20:07 GMT
+< Content-Type: text/html; charset=UTF-8
+< Transfer-Encoding: chunked
+< Connection: keep-alive
+< 
+* Connection #0 to host api.ostk.ru left intact
+HTTP код: 200
+✅ Запрос выполнен
+Ответ: {"status":"found","request":"Телевизор Samsung 55QN90B Neo QLED","found_category":"Телевизоры","found_category_id":"90639","accuracy":0.99,"brand_id":153061,"brand_accuracy":0.99,"user_category":"Телевизоры","user":"1"}
+
+📝 Тест 2: Создание тестового товара
+==================================
+Данные товара:
+{
+    "name": "Телевизор Samsung 32D3-2D35 Smart TV",
+    "vendor_article": "TV-SAMSUNG-32D3",
+    "recommend_price": 25999.99,
+    "brand": "Samsung",
+    "category": "Телевизоры",
+    "description": "Телевизор Samsung 32\" Full HD Smart TV с поддержкой HDR"
+}
+
+*   Trying 127.0.0.1:8095...
+* TCP_NODELAY set
+* Connected to localhost (127.0.0.1) port 8095 (#0)
+> POST /api/v1/products HTTP/1.1
+Host: localhost:8095
+Accept: */*
+Authorization: Bearer 80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27
+Content-Type: application/json
+Content-Length: 419
+
+* upload completely sent off: 419 out of 419 bytes
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 404 Not Found
+< Content-Type: text/plain
+< Date: Sun, 31 Aug 2025 16:20:07 GMT
+< Content-Length: 18
+< 
+* Connection #0 to host localhost left intact
+HTTP код: 404
+Ответ: 404 page not found
+
+❌ Ошибка создания товара
+
+🎉 Отладочный тест завершен!

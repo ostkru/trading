@@ -20,6 +20,9 @@ func NewHandlers(service *Service) *Handlers {
 	return &Handlers{service: service}
 }
 
+// @POST /products
+// Создает новый продукт в системе
+// Требует аутентификации и валидации данных
 func (h *Handlers) CreateMetaproduct(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -68,6 +71,9 @@ func (h *Handlers) CreateMetaproduct(c *gin.Context) {
 	response.SuccessWithData(c, http.StatusCreated, product)
 }
 
+// @GET /products/{id}
+// Получает продукт по его уникальному идентификатору
+// Возвращает 404 если продукт не найден
 func (h *Handlers) GetMetaproduct(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -82,6 +88,9 @@ func (h *Handlers) GetMetaproduct(c *gin.Context) {
 	response.SuccessWithData(c, http.StatusOK, product)
 }
 
+// @GET /products
+// Получает список всех продуктов с возможностью фильтрации
+// Поддерживает пагинацию и сортировку
 func (h *Handlers) ListMetaproducts(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {

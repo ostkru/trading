@@ -1,0 +1,8 @@
+PHP Warning:  PHP Startup: Unable to load dynamic library 'pdo_sqlite.so' (tried: /usr/lib/php/20190902/pdo_sqlite.so (/usr/lib/php/20190902/pdo_sqlite.so: undefined symbol: sqlite3_column_table_name), /usr/lib/php/20190902/pdo_sqlite.so.so (/usr/lib/php/20190902/pdo_sqlite.so.so: cannot open shared object file: No such file or directory)) in Unknown on line 0
+🧪 ТЕСТ ИНТЕГРАЦИИ МЕДИАДАННЫХ С ПРОДУКТАМИ
+==============================================
+
+📸 ТЕСТ 1: Создание продукта с медиаданными
+--------------------------------------------
+POST с медиаданными: HTTP 404
+❌ Ошибка создания: 404 page not found

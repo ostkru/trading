@@ -15,12 +15,12 @@ import (
 
 // OpenAPI структуры
 type OpenAPISpec struct {
-	OpenAPI    string                 `json:"openapi"`
-	Info       Info                   `json:"info"`
-	Servers    []Server               `json:"servers"`
-	Paths      map[string]PathItem    `json:"paths"`
-	Components Components             `json:"components"`
-	Tags       []Tag                  `json:"tags"`
+	OpenAPI    string              `json:"openapi"`
+	Info       Info                `json:"info"`
+	Servers    []Server            `json:"servers"`
+	Paths      map[string]PathItem `json:"paths"`
+	Components Components          `json:"components"`
+	Tags       []Tag               `json:"tags"`
 }
 
 type Info struct {
@@ -64,21 +64,21 @@ type Parameter struct {
 }
 
 type RequestBody struct {
-	Description string                  `json:"description"`
-	Content     map[string]MediaType   `json:"content"`
-	Required    bool                    `json:"required"`
+	Description string               `json:"description"`
+	Content     map[string]MediaType `json:"content"`
+	Required    bool                 `json:"required"`
 }
 
 type MediaType struct {
-	Schema  *SchemaRef    `json:"schema"`
-	Example interface{}   `json:"example,omitempty"`
+	Schema   *SchemaRef         `json:"schema"`
+	Example  interface{}        `json:"example,omitempty"`
 	Examples map[string]Example `json:"examples,omitempty"`
 }
 
 type Response struct {
-	Description string                  `json:"description"`
-	Content     map[string]MediaType   `json:"content,omitempty"`
-	Headers     map[string]Header      `json:"headers,omitempty"`
+	Description string               `json:"description"`
+	Content     map[string]MediaType `json:"content,omitempty"`
+	Headers     map[string]Header    `json:"headers,omitempty"`
 }
 
 type Header struct {
@@ -87,19 +87,19 @@ type Header struct {
 }
 
 type SchemaRef struct {
-	Ref         string                 `json:"$ref,omitempty"`
-	Type        string                 `json:"type,omitempty"`
-	Format      string                 `json:"format,omitempty"`
-	Description string                 `json:"description,omitempty"`
-	Properties  map[string]*SchemaRef  `json:"properties,omitempty"`
-	Required    []string               `json:"required,omitempty"`
-	Items       *SchemaRef             `json:"items,omitempty"`
-	Example     interface{}            `json:"example,omitempty"`
-	Enum        []interface{}          `json:"enum,omitempty"`
-	MinLength   *int                   `json:"minLength,omitempty"`
-	MaxLength   *int                   `json:"maxLength,omitempty"`
-	Minimum     *float64               `json:"minimum,omitempty"`
-	Maximum     *float64               `json:"maximum,omitempty"`
+	Ref         string                `json:"$ref,omitempty"`
+	Type        string                `json:"type,omitempty"`
+	Format      string                `json:"format,omitempty"`
+	Description string                `json:"description,omitempty"`
+	Properties  map[string]*SchemaRef `json:"properties,omitempty"`
+	Required    []string              `json:"required,omitempty"`
+	Items       *SchemaRef            `json:"items,omitempty"`
+	Example     interface{}           `json:"example,omitempty"`
+	Enum        []interface{}         `json:"enum,omitempty"`
+	MinLength   *int                  `json:"minLength,omitempty"`
+	MaxLength   *int                  `json:"maxLength,omitempty"`
+	Minimum     *float64              `json:"minimum,omitempty"`
+	Maximum     *float64              `json:"maximum,omitempty"`
 }
 
 type Example struct {
@@ -110,11 +110,11 @@ type Example struct {
 }
 
 type Components struct {
-	Schemas         map[string]*SchemaRef         `json:"schemas"`
-	Parameters      map[string]*Parameter         `json:"parameters"`
-	RequestBodies   map[string]*RequestBody      `json:"requestBodies"`
-	Responses       map[string]*Response         `json:"responses"`
-	SecuritySchemes map[string]*SecurityScheme   `json:"securitySchemes"`
+	Schemas         map[string]*SchemaRef      `json:"schemas"`
+	Parameters      map[string]*Parameter      `json:"parameters"`
+	RequestBodies   map[string]*RequestBody    `json:"requestBodies"`
+	Responses       map[string]*Response       `json:"responses"`
+	SecuritySchemes map[string]*SecurityScheme `json:"securitySchemes"`
 }
 
 type SecurityScheme struct {
@@ -132,10 +132,10 @@ type Tag struct {
 
 // Go структуры для анализа
 type GoStruct struct {
-	Name       string
-	Fields     []GoField
-	Comment    string
-	Package    string
+	Name    string
+	Fields  []GoField
+	Comment string
+	Package string
 }
 
 type GoField struct {
@@ -159,10 +159,10 @@ type GoHandler struct {
 
 // Генератор OpenAPI
 type OpenAPIGenerator struct {
-	Spec        *OpenAPISpec
-	GoStructs   map[string]*GoStruct
-	GoHandlers  []*GoHandler
-	Examples    map[string]interface{}
+	Spec       *OpenAPISpec
+	GoStructs  map[string]*GoStruct
+	GoHandlers []*GoHandler
+	Examples   map[string]interface{}
 }
 
 func NewOpenAPIGenerator() *OpenAPIGenerator {
@@ -184,7 +184,7 @@ func NewOpenAPIGenerator() *OpenAPIGenerator {
 					Description: "Local development server",
 				},
 			},
-			Paths:      make(map[string]PathItem),
+			Paths: make(map[string]PathItem),
 			Components: Components{
 				Schemas:         make(map[string]*SchemaRef),
 				Parameters:      make(map[string]*Parameter),
@@ -236,18 +236,18 @@ func (g *OpenAPIGenerator) Generate() error {
 func (g *OpenAPIGenerator) scanGoFiles() error {
 	// Сканируем internal/modules для поиска структур и обработчиков
 	modulesDir := "internal/modules"
-	
+
 	return filepath.Walk(modulesDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if !info.IsDir() && strings.HasSuffix(path, ".go") {
 			if err := g.parseGoFile(path); err != nil {
 				log.Printf("Предупреждение: ошибка парсинга %s: %v", path, err)
 			}
 		}
-		
+
 		return nil
 	})
 }
@@ -259,20 +259,20 @@ func (g *OpenAPIGenerator) parseGoFile(filePath string) error {
 		return err
 	}
 
-			// Анализируем AST
-		ast.Inspect(node, func(n ast.Node) bool {
-			switch x := n.(type) {
-			case *ast.TypeSpec:
-				if structType, ok := x.Type.(*ast.StructType); ok {
-					g.parseStruct(x.Name.Name, node.Name.Name, structType)
-				}
-			case *ast.FuncDecl:
-				if x.Recv != nil {
-					g.parseHandler(x)
-				}
+	// Анализируем AST
+	ast.Inspect(node, func(n ast.Node) bool {
+		switch x := n.(type) {
+		case *ast.TypeSpec:
+			if structType, ok := x.Type.(*ast.StructType); ok {
+				g.parseStruct(x.Name.Name, node.Name.Name, structType)
 			}
-			return true
-		})
+		case *ast.FuncDecl:
+			if x.Recv != nil {
+				g.parseHandler(x)
+			}
+		}
+		return true
+	})
 
 	return nil
 }
@@ -293,10 +293,10 @@ func (g *OpenAPIGenerator) parseStruct(name, packageName string, structType *ast
 				Comment:  g.getCommentString(field.Doc),
 				Required: g.isFieldRequired(field.Tag),
 			}
-			
+
 			// Парсим валидацию из тегов
 			goField.Validation = g.parseValidation(field.Tag)
-			
+
 			goStruct.Fields = append(goStruct.Fields, goField)
 		}
 	}
@@ -307,7 +307,7 @@ func (g *OpenAPIGenerator) parseStruct(name, packageName string, structType *ast
 func (g *OpenAPIGenerator) parseHandler(funcDecl *ast.FuncDecl) {
 	// Анализируем комментарии для поиска HTTP методов и путей
 	comment := g.getCommentString(funcDecl.Doc)
-	
+
 	// Ищем HTTP метод и путь в комментариях
 	method, path := g.extractHTTPInfo(comment)
 	if method == "" || path == "" {
@@ -323,7 +323,7 @@ func (g *OpenAPIGenerator) parseHandler(funcDecl *ast.FuncDecl) {
 
 	// Анализируем параметры функции
 	g.analyzeHandlerParams(funcDecl, handler)
-	
+
 	g.GoHandlers = append(g.GoHandlers, handler)
 }
 
@@ -343,7 +343,7 @@ func (g *OpenAPIGenerator) analyzeHandlerParams(funcDecl *ast.FuncDecl, handler 
 		if len(param.Names) > 0 {
 			paramName := param.Names[0].Name
 			paramType := g.getTypeString(param.Type)
-			
+
 			// Определяем тип параметра
 			switch {
 			case strings.Contains(paramName, "c") || strings.Contains(paramType, "Context"):
@@ -400,20 +400,20 @@ func (g *OpenAPIGenerator) isFieldRequired(tag *ast.BasicLit) bool {
 	if tag == nil {
 		return false
 	}
-	
+
 	tagStr := strings.Trim(tag.Value, "`")
-	return strings.Contains(tagStr, `binding:"required"`) || 
-		   strings.Contains(tagStr, `json:",required"`)
+	return strings.Contains(tagStr, `binding:"required"`) ||
+		strings.Contains(tagStr, `json:",required"`)
 }
 
 func (g *OpenAPIGenerator) parseValidation(tag *ast.BasicLit) []string {
 	if tag == nil {
 		return nil
 	}
-	
+
 	tagStr := strings.Trim(tag.Value, "`")
 	validations := make([]string, 0)
-	
+
 	// Ищем validation теги
 	if strings.Contains(tagStr, "min:") {
 		validations = append(validations, "min")
@@ -427,7 +427,7 @@ func (g *OpenAPIGenerator) parseValidation(tag *ast.BasicLit) []string {
 	if strings.Contains(tagStr, "url") {
 		validations = append(validations, "url")
 	}
-	
+
 	return validations
 }
 
@@ -437,7 +437,7 @@ func (g *OpenAPIGenerator) findStructByName(name string) *GoStruct {
 	if idx := strings.LastIndex(cleanName, "."); idx != -1 {
 		cleanName = cleanName[idx+1:]
 	}
-	
+
 	return g.GoStructs[cleanName]
 }
 
@@ -460,7 +460,7 @@ func (g *OpenAPIGenerator) convertGoStructToSchema(goStruct *GoStruct) *SchemaRe
 	for _, field := range goStruct.Fields {
 		fieldSchema := g.convertGoFieldToSchema(field)
 		schema.Properties[field.Name] = fieldSchema
-		
+
 		if field.Required {
 			schema.Required = append(schema.Required, field.Name)
 		}
@@ -524,7 +524,7 @@ func (g *OpenAPIGenerator) getBasicType(goType string) string {
 func (g *OpenAPIGenerator) generateEnumValues(field GoField) []interface{} {
 	// Генерируем примеры enum значений на основе валидации
 	examples := make([]interface{}, 0)
-	
+
 	for _, validation := range field.Validation {
 		switch validation {
 		case "min":
@@ -537,11 +537,11 @@ func (g *OpenAPIGenerator) generateEnumValues(field GoField) []interface{} {
 			examples = append(examples, "https://example.com")
 		}
 	}
-	
+
 	if len(examples) == 0 {
 		examples = append(examples, "example_value")
 	}
-	
+
 	return examples
 }
 
@@ -579,7 +579,7 @@ func (g *OpenAPIGenerator) generatePaths() error {
 		}
 
 		operation := g.convertHandlerToOperation(handler)
-		
+
 		pathItem := g.Spec.Paths[path]
 		switch handler.Method {
 		case "GET":
@@ -593,11 +593,11 @@ func (g *OpenAPIGenerator) generatePaths() error {
 		case "PATCH":
 			pathItem.Patch = operation
 		}
-		
+
 		pathItem.Summary = handler.Comment
 		g.Spec.Paths[path] = pathItem
 	}
-	
+
 	return nil
 }
 
@@ -634,7 +634,7 @@ func (g *OpenAPIGenerator) getTagFromPath(path string) string {
 
 func (g *OpenAPIGenerator) convertParameters(fields []GoField) []Parameter {
 	parameters := make([]Parameter, 0)
-	
+
 	for _, field := range fields {
 		param := Parameter{
 			Name:        field.Name,
@@ -646,7 +646,7 @@ func (g *OpenAPIGenerator) convertParameters(fields []GoField) []Parameter {
 		}
 		parameters = append(parameters, param)
 	}
-	
+
 	return parameters
 }
 
@@ -667,7 +667,7 @@ func (g *OpenAPIGenerator) generateRequestBody(goStruct *GoStruct) *RequestBody 
 
 func (g *OpenAPIGenerator) generateResponses(handler *GoHandler) map[string]Response {
 	responses := make(map[string]Response)
-	
+
 	// Успешный ответ
 	successResponse := Response{
 		Description: "Успешный ответ",
@@ -681,17 +681,21 @@ func (g *OpenAPIGenerator) generateResponses(handler *GoHandler) map[string]Resp
 							Example: true,
 						},
 						"data": {
-							Ref: "#/components/schemas/" + handler.Response.Name,
+							Type:        "object",
+							Description: "Данные ответа",
 						},
 					},
 				},
-				Example: g.generateSuccessResponseExample(handler),
+				Example: map[string]interface{}{
+					"success": true,
+					"data":    "Данные ответа",
+				},
 			},
 		},
 	}
-	
+
 	responses["200"] = successResponse
-	
+
 	// Ошибки
 	errorResponses := map[string]string{
 		"400": "Некорректный запрос",
@@ -700,7 +704,7 @@ func (g *OpenAPIGenerator) generateResponses(handler *GoHandler) map[string]Resp
 		"404": "Не найдено",
 		"500": "Внутренняя ошибка сервера",
 	}
-	
+
 	for code, description := range errorResponses {
 		responses[code] = Response{
 			Description: description,
@@ -722,25 +726,18 @@ func (g *OpenAPIGenerator) generateResponses(handler *GoHandler) map[string]Resp
 			},
 		}
 	}
-	
+
 	return responses
 }
 
 func (g *OpenAPIGenerator) generateStructExample(goStruct *GoStruct) interface{} {
 	example := make(map[string]interface{})
-	
+
 	for _, field := range goStruct.Fields {
 		example[field.Name] = g.generateFieldExample(field)
 	}
-	
-	return example
-}
 
-func (g *OpenAPIGenerator) generateSuccessResponseExample(handler *GoHandler) interface{} {
-	return map[string]interface{}{
-		"success": true,
-		"data":    g.generateStructExample(handler.Response),
-	}
+	return example
 }
 
 func (g *OpenAPIGenerator) generateExamples() error {
@@ -755,28 +752,28 @@ func (g *OpenAPIGenerator) generateExamples() error {
 		"description": "Описание продукта",
 		"user_id":     1,
 	}
-	
+
 	g.Examples["Offer"] = map[string]interface{}{
-		"id":             1,
-		"product_id":     1,
-		"type":           "sale",
-		"price":          999.99,
-		"lot_count":      10,
-		"vat":            true,
-		"delivery_days":  3,
-		"user_id":        1,
-		"warehouse_id":   1,
+		"id":            1,
+		"product_id":    1,
+		"type":          "sale",
+		"price":         999.99,
+		"lot_count":     10,
+		"vat":           true,
+		"delivery_days": 3,
+		"user_id":       1,
+		"warehouse_id":  1,
 	}
-	
+
 	g.Examples["Warehouse"] = map[string]interface{}{
 		"id":        1,
 		"name":      "Главный склад",
 		"address":   "ул. Примерная, 1",
 		"latitude":  55.7558,
 		"longitude": 37.6176,
-		"user_id":  1,
+		"user_id":   1,
 	}
-	
+
 	return nil
 }
 
@@ -788,7 +785,7 @@ func (g *OpenAPIGenerator) addStandardComponents() {
 		Name:        "X-API-KEY",
 		In:          "header",
 	}
-	
+
 	// Добавляем стандартные параметры
 	g.Spec.Components.Parameters["APIKey"] = &Parameter{
 		Name:        "X-API-KEY",
@@ -808,24 +805,24 @@ func (g *OpenAPIGenerator) SaveToFile(filename string) error {
 	for path := range g.Spec.Paths {
 		sortedPaths = append(sortedPaths, path)
 	}
-	
+
 	// Создаем временную копию с отсортированными путями
 	tempSpec := *g.Spec
 	tempSpec.Paths = make(map[string]PathItem)
 	for _, path := range sortedPaths {
 		tempSpec.Paths[path] = g.Spec.Paths[path]
 	}
-	
+
 	// Сохраняем в файл
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	
+
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
-	
+
 	return encoder.Encode(tempSpec)
 }
 
@@ -850,6 +847,14 @@ func (g *OpenAPIGenerator) GenerateHTMLDocs(filename string) error {
         .type { color: #0066cc; font-weight: bold; }
         .required { color: #cc0000; font-weight: bold; }
         .example { color: #666; font-style: italic; }
+        .endpoints { margin-top: 30px; }
+        .endpoint { border: 1px solid #ddd; margin: 10px 0; border-radius: 5px; }
+        .method { padding: 10px; font-weight: bold; color: white; margin: 5px; border-radius: 3px; }
+        .get { background: #61affe; }
+        .post { background: #49cc90; }
+        .put { background: #fca130; }
+        .delete { background: #f93e3e; }
+        .path { padding: 10px; background: #f8f9fa; font-family: monospace; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -869,6 +874,39 @@ func (g *OpenAPIGenerator) GenerateHTMLDocs(filename string) error {
 		html += fmt.Sprintf(`<li><strong>%s</strong> - %s</li>`, server.URL, server.Description)
 	}
 	html += `</ul></div>`
+
+	// Добавляем API endpoints
+	html += `<div class="endpoints">
+            <h2>🚀 API Endpoints</h2>`
+
+	// Добавляем пути API
+	for path, pathItem := range g.Spec.Paths {
+		html += fmt.Sprintf(`
+            <div class="endpoint">
+                <div class="path">%s</div>`, path)
+
+		if pathItem.Post != nil {
+			html += fmt.Sprintf(`
+                <div class="method post">POST</div>
+                <div class="description">
+                    <strong>%s</strong><br>
+                    %s
+                </div>`, pathItem.Post.Summary, pathItem.Post.Description)
+		}
+
+		if pathItem.Get != nil {
+			html += fmt.Sprintf(`
+                <div class="method get">GET</div>
+                <div class="description">
+                    <strong>%s</strong><br>
+                    %s
+                </div>`, pathItem.Get.Summary, pathItem.Get.Description)
+		}
+
+		html += `</div>`
+	}
+
+	html += `</div>`
 
 	// Добавляем схемы
 	html += `<div class="schemas">
@@ -929,24 +967,24 @@ func (g *OpenAPIGenerator) GenerateHTMLDocs(filename string) error {
 
 func main() {
 	log.Println("🚀 Запуск генератора OpenAPI документации...")
-	
+
 	generator := NewOpenAPIGenerator()
-	
+
 	if err := generator.Generate(); err != nil {
 		log.Fatalf("❌ Ошибка генерации: %v", err)
 	}
-	
+
 	// Сохраняем OpenAPI спецификацию
 	if err := generator.SaveToFile("openapi_generated.json"); err != nil {
 		log.Fatalf("❌ Ошибка сохранения OpenAPI файла: %v", err)
 	}
 	log.Println("✅ OpenAPI спецификация сохранена в openapi_generated.json")
-	
+
 	// Генерируем HTML документацию
 	if err := generator.GenerateHTMLDocs("api_documentation.html"); err != nil {
 		log.Fatalf("❌ Ошибка генерации HTML документации: %v", err)
 	}
 	log.Println("✅ HTML документация сохранена в api_documentation.html")
-	
+
 	log.Println("🎉 Генерация завершена успешно!")
 }

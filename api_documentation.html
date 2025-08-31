@@ -17,6 +17,14 @@
         .type { color: #0066cc; font-weight: bold; }
         .required { color: #cc0000; font-weight: bold; }
         .example { color: #666; font-style: italic; }
+        .endpoints { margin-top: 30px; }
+        .endpoint { border: 1px solid #ddd; margin: 10px 0; border-radius: 5px; }
+        .method { padding: 10px; font-weight: bold; color: white; margin: 5px; border-radius: 3px; }
+        .get { background: #61affe; }
+        .post { background: #49cc90; }
+        .put { background: #fca130; }
+        .delete { background: #f93e3e; }
+        .path { padding: 10px; background: #f8f9fa; font-family: monospace; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -29,34 +37,411 @@
 
         <div class="info">
             <h2>📡 Серверы</h2>
-            <ul><li><strong>https://api.portaldata.ru/v1/trading</strong> - Production server</li><li><strong>http://localhost:8095</strong> - Local development server</li></ul></div><div class="schemas">
+            <ul><li><strong>https://api.portaldata.ru/v1/trading</strong> - Production server</li><li><strong>http://localhost:8095</strong> - Local development server</li></ul></div><div class="endpoints">
+            <h2>🚀 API Endpoints</h2>
+            <div class="endpoint">
+                <div class="path">/products</div>
+                <div class="method post">POST</div>
+                <div class="description">
+                    <strong>@POST /products Создает новый продукт в системе Требует аутентификации и валидации данных</strong><br>
+                    @POST /products Создает новый продукт в системе Требует аутентификации и валидации данных
+                </div>
+                <div class="method get">GET</div>
+                <div class="description">
+                    <strong>@GET /products Получает список всех продуктов с возможностью фильтрации Поддерживает пагинацию и сортировку</strong><br>
+                    @GET /products Получает список всех продуктов с возможностью фильтрации Поддерживает пагинацию и сортировку
+                </div></div>
+            <div class="endpoint">
+                <div class="path">/products/{id}</div>
+                <div class="method get">GET</div>
+                <div class="description">
+                    <strong>@GET /products/{id} Получает продукт по его уникальному идентификатору Возвращает 404 если продукт не найден</strong><br>
+                    @GET /products/{id} Получает продукт по его уникальному идентификатору Возвращает 404 если продукт не найден
+                </div></div></div><div class="schemas">
             <h2>📋 Схемы данных</h2>
+            <div class="schema">
+                <div class="schema-header">Offer</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>UpdatedAt</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>PricePerUnit</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                </div><div class="field">
+                    <strong>RecommendPrice</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>WarehouseName</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>TaxNDS</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>WarehouseID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>ProductName</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>VendorArticle</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>MaxShippingDays</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>CreatedAt</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>IsPublic</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>UnitsPerLot</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>AvailableLots</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>Longitude</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>OfferType</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>OfferID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>UserID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>ProductID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Latitude</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>WarehouseAddress</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">RedisHandler</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>redisService</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">CreateBatchWarehouseRequest</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>Warehouses</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">Warehouse</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>Latitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                </div><div class="field">
+                    <strong>WorkingHours</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Address</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>ID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>UpdatedAt</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Longitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                </div><div class="field">
+                    <strong>WBID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>UserID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>Name</strong> <span class="type">(string)</span> <span class='example'>пример: Example Name</span>
+                </div><div class="field">
+                    <strong>CreatedAt</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">EndpointStats</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>MinuteCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>DayCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>LastRequest</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">UpdateWarehouseRequest</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>Name</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Address</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Latitude</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Longitude</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>WorkingHours</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">GetOrderResponse</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>Order</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>OrderItems</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">CreateProductsRequest</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>Products</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">APIKeyUsage</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>DayCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>APIKey</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>TotalRequests</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>MinuteCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">CreateWarehouseRequest</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>Name</strong> <span class="type">(string)</span> <span class='example'>пример: Example Name</span>
+                </div><div class="field">
+                    <strong>Address</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>Latitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                </div><div class="field">
+                    <strong>Longitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                </div><div class="field">
+                    <strong>WorkingHours</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">Handlers</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>service</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">UpdateProductRequest</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>Barcode</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Name</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>RecommendPrice</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>BrandID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Description</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>ImageURLs</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>VideoURLs</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Model3DURLs</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>VendorArticle</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Brand</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Category</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>CategoryID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">RedisRateLimitService</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>client</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>ctx</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div></div></div>
             <div class="schema">
                 <div class="schema-header">CreateProductRequest</div>
                 <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>Category</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                    <strong>ImageURLs</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
                 </div><div class="field">
-                    <strong>Description</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                    <strong>VideoURLs</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
                 </div><div class="field">
-                    <strong>Barcode</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                    <strong>Name</strong> <span class="type">(string)</span> <span class='example'>пример: Example Name</span>
                 </div><div class="field">
                     <strong>VendorArticle</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
                 </div><div class="field">
                     <strong>RecommendPrice</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
                 </div><div class="field">
+                    <strong>Category</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>CategoryID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
                     <strong>Brand</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div><div class="field">
-                    <strong>ImageURLs</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>VideoURLs</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Model3DURLs</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Name</strong> <span class="type">(string)</span> <span class='example'>пример: Example Name</span>
                 </div><div class="field">
                     <strong>BrandID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
                 </div><div class="field">
+                    <strong>Description</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>Barcode</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Model3DURLs</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">UpdateOfferRequest</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>PricePerUnit</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>AvailableLots</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>TaxNDS</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>UnitsPerLot</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>IsPublic</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>MaxShippingDays</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>WarehouseID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">WarehouseListResponse</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>Warehouses</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Total</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>Page</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>Limit</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">GeographicFilter</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>MinLatitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                </div><div class="field">
+                    <strong>MaxLatitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                </div><div class="field">
+                    <strong>MinLongitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                </div><div class="field">
+                    <strong>MaxLongitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">Order</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>OrderTime</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
+                </div><div class="field">
+                    <strong>Notes</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>ShippingAddress</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>InitiatorUserID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>CounterpartyUserID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>PricePerUnit</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                </div><div class="field">
+                    <strong>OrderType</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>PaymentMethod</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>CreatedAt</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
+                </div><div class="field">
+                    <strong>UpdatedAt</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
+                </div><div class="field">
+                    <strong>TotalAmount</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>IsMulti</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>OfferID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>LotCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>OrderStatus</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>OrderID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>UnitsPerLot</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>TrackingNumber</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>MaxShippingDays</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">CreateOfferRequest</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>IsPublic</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>AvailableLots</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>UnitsPerLot</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>WarehouseID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>TaxNDS</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>MaxShippingDays</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>ProductID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>OfferType</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>PricePerUnit</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">RateLimitConfig</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>MinuteLimit</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>DayLimit</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">ProductListResponse</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>Limit</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>Products</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Total</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>Page</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">RateLimitStats</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>RedisInfo</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>ActiveAPIKeys</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>TotalAPIKeys</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>TotalKeys</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">Product</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>Name</strong> <span class="type">(string)</span> <span class='example'>пример: Example Name</span>
+                </div><div class="field">
+                    <strong>VendorArticle</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>Barcode</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>UpdatedAt</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
+                </div><div class="field">
+                    <strong>Model3DURLs</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>BrandID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Status</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>CreatedAt</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
+                </div><div class="field">
+                    <strong>VideoURLs</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>ID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>Category</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>ImageURLs</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>RecommendPrice</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                </div><div class="field">
+                    <strong>Brand</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
                     <strong>CategoryID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Description</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>UserID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">OrderItem</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>Status</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>ID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>OrderID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>OfferID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>Qty</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                </div><div class="field">
+                    <strong>PricePerUnit</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                </div><div class="field">
+                    <strong>CreatedAt</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
                 </div></div></div>
             <div class="schema">
                 <div class="schema-header">RateLimitCheck</div>
@@ -74,239 +459,9 @@
                     <strong>Message</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
                 </div></div></div>
             <div class="schema">
-                <div class="schema-header">Warehouse</div>
+                <div class="schema-header">CreateOffersRequest</div>
                 <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>Latitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
-                </div><div class="field">
-                    <strong>WBID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>ID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>Name</strong> <span class="type">(string)</span> <span class='example'>пример: Example Name</span>
-                </div><div class="field">
-                    <strong>CreatedAt</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>WorkingHours</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Address</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div><div class="field">
-                    <strong>UserID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>UpdatedAt</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Longitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">UpdateOfferRequest</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>AvailableLots</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>TaxNDS</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>UnitsPerLot</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>IsPublic</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>MaxShippingDays</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>WarehouseID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>PricePerUnit</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">CreateProductsRequest</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>Products</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">UpdateWarehouseRequest</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>WorkingHours</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Name</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Address</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Latitude</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Longitude</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">RedisHandler</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>redisService</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">Handlers</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>service</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">UpdateProductRequest</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>BrandID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Description</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Barcode</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>ImageURLs</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Model3DURLs</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>RecommendPrice</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Category</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Brand</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>CategoryID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>VideoURLs</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Name</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>VendorArticle</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">Service</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>db</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">RateLimitConfig</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>MinuteLimit</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>DayLimit</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">EndpointStats</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>MinuteCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>DayCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>LastRequest</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">RateLimitStats</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>ActiveAPIKeys</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>TotalAPIKeys</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>TotalKeys</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>RedisInfo</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">OrderItem</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>PricePerUnit</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
-                </div><div class="field">
-                    <strong>CreatedAt</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
-                </div><div class="field">
-                    <strong>Status</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div><div class="field">
-                    <strong>ID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>OrderID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>OfferID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>Qty</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">Offer</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>RecommendPrice</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>OfferID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>UserID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>IsPublic</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Latitude</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Longitude</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>CreatedAt</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>ProductID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>UnitsPerLot</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>ProductName</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>WarehouseName</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>MaxShippingDays</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>WarehouseAddress</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>UpdatedAt</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>PricePerUnit</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
-                </div><div class="field">
-                    <strong>TaxNDS</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>WarehouseID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>OfferType</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div><div class="field">
-                    <strong>AvailableLots</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>VendorArticle</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">RateLimit</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>UserID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>Endpoint</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div><div class="field">
-                    <strong>RequestCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>MinuteCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>DayCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>MinuteStart</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
-                </div><div class="field">
-                    <strong>DayStart</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
-                </div><div class="field">
-                    <strong>ID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>UpdatedAt</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
-                </div><div class="field">
-                    <strong>LastRequestTime</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
-                </div><div class="field">
-                    <strong>CreatedAt</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
-                </div><div class="field">
-                    <strong>APIKey</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">CreateOfferRequest</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>PricePerUnit</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
-                </div><div class="field">
-                    <strong>AvailableLots</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>TaxNDS</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>UnitsPerLot</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>WarehouseID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>MaxShippingDays</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>OfferType</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div><div class="field">
-                    <strong>IsPublic</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>ProductID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                    <strong>Offers</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
                 </div></div></div>
             <div class="schema">
                 <div class="schema-header">APIKeyInfo</div>
@@ -320,56 +475,45 @@
                     <strong>LastRequest</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
                 </div></div></div>
             <div class="schema">
-                <div class="schema-header">Order</div>
+                <div class="schema-header">Service</div>
                 <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>PricePerUnit</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
-                </div><div class="field">
-                    <strong>UnitsPerLot</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>OrderStatus</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>CreatedAt</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
-                </div><div class="field">
-                    <strong>UpdatedAt</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
-                </div><div class="field">
-                    <strong>OrderID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>IsMulti</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>OfferID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>CounterpartyUserID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>LotCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>Notes</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>PaymentMethod</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>OrderTime</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
-                </div><div class="field">
-                    <strong>ShippingAddress</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>TrackingNumber</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>TotalAmount</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>InitiatorUserID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>OrderType</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div><div class="field">
-                    <strong>MaxShippingDays</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                    <strong>db</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
                 </div></div></div>
             <div class="schema">
-                <div class="schema-header">ProductListResponse</div>
+                <div class="schema-header">AuthService</div>
                 <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>Page</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                    <strong>userService</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div></div></div>
+            <div class="schema">
+                <div class="schema-header">OfferFilterRequest</div>
+                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
+                    <strong>ProductName</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
                 </div><div class="field">
-                    <strong>Limit</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                    <strong>TaxNDS</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
                 </div><div class="field">
-                    <strong>Products</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
+                    <strong>CategoryID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
                 </div><div class="field">
-                    <strong>Total</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
+                    <strong>UnitsPerLot</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>Filter</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>OfferType</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                </div><div class="field">
+                    <strong>Geographic</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>PriceMin</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>PriceMax</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>AvailableLots</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>WarehouseID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>BrandID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>VendorArticle</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                </div><div class="field">
+                    <strong>MaxShippingDays</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
                 </div></div></div>
             <div class="schema">
                 <div class="schema-header">OfferListResponse</div>
@@ -383,53 +527,31 @@
                     <strong>Limit</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
                 </div></div></div>
             <div class="schema">
-                <div class="schema-header">CreateWarehouseRequest</div>
+                <div class="schema-header">RateLimit</div>
                 <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>Address</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                    <strong>MinuteStart</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
                 </div><div class="field">
-                    <strong>Latitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                    <strong>CreatedAt</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
                 </div><div class="field">
-                    <strong>Longitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
+                    <strong>UpdatedAt</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
                 </div><div class="field">
-                    <strong>WorkingHours</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
+                    <strong>ID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
                 </div><div class="field">
-                    <strong>Name</strong> <span class="type">(string)</span> <span class='example'>пример: Example Name</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">OfferFilterRequest</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>PriceMin</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                    <strong>RequestCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
                 </div><div class="field">
-                    <strong>ProductName</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                    <strong>DayCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
                 </div><div class="field">
-                    <strong>VendorArticle</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                    <strong>LastRequestTime</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
                 </div><div class="field">
-                    <strong>TaxNDS</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                    <strong>DayStart</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
                 </div><div class="field">
-                    <strong>UnitsPerLot</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                    <strong>UserID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
                 </div><div class="field">
-                    <strong>PriceMax</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                    <strong>APIKey</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
                 </div><div class="field">
-                    <strong>AvailableLots</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
+                    <strong>Endpoint</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
                 </div><div class="field">
-                    <strong>WarehouseID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Filter</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div><div class="field">
-                    <strong>OfferType</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div><div class="field">
-                    <strong>Geographic</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>BrandID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>CategoryID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>MaxShippingDays</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">CreateOffersRequest</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>Offers</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
+                    <strong>MinuteCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
                 </div></div></div>
             <div class="schema">
                 <div class="schema-header">CreateOrderRequest</div>
@@ -437,100 +559,6 @@
                     <strong>OfferID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
                 </div><div class="field">
                     <strong>LotCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">WarehouseListResponse</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>Limit</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>Warehouses</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Total</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>Page</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">GetOrderResponse</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>Order</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>OrderItems</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">AuthService</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>userService</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">Product</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>UpdatedAt</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
-                </div><div class="field">
-                    <strong>Model3DURLs</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Category</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>BrandID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Barcode</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Status</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div><div class="field">
-                    <strong>VideoURLs</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Name</strong> <span class="type">(string)</span> <span class='example'>пример: Example Name</span>
-                </div><div class="field">
-                    <strong>RecommendPrice</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
-                </div><div class="field">
-                    <strong>CategoryID</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>CreatedAt</strong> <span class="type">(string)</span> <span class='example'>пример: 2025-01-01T00:00:00Z</span>
-                </div><div class="field">
-                    <strong>ImageURLs</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>ID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>VendorArticle</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div><div class="field">
-                    <strong>Brand</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>Description</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div><div class="field">
-                    <strong>UserID</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">GeographicFilter</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>MinLatitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
-                </div><div class="field">
-                    <strong>MaxLatitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
-                </div><div class="field">
-                    <strong>MinLongitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
-                </div><div class="field">
-                    <strong>MaxLongitude</strong> <span class="type">(number)</span> <span class='example'>пример: 123.45</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">CreateBatchWarehouseRequest</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>Warehouses</strong> <span class="type">(array)</span> <span class='example'>пример: example_value</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">APIKeyUsage</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>DayCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>APIKey</strong> <span class="type">(string)</span> <span class='example'>пример: example_string</span>
-                </div><div class="field">
-                    <strong>TotalRequests</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div><div class="field">
-                    <strong>MinuteCount</strong> <span class="type">(integer)</span> <span class='example'>пример: 123</span>
-                </div></div></div>
-            <div class="schema">
-                <div class="schema-header">RedisRateLimitService</div>
-                <div class="schema-body"><p><strong>Поля:</strong></p><div class="field">
-                    <strong>client</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
-                </div><div class="field">
-                    <strong>ctx</strong> <span class="type">()</span> <span class='example'>пример: example_value</span>
                 </div></div></div>
         </div>
     </div>

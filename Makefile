@@ -51,3 +51,29 @@ clean-docs:
 	@echo "🧹 Очистка сгенерированной документации..."
 	@rm -f openapi-generator openapi_generated.json api_documentation.html
 	@echo "✅ Документация очищена"
+
+# Тестирование
+.PHONY: test test-api test-integration test-unit test-performance test-all
+test:
+	@echo "🧪 Запуск тестов..."
+	@cd tests && make test-all
+
+test-api:
+	@echo "🧪 Запуск API тестов..."
+	@cd tests && make test-api
+
+test-integration:
+	@echo "🧪 Запуск интеграционных тестов..."
+	@cd tests && make test-integration
+
+test-unit:
+	@echo "🧪 Запуск модульных тестов..."
+	@cd tests && make test-unit
+
+test-performance:
+	@echo "🧪 Запуск тестов производительности..."
+	@cd tests && make test-performance
+
+test-all:
+	@echo "🧪 Запуск всех тестов..."
+	@cd tests && make test-all

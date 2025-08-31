@@ -1,0 +1,22 @@
+PHP Warning:  PHP Startup: Unable to load dynamic library 'pdo_sqlite.so' (tried: /usr/lib/php/20190902/pdo_sqlite.so (/usr/lib/php/20190902/pdo_sqlite.so: undefined symbol: sqlite3_column_table_name), /usr/lib/php/20190902/pdo_sqlite.so.so (/usr/lib/php/20190902/pdo_sqlite.so.so: cannot open shared object file: No such file or directory)) in Unknown on line 0
+🧪 Тестирование классификатора продуктов
+=====================================
+
+📝 Тест 1: Создание продукта 'Телевизор Samsung 55" QLED'
+Ожидаем: HTTP 201, статус 'processing', затем асинхронная классификация
+Передаем brand='Samsung' для улучшения точности классификации
+
+HTTP код: 201
+Ответ: {"success":true,"data":{"id":2928,"name":"Телевизор Samsung 55\" QLED","vendor_article":"TV-SAMSUNG-55QLED","recommend_price":89999.99,"brand":"Samsung","category":"Телевизоры","description":"Телевизор Samsung 55\" QLED с высоким качеством изображения","barcode":"1234567890123","status":"processing","created_at":"2025-08-31T19:18:47.584519301+03:00","updated_at":"2025-08-31T19:18:47.584519301+03:00","user_id":1,"image_urls":null,"video_urls":null,"model_3d_urls":null}}
+
+
+==================================================
+
+📝 Тест 2: Создание продукта 'Какая-то штука'
+Ожидаем: HTTP 201, статус остается 'processing'
+
+HTTP код: 201
+Ответ: {"success":true,"data":{"id":2929,"name":"Какая-то штука","vendor_article":"UNKNOWN-ITEM","recommend_price":100,"brand":"Неизвестно","category":"Разное","description":"Неизвестный товар","barcode":"9876543210987","status":"processing","created_at":"2025-08-31T19:18:47.913144992+03:00","updated_at":"2025-08-31T19:18:47.913144992+03:00","user_id":1,"image_urls":null,"video_urls":null,"model_3d_urls":null}}
+
+
+🎉 Тестирование завершено!

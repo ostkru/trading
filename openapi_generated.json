@@ -15,7 +15,401 @@
       "description": "Local development server"
     }
   ],
-  "paths": {},
+  "paths": {
+    "/products": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "@GET /products Получает список всех продуктов с возможностью фильтрации Поддерживает пагинацию и сортировку",
+        "description": "@GET /products Получает список всех продуктов с возможностью фильтрации Поддерживает пагинацию и сортировку",
+        "operationId": "ListMetaproducts",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Данные ответа"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                },
+                "example": {
+                  "data": "Данные ответа",
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Некорректный запрос"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Некорректный запрос"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Не авторизован"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Не авторизован"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Доступ запрещен"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Доступ запрещен"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Не найдено"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Не найдено"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Внутренняя ошибка сервера"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Внутренняя ошибка сервера"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "@POST /products Создает новый продукт в системе Требует аутентификации и валидации данных",
+        "description": "@POST /products Создает новый продукт в системе Требует аутентификации и валидации данных",
+        "operationId": "CreateMetaproduct",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Данные ответа"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                },
+                "example": {
+                  "data": "Данные ответа",
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Некорректный запрос"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Некорректный запрос"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Не авторизован"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Не авторизован"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Доступ запрещен"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Доступ запрещен"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Не найдено"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Не найдено"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Внутренняя ошибка сервера"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Внутренняя ошибка сервера"
+                }
+              }
+            }
+          }
+        }
+      },
+      "summary": "@GET /products Получает список всех продуктов с возможностью фильтрации Поддерживает пагинацию и сортировку"
+    },
+    "/products/{id}": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "@GET /products/{id} Получает продукт по его уникальному идентификатору Возвращает 404 если продукт не найден",
+        "description": "@GET /products/{id} Получает продукт по его уникальному идентификатору Возвращает 404 если продукт не найден",
+        "operationId": "GetMetaproduct",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Данные ответа"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                },
+                "example": {
+                  "data": "Данные ответа",
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Некорректный запрос"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Некорректный запрос"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Не авторизован"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Не авторизован"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Доступ запрещен"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Доступ запрещен"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Не найдено"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Не найдено"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Внутренняя ошибка сервера"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Внутренняя ошибка сервера"
+                }
+              }
+            }
+          }
+        }
+      },
+      "summary": "@GET /products/{id} Получает продукт по его уникальному идентификатору Возвращает 404 если продукт не найден"
+    }
+  },
   "components": {
     "schemas": {
       "APIKeyInfo": {

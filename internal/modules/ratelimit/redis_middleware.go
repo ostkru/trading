@@ -115,11 +115,13 @@ func RedisRateLimitMiddleware(redisService *RedisRateLimitService) gin.HandlerFu
 			return
 		}
 
-		// Добавляем информацию о лимитах в заголовки
+		// Добавляем информацию о лимитах в заголовки для всех запросов
 		c.Header("X-RateLimit-Limit-Minute", fmt.Sprintf("%d", rateLimitCheck.MinuteLimit))
 		c.Header("X-RateLimit-Limit-Day", fmt.Sprintf("%d", rateLimitCheck.DayLimit))
 		c.Header("X-RateLimit-Remaining-Minute", fmt.Sprintf("%d", rateLimitCheck.MinuteLimit-rateLimitCheck.MinuteUsed))
 		c.Header("X-RateLimit-Remaining-Day", fmt.Sprintf("%d", rateLimitCheck.DayLimit-rateLimitCheck.DayUsed))
+		c.Header("X-RateLimit-Reset-Minute", fmt.Sprintf("%d", 60))    // секунды до сброса
+		c.Header("X-RateLimit-Reset-Day", fmt.Sprintf("%d", 24*60*60)) // секунды до сброса
 
 		// Добавляем API ключ в контекст для дальнейшего использования
 		c.Set("apiKey", apiKey)

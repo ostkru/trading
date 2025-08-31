@@ -1,0 +1,51 @@
+PHP Warning:  PHP Startup: Unable to load dynamic library 'pdo_sqlite.so' (tried: /usr/lib/php/20190902/pdo_sqlite.so (/usr/lib/php/20190902/pdo_sqlite.so: undefined symbol: sqlite3_column_table_name), /usr/lib/php/20190902/pdo_sqlite.so.so (/usr/lib/php/20190902/pdo_sqlite.so.so: cannot open shared object file: No such file or directory)) in Unknown on line 0
+🔧 Тестирование Redis Rate Limiting API
+🌐 Base URL: http://localhost:8095
+⏰ Время: 2025-08-31 19:19:59
+
+🚀 Запуск тестов Redis Rate Limiting...
+
+📝 Выполняется: testBasicRateLimit
+❌ testBasicRateLimit - FAILED: Header 'X-RateLimit-Limit-Minute' not found in response
+
+📝 Выполняется: testMinuteLimits
+❌ testMinuteLimits - FAILED: Header 'X-RateLimit-Remaining-Minute' not found
+
+📝 Выполняется: testDayLimits
+❌ testDayLimits - FAILED: Expected 0 to be > 0
+
+📝 Выполняется: testPublicEndpointLimits
+❌ testPublicEndpointLimits - FAILED: Expected 0 to be > 0
+
+📝 Выполняется: testAPIKeySearch
+✅ testAPIKeySearch - PASSED
+
+📝 Выполняется: testAPIKeyInfo
+✅ testAPIKeyInfo - PASSED
+
+📝 Выполняется: testAPIKeyStats
+✅ testAPIKeyStats - PASSED
+
+📝 Выполняется: testTopAPIKeys
+✅ testTopAPIKeys - PASSED
+
+📝 Выполняется: testResetCounters
+✅ testResetCounters - PASSED
+
+📝 Выполняется: testRateLimitHeaders
+✅ testRateLimitHeaders - PASSED
+
+📝 Выполняется: testMultipleAPIKeys
+❌ testMultipleAPIKeys - FAILED: Expected 0 to be > 0
+
+📝 Выполняется: testEdgeCases
+✅ testEdgeCases - PASSED
+
+📊 Результаты тестов:
+✅ Пройдено: 7
+❌ Не пройдено: 5
+📈 Общий процент успеха: 58.33%
+
+==================================================
+😞 Некоторые тесты не прошли!
+==================================================

@@ -315,8 +315,31 @@ class ComprehensiveAPITestImproved {
         $this->performanceMetrics['Создание склада User1'] = round(($endTime - $startTime) * 1000, 2);
         $this->assertTest('Создание склада User1', $response['status'] === 201, $response);
         
-        if ($response['status'] === 201 && isset($response['data']['id'])) {
-            $this->createdWarehouses['user1'] = $response['data']['id'];
+        if ($response['status'] === 201) {
+            // Отладочная информация
+            echo "   🔍 Отладка: склад создан, анализируем структуру ответа\n";
+            echo "   🔍 Статус: " . $response['status'] . "\n";
+            echo "   🔍 Полный ответ: " . json_encode($response) . "\n";
+            
+            // Пробуем разные варианты структуры ответа
+            if (isset($response['data']['id'])) {
+                $this->createdWarehouses['user1'] = $response['data']['id'];
+                echo "   ✅ Найден data.id: " . $this->createdWarehouses['user1'] . "\n";
+            } elseif (isset($response['data']['warehouse_id'])) {
+                $this->createdWarehouses['user1'] = $response['data']['warehouse_id'];
+                echo "   ✅ Найден data.warehouse_id: " . $this->createdWarehouses['user1'] . "\n";
+            } elseif (isset($response['data']['warehouse']['id'])) {
+                $this->createdWarehouses['user1'] = $response['data']['warehouse']['id'];
+                echo "   ✅ Найден data.warehouse.id: " . $this->createdWarehouses['user1'] . "\n";
+            } elseif (isset($response['id'])) {
+                $this->createdWarehouses['user1'] = $response['id'];
+                echo "   ✅ Найден id: " . $this->createdWarehouses['user1'] . "\n";
+            } elseif (isset($response['warehouse_id'])) {
+                $this->createdWarehouses['user1'] = $response['warehouse_id'];
+                echo "   ✅ Найден warehouse_id: " . $this->createdWarehouses['user1'] . "\n";
+            } else {
+                echo "   ❌ ID склада не найден в ответе\n";
+            }
             
             // Обновление склада
             $updateData = [
@@ -348,8 +371,31 @@ class ComprehensiveAPITestImproved {
         $this->performanceMetrics['Создание склада User2'] = round(($endTime - $startTime) * 1000, 2);
         $this->assertTest('Создание склада User2', $response['status'] === 201, $response);
         
-        if ($response['status'] === 201 && isset($response['data']['id'])) {
-            $this->createdWarehouses['user2'] = $response['data']['id'];
+        if ($response['status'] === 201) {
+            // Отладочная информация
+            echo "   🔍 Отладка: склад user2 создан, анализируем структуру ответа\n";
+            echo "   🔍 Статус: " . $response['status'] . "\n";
+            echo "   🔍 Полный ответ: " . json_encode($response) . "\n";
+            
+            // Пробуем разные варианты структуры ответа
+            if (isset($response['data']['id'])) {
+                $this->createdWarehouses['user2'] = $response['data']['id'];
+                echo "   ✅ Найден data.id: " . $this->createdWarehouses['user2'] . "\n";
+            } elseif (isset($response['data']['warehouse_id'])) {
+                $this->createdWarehouses['user2'] = $response['data']['warehouse_id'];
+                echo "   ✅ Найден data.warehouse_id: " . $this->createdWarehouses['user2'] . "\n";
+            } elseif (isset($response['data']['warehouse']['id'])) {
+                $this->createdWarehouses['user2'] = $response['data']['warehouse']['id'];
+                echo "   ✅ Найден data.warehouse.id: " . $this->createdWarehouses['user2'] . "\n";
+            } elseif (isset($response['id'])) {
+                $this->createdWarehouses['user2'] = $response['id'];
+                echo "   ✅ Найден id: " . $this->createdWarehouses['user2'] . "\n";
+            } elseif (isset($response['warehouse_id'])) {
+                $this->createdWarehouses['user2'] = $response['warehouse_id'];
+                echo "   ✅ Найден warehouse_id: " . $this->createdWarehouses['user2'] . "\n";
+            } else {
+                echo "   ❌ ID склада user2 не найден в ответе\n";
+            }
             
             // Получение созданного склада user2
             $startTime = microtime(true);
@@ -725,6 +771,10 @@ class ComprehensiveAPITestImproved {
         echo "📋 4. ПОЛНЫЙ ЦИКЛ ТЕСТИРОВАНИЯ ПРЕДЛОЖЕНИЙ\n";
         echo "------------------------------------------------\n";
         
+        // Отладочная информация
+        echo "   🔍 Отладка: createdProducts = " . json_encode($this->createdProducts) . "\n";
+        echo "   🔍 Отладка: createdWarehouses = " . json_encode($this->createdWarehouses) . "\n";
+        
         // Создание предложения (если есть продукты и склады)
         if (isset($this->createdProducts['user1']) && isset($this->createdWarehouses['user1'])) {
             $offerData = [
@@ -762,6 +812,8 @@ class ComprehensiveAPITestImproved {
             }
         } else {
             echo "   ⚠️  Пропуск создания предложения - нет продуктов или складов\n";
+            echo "   🔍 Отладка: createdProducts['user1'] = " . (isset($this->createdProducts['user1']) ? $this->createdProducts['user1'] : 'не установлен') . "\n";
+            echo "   🔍 Отладка: createdWarehouses['user1'] = " . (isset($this->createdWarehouses['user1']) ? $this->createdWarehouses['user1'] : 'не установлен') . "\n";
         }
         
         // Создание предложения для user2 (если есть продукты и склады)
@@ -801,6 +853,8 @@ class ComprehensiveAPITestImproved {
             }
         } else {
             echo "   ⚠️  Пропуск создания предложения User2 - нет продуктов или складов\n";
+            echo "   🔍 Отладка: createdProducts['user2'] = " . (isset($this->createdProducts['user2']) ? $this->createdProducts['user2'] : 'не установлен') . "\n";
+            echo "   🔍 Отладка: createdWarehouses['user2'] = " . (isset($this->createdWarehouses['user2']) ? $this->createdWarehouses['user2'] : 'не установлен') . "\n";
         }
         
         // Создание предложения для user2 (если есть продукты и склады)
@@ -840,6 +894,8 @@ class ComprehensiveAPITestImproved {
             }
         } else {
             echo "   ⚠️  Пропуск создания предложения User2 - нет продуктов или складов\n";
+            echo "   🔍 Отладка: createdProducts['user2'] = " . (isset($this->createdProducts['user2']) ? $this->createdProducts['user2'] : 'не установлен') . "\n";
+            echo "   🔍 Отладка: createdWarehouses['user2'] = " . (isset($this->createdWarehouses['user2']) ? $this->createdWarehouses['user2'] : 'не установлен') . "\n";
         }
         
         // Получение списка предложений
@@ -1539,7 +1595,7 @@ class ComprehensiveAPITestImproved {
         echo "---------------------------------------\n";
         
         // Включаем отдельный тестер Redis Rate Limiting
-        require_once 'test_redis_rate_limiting.php';
+        require_once '../api/test_redis_rate_limiting.php';
         
         try {
             $redisRateLimitTester = new RedisRateLimitingTest('http://localhost:8095');
