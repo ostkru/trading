@@ -179,6 +179,22 @@ func (s *Service) CreateBatchWarehouses(warehouses []CreateWarehouseRequest, use
 		return nil, errors.New("Максимальное количество складов в пакете: 100")
 	}
 
+	// Предварительная валидация всех складов
+	for i, req := range warehouses {
+		if strings.TrimSpace(req.Name) == "" {
+			return nil, fmt.Errorf("склад %d: требуется name", i+1)
+		}
+		if strings.TrimSpace(req.Address) == "" {
+			return nil, fmt.Errorf("склад %d: требуется address", i+1)
+		}
+		if req.Latitude < -90 || req.Latitude > 90 {
+			return nil, fmt.Errorf("склад %d: latitude должен быть в диапазоне от -90 до 90", i+1)
+		}
+		if req.Longitude < -180 || req.Longitude > 180 {
+			return nil, fmt.Errorf("склад %d: longitude должен быть в диапазоне от -180 до 180", i+1)
+		}
+	}
+
 	var createdWarehouses []Warehouse
 
 	// Начинаем транзакцию
@@ -189,14 +205,6 @@ func (s *Service) CreateBatchWarehouses(warehouses []CreateWarehouseRequest, use
 	defer tx.Rollback()
 
 	for _, req := range warehouses {
-		// Валидация данных
-		if req.Name == "" {
-			return nil, errors.New("Требуется name для всех складов")
-		}
-		if req.Address == "" {
-			return nil, errors.New("Требуется address для всех складов")
-		}
-
 		// Создаем склад
 		result, err := tx.Exec(`INSERT INTO warehouses (user_id, name, address, latitude, longitude, working_hours) VALUES (?, ?, ?, ?, ?, ?)`,
 			userID, req.Name, req.Address, req.Latitude, req.Longitude, req.WorkingHours)
@@ -220,7 +228,6 @@ func (s *Service) CreateBatchWarehouses(warehouses []CreateWarehouseRequest, use
 		createdWarehouses = append(createdWarehouses, wh)
 	}
 
-	// Подтверждаем транзакцию
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("ошибка подтверждения транзакции: %v", err)
 	}

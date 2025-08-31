@@ -139,7 +139,15 @@ func (h *Handlers) CreateBatchWarehouses(c *gin.Context) {
 	warehouses, err := h.service.CreateBatchWarehouses(req.Warehouses, userID.(int64))
 	if err != nil {
 		log.Printf("CreateBatchWarehouses error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сервера: " + err.Error()})
+
+		// Проверяем, является ли ошибка ошибкой валидации
+		if strings.Contains(err.Error(), "требуется") ||
+			strings.Contains(err.Error(), "должен быть") ||
+			strings.Contains(err.Error(), "диапазоне") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сервера: " + err.Error()})
+		}
 		return
 	}
 

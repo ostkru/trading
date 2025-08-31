@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} - API Документация</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: #f5f5f5; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        .endpoint { border: 1px solid #ddd; margin: 10px 0; border-radius: 5px; }
+        .method { padding: 10px; font-weight: bold; color: white; }
+        .get { background: #61affe; }
+        .post { background: #49cc90; }
+        .put { background: #fca130; }
+        .delete { background: #f93e3e; }
+        .path { padding: 10px; background: #f8f9fa; font-family: monospace; }
+        .description { padding: 10px; }
+        .examples { padding: 10px; background: #f8f9fa; }
+        .example { margin: 10px 0; }
+        .code { background: #2d3748; color: #e2e8f0; padding: 10px; border-radius: 3px; font-family: monospace; }
+        .schemas { margin-top: 30px; }
+        .schema { border: 1px solid #ddd; margin: 10px 0; border-radius: 5px; }
+        .schema-header { padding: 10px; background: #f8f9fa; font-weight: bold; }
+        .schema-body { padding: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{.Title}}</h1>
+            <p>{{.Description}}</p>
+            <p><strong>Версия:</strong> {{.Version}}</p>
+        </div>
+
+        <h2>API Endpoints</h2>
+        {{range $path, $item := .Paths}}
+        <div class="endpoint">
+            {{if $item.Get}}
+            <div class="method get">GET</div>
+            <div class="path">{{$path}}</div>
+            <div class="description">
+                <strong>{{$item.Get.Summary}}</strong><br>
+                {{$item.Get.Description}}
+            </div>
+            {{if $item.Get.RequestBody}}
+            <div class="examples">
+                <strong>Пример запроса:</strong>
+                <div class="example">
+                    <div class="code">{{$item.Get.RequestBody.Content.application/json.Example}}</div>
+                </div>
+            </div>
+            {{end}}
+            {{end}}
+            
+            {{if $item.Post}}
+            <div class="method post">POST</div>
+            <div class="path">{{$path}}</div>
+            <div class="description">
+                <strong>{{$item.Post.Summary}}</strong><br>
+                {{$item.Post.Description}}
+            </div>
+            {{if $item.Post.RequestBody}}
+            <div class="examples">
+                <strong>Пример запроса:</strong>
+                <div class="example">
+                    <div class="code">{{$item.Post.RequestBody.Content.application/json.Example}}</div>
+                </div>
+            </div>
+            {{end}}
+            {{end}}
+        </div>
+        {{end}}
+
+        <div class="schemas">
+            <h2>Схемы данных</h2>
+            {{range $name, $schema := .Components.Schemas}}
+            <div class="schema">
+                <div class="schema-header">{{$name}}</div>
+                <div class="schema-body">
+                    <strong>Тип:</strong> {{$schema.Type}}<br>
+                    {{if $schema.Description}}<strong>Описание:</strong> {{$schema.Description}}<br>{{end}}
+                    {{if $schema.Properties}}
+                    <strong>Поля:</strong>
+                    <ul>
+                    {{range $fieldName, $field := $schema.Properties}}
+                        <li><strong>{{$fieldName}}</strong> ({{$field.Type}}){{if $field.Description}} - {{$field.Description}}{{end}}</li>
+                    {{end}}
+                    </ul>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+</body>
+</html>

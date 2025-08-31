@@ -30,3 +30,24 @@ services-status:
 services-uninstall:
 	@echo "🗑️ Удаление сервисов..."
 	@sudo ./scripts/manage-services.sh uninstall
+
+# OpenAPI Documentation Generator
+.PHONY: openapi-generator
+openapi-generator:
+	@echo "🚀 Сборка генератора OpenAPI документации..."
+	@go build -o openapi-generator ./cmd/openapi-generator
+	@echo "✅ Генератор собран: ./openapi-generator"
+
+.PHONY: generate-docs
+generate-docs: openapi-generator
+	@echo "📚 Генерация OpenAPI документации..."
+	@./openapi-generator
+	@echo "✅ Документация сгенерирована:"
+	@echo "   - openapi_generated.json"
+	@echo "   - api_documentation.html"
+
+.PHONY: clean-docs
+clean-docs:
+	@echo "🧹 Очистка сгенерированной документации..."
+	@rm -f openapi-generator openapi_generated.json api_documentation.html
+	@echo "✅ Документация очищена"

@@ -63,16 +63,6 @@ func main() {
 		0,                // Redis база данных
 	)
 
-	if redisRateLimitService == nil {
-		log.Printf("⚠️  Предупреждение: Redis Rate Limiting недоступен, используется MySQL-based rate limiting")
-		// Fallback к MySQL-based rate limiting
-		router.Use(ratelimit.RateLimitMiddleware(ratelimit.NewService(db.DB)))
-	} else {
-		log.Printf("✅ Redis Rate Limiting подключен успешно")
-		// Используем Redis-based rate limiting
-		router.Use(ratelimit.RedisRateLimitMiddleware(redisRateLimitService))
-	}
-
 	// Основной endpoint для проверки доступности
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -94,15 +84,25 @@ func main() {
 	// Swagger
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Публичные маршруты (без авторизации)
-	publicGroup := router.Group("/api/v1")
+	// API маршруты (с rate limiting)
+	apiGroup := router.Group("")
 
-	// Публичные офферы
-	offer.RegisterPublicRoutes(publicGroup, offerHandlers)
+	// Применяем rate limiting middleware к API маршрутам
+	if redisRateLimitService == nil {
+		log.Printf("⚠️  Предупреждение: Redis Rate Limiting недоступен, используется MySQL-based rate limiting")
+		apiGroup.Use(ratelimit.RateLimitMiddleware(ratelimit.NewService(db.DB)))
+	} else {
+		log.Printf("✅ Redis Rate Limiting подключен успешно")
+		apiGroup.Use(ratelimit.RedisRateLimitMiddleware(redisRateLimitService))
+	}
+
+	// Публичные офферы (без авторизации) - регистрируем ДО authMiddleware
+	offer.RegisterPublicRoutes(apiGroup, offerHandlers)
+
+	// Применяем auth middleware к защищенным маршрутам
+	apiGroup.Use(authMiddleware)
 
 	// Защищенные маршруты (с авторизацией)
-	apiGroup := router.Group("/api/v1")
-	apiGroup.Use(authMiddleware)
 	products.RegisterRoutes(apiGroup, productsHandlers)
 	offer.RegisterRoutes(apiGroup, offerHandlers)
 	order.RegisterRoutes(apiGroup, orderHandlers)
@@ -111,7 +111,7 @@ func main() {
 	// Redis Rate Limiting API маршруты (публичные для мониторинга)
 	if redisRateLimitService != nil {
 		redisHandler := ratelimit.NewRedisHandler(redisRateLimitService)
-		rateLimitGroup := router.Group("/api/v1/rate-limit")
+		rateLimitGroup := router.Group("/rate-limit")
 		ratelimit.SetupRedisRoutes(rateLimitGroup, redisHandler)
 		log.Printf("✅ Redis Rate Limiting API маршруты зарегистрированы")
 	}

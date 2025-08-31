@@ -6,7 +6,7 @@
 require_once 'test_redis_rate_limiting.php';
 
 function main() {
-    $baseUrl = $argv[1] ?? 'http://localhost:8080';
+    $baseUrl = $argv[1] ?? 'http://localhost:8095';
     
     echo "🚀 ТЕСТИРОВАНИЕ REDIS RATE LIMITING\n";
     echo "=====================================\n\n";

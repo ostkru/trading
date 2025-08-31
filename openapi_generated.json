@@ -1,0 +1,1154 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Trading API",
+    "description": "API для торговой платформы",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.portaldata.ru/v1/trading",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:8095",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {},
+  "components": {
+    "schemas": {
+      "APIKeyInfo": {
+        "type": "object",
+        "properties": {
+          "APIKey": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "Endpoints": {
+            "$ref": "#/components/schemas/*ast.MapType",
+            "example": "example_value"
+          },
+          "LastRequest": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "TotalRequests": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          }
+        }
+      },
+      "APIKeyUsage": {
+        "type": "object",
+        "properties": {
+          "APIKey": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "DayCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "MinuteCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "TotalRequests": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          }
+        }
+      },
+      "AuthService": {
+        "type": "object",
+        "properties": {
+          "userService": {
+            "$ref": "#/components/schemas/*Service",
+            "example": "example_value"
+          }
+        }
+      },
+      "CreateBatchWarehouseRequest": {
+        "type": "object",
+        "properties": {
+          "Warehouses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": "example_value"
+          }
+        }
+      },
+      "CreateOfferRequest": {
+        "type": "object",
+        "properties": {
+          "AvailableLots": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "IsPublic": {
+            "$ref": "#/components/schemas/*bool",
+            "example": "example_value"
+          },
+          "MaxShippingDays": {
+            "$ref": "#/components/schemas/*int",
+            "example": "example_value"
+          },
+          "OfferType": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "PricePerUnit": {
+            "type": "number",
+            "format": "double",
+            "example": 123.45
+          },
+          "ProductID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "TaxNDS": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "UnitsPerLot": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "WarehouseID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          }
+        }
+      },
+      "CreateOffersRequest": {
+        "type": "object",
+        "properties": {
+          "Offers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": "example_value"
+          }
+        }
+      },
+      "CreateOrderRequest": {
+        "type": "object",
+        "properties": {
+          "LotCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "OfferID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          }
+        }
+      },
+      "CreateProductRequest": {
+        "type": "object",
+        "properties": {
+          "Barcode": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "Brand": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "BrandID": {
+            "$ref": "#/components/schemas/*int64",
+            "example": "example_value"
+          },
+          "Category": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "CategoryID": {
+            "$ref": "#/components/schemas/*int64",
+            "example": "example_value"
+          },
+          "Description": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "ImageURLs": {
+            "type": "array",
+            "description": "Медиа поля",
+            "items": {
+              "type": "string"
+            },
+            "example": "example_value"
+          },
+          "Model3DURLs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": "example_value"
+          },
+          "Name": {
+            "type": "string",
+            "example": "Example Name"
+          },
+          "RecommendPrice": {
+            "type": "number",
+            "format": "double",
+            "example": 123.45
+          },
+          "VendorArticle": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "VideoURLs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": "example_value"
+          }
+        }
+      },
+      "CreateProductsRequest": {
+        "type": "object",
+        "properties": {
+          "Products": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": "example_value"
+          }
+        }
+      },
+      "CreateWarehouseRequest": {
+        "type": "object",
+        "properties": {
+          "Address": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "Latitude": {
+            "type": "number",
+            "format": "double",
+            "example": 123.45
+          },
+          "Longitude": {
+            "type": "number",
+            "format": "double",
+            "example": 123.45
+          },
+          "Name": {
+            "type": "string",
+            "example": "Example Name"
+          },
+          "WorkingHours": {
+            "type": "string",
+            "example": "example_string"
+          }
+        }
+      },
+      "EndpointStats": {
+        "type": "object",
+        "properties": {
+          "DayCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "LastRequest": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "MinuteCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          }
+        }
+      },
+      "GeographicFilter": {
+        "type": "object",
+        "properties": {
+          "MaxLatitude": {
+            "type": "number",
+            "format": "double",
+            "example": 123.45
+          },
+          "MaxLongitude": {
+            "type": "number",
+            "format": "double",
+            "example": 123.45
+          },
+          "MinLatitude": {
+            "type": "number",
+            "format": "double",
+            "example": 123.45
+          },
+          "MinLongitude": {
+            "type": "number",
+            "format": "double",
+            "example": 123.45
+          }
+        }
+      },
+      "GetOrderResponse": {
+        "type": "object",
+        "properties": {
+          "Order": {
+            "$ref": "#/components/schemas/Order",
+            "example": "example_value"
+          },
+          "OrderItems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": "example_value"
+          }
+        }
+      },
+      "Handlers": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "$ref": "#/components/schemas/*Service",
+            "example": "example_value"
+          }
+        }
+      },
+      "Offer": {
+        "type": "object",
+        "properties": {
+          "AvailableLots": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "CreatedAt": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "IsPublic": {
+            "$ref": "#/components/schemas/*bool",
+            "example": "example_value"
+          },
+          "Latitude": {
+            "$ref": "#/components/schemas/*float64",
+            "example": "example_value"
+          },
+          "Longitude": {
+            "$ref": "#/components/schemas/*float64",
+            "example": "example_value"
+          },
+          "MaxShippingDays": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "OfferID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "OfferType": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "PricePerUnit": {
+            "type": "number",
+            "format": "double",
+            "example": 123.45
+          },
+          "ProductID": {
+            "$ref": "#/components/schemas/*int64",
+            "example": "example_value"
+          },
+          "ProductName": {
+            "$ref": "#/components/schemas/*string",
+            "description": "Дополнительные поля для публичных офферов",
+            "example": "example_value"
+          },
+          "RecommendPrice": {
+            "$ref": "#/components/schemas/*float64",
+            "example": "example_value"
+          },
+          "TaxNDS": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "UnitsPerLot": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "UpdatedAt": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "UserID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "VendorArticle": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "WarehouseAddress": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "WarehouseID": {
+            "$ref": "#/components/schemas/*int64",
+            "example": "example_value"
+          },
+          "WarehouseName": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          }
+        }
+      },
+      "OfferFilterRequest": {
+        "type": "object",
+        "properties": {
+          "AvailableLots": {
+            "$ref": "#/components/schemas/*int",
+            "example": "example_value"
+          },
+          "BrandID": {
+            "$ref": "#/components/schemas/*int64",
+            "example": "example_value"
+          },
+          "CategoryID": {
+            "$ref": "#/components/schemas/*int64",
+            "example": "example_value"
+          },
+          "Filter": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "Geographic": {
+            "$ref": "#/components/schemas/*GeographicFilter",
+            "example": "example_value"
+          },
+          "MaxShippingDays": {
+            "$ref": "#/components/schemas/*int",
+            "example": "example_value"
+          },
+          "OfferType": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "PriceMax": {
+            "$ref": "#/components/schemas/*float64",
+            "example": "example_value"
+          },
+          "PriceMin": {
+            "$ref": "#/components/schemas/*float64",
+            "example": "example_value"
+          },
+          "ProductName": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "TaxNDS": {
+            "$ref": "#/components/schemas/*int",
+            "example": "example_value"
+          },
+          "UnitsPerLot": {
+            "$ref": "#/components/schemas/*int",
+            "example": "example_value"
+          },
+          "VendorArticle": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "WarehouseID": {
+            "$ref": "#/components/schemas/*int64",
+            "example": "example_value"
+          }
+        }
+      },
+      "OfferListResponse": {
+        "type": "object",
+        "properties": {
+          "Limit": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "Offers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": "example_value"
+          },
+          "Page": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "Total": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "CounterpartyUserID": {
+            "$ref": "#/components/schemas/*int64",
+            "example": "example_value"
+          },
+          "CreatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "InitiatorUserID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "IsMulti": {
+            "$ref": "#/components/schemas/*bool",
+            "example": "example_value"
+          },
+          "LotCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "MaxShippingDays": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "Notes": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "OfferID": {
+            "$ref": "#/components/schemas/*int64",
+            "example": "example_value"
+          },
+          "OrderID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "OrderStatus": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "OrderTime": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "OrderType": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "PaymentMethod": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "PricePerUnit": {
+            "type": "number",
+            "format": "double",
+            "example": 123.45
+          },
+          "ShippingAddress": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "TotalAmount": {
+            "$ref": "#/components/schemas/*float64",
+            "example": "example_value"
+          },
+          "TrackingNumber": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "UnitsPerLot": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "UpdatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00Z"
+          }
+        }
+      },
+      "OrderItem": {
+        "type": "object",
+        "properties": {
+          "CreatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "ID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "OfferID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "OrderID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "PricePerUnit": {
+            "type": "number",
+            "format": "double",
+            "example": 123.45
+          },
+          "Qty": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "Status": {
+            "type": "string",
+            "example": "example_string"
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "Barcode": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "Brand": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "BrandID": {
+            "$ref": "#/components/schemas/*int64",
+            "example": "example_value"
+          },
+          "Category": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "CategoryID": {
+            "$ref": "#/components/schemas/*int64",
+            "example": "example_value"
+          },
+          "CreatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "Description": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "ID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "ImageURLs": {
+            "$ref": "#/components/schemas/*ast.InterfaceType",
+            "description": "Медиа поля (могут быть JSON строками или слайсами)",
+            "example": "example_value"
+          },
+          "Model3DURLs": {
+            "$ref": "#/components/schemas/*ast.InterfaceType",
+            "example": "example_value"
+          },
+          "Name": {
+            "type": "string",
+            "example": "Example Name"
+          },
+          "RecommendPrice": {
+            "type": "number",
+            "format": "double",
+            "example": 123.45
+          },
+          "Status": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "UpdatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "UserID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "VendorArticle": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "VideoURLs": {
+            "$ref": "#/components/schemas/*ast.InterfaceType",
+            "example": "example_value"
+          }
+        }
+      },
+      "ProductListResponse": {
+        "type": "object",
+        "properties": {
+          "Limit": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "Page": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "Products": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": "example_value"
+          },
+          "Total": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          }
+        }
+      },
+      "RateLimit": {
+        "type": "object",
+        "properties": {
+          "APIKey": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "CreatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "DayCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "DayStart": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "Endpoint": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "ID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "LastRequestTime": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "MinuteCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "MinuteStart": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "RequestCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "UpdatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "UserID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          }
+        }
+      },
+      "RateLimitCheck": {
+        "type": "object",
+        "properties": {
+          "Allowed": {
+            "type": "boolean",
+            "example": true
+          },
+          "DayLimit": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "DayUsed": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "Message": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "MinuteLimit": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "MinuteUsed": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          }
+        }
+      },
+      "RateLimitConfig": {
+        "type": "object",
+        "properties": {
+          "DayLimit": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "MinuteLimit": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          }
+        }
+      },
+      "RateLimitStats": {
+        "type": "object",
+        "properties": {
+          "ActiveAPIKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": "example_value"
+          },
+          "RedisInfo": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "TotalAPIKeys": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "TotalKeys": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          }
+        }
+      },
+      "RedisHandler": {
+        "type": "object",
+        "properties": {
+          "redisService": {
+            "$ref": "#/components/schemas/*RedisRateLimitService",
+            "example": "example_value"
+          }
+        }
+      },
+      "RedisRateLimitService": {
+        "type": "object",
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/*redis.Client",
+            "example": "example_value"
+          },
+          "ctx": {
+            "$ref": "#/components/schemas/context.Context",
+            "example": "example_value"
+          }
+        }
+      },
+      "Service": {
+        "type": "object",
+        "properties": {
+          "db": {
+            "$ref": "#/components/schemas/*database.DB",
+            "example": "example_value"
+          }
+        }
+      },
+      "UpdateOfferRequest": {
+        "type": "object",
+        "properties": {
+          "AvailableLots": {
+            "$ref": "#/components/schemas/*int",
+            "example": "example_value"
+          },
+          "IsPublic": {
+            "$ref": "#/components/schemas/*bool",
+            "example": "example_value"
+          },
+          "MaxShippingDays": {
+            "$ref": "#/components/schemas/*int",
+            "example": "example_value"
+          },
+          "PricePerUnit": {
+            "$ref": "#/components/schemas/*float64",
+            "example": "example_value"
+          },
+          "TaxNDS": {
+            "$ref": "#/components/schemas/*int",
+            "example": "example_value"
+          },
+          "UnitsPerLot": {
+            "$ref": "#/components/schemas/*int",
+            "example": "example_value"
+          },
+          "WarehouseID": {
+            "$ref": "#/components/schemas/*int64",
+            "example": "example_value"
+          }
+        }
+      },
+      "UpdateProductRequest": {
+        "type": "object",
+        "properties": {
+          "Barcode": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "Brand": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "BrandID": {
+            "$ref": "#/components/schemas/*int64",
+            "example": "example_value"
+          },
+          "Category": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "CategoryID": {
+            "$ref": "#/components/schemas/*int64",
+            "example": "example_value"
+          },
+          "Description": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "ImageURLs": {
+            "$ref": "#/components/schemas/*[]string",
+            "description": "Медиа поля",
+            "example": "example_value"
+          },
+          "Model3DURLs": {
+            "$ref": "#/components/schemas/*[]string",
+            "example": "example_value"
+          },
+          "Name": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "RecommendPrice": {
+            "$ref": "#/components/schemas/*float64",
+            "example": "example_value"
+          },
+          "VendorArticle": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "VideoURLs": {
+            "$ref": "#/components/schemas/*[]string",
+            "example": "example_value"
+          }
+        }
+      },
+      "UpdateWarehouseRequest": {
+        "type": "object",
+        "properties": {
+          "Address": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "Latitude": {
+            "$ref": "#/components/schemas/*float64",
+            "example": "example_value"
+          },
+          "Longitude": {
+            "$ref": "#/components/schemas/*float64",
+            "example": "example_value"
+          },
+          "Name": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "WorkingHours": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          }
+        }
+      },
+      "Warehouse": {
+        "type": "object",
+        "properties": {
+          "Address": {
+            "type": "string",
+            "example": "example_string"
+          },
+          "CreatedAt": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "ID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "Latitude": {
+            "type": "number",
+            "format": "double",
+            "example": 123.45
+          },
+          "Longitude": {
+            "type": "number",
+            "format": "double",
+            "example": 123.45
+          },
+          "Name": {
+            "type": "string",
+            "example": "Example Name"
+          },
+          "UpdatedAt": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "UserID": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "WBID": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          },
+          "WorkingHours": {
+            "$ref": "#/components/schemas/*string",
+            "example": "example_value"
+          }
+        }
+      },
+      "WarehouseListResponse": {
+        "type": "object",
+        "properties": {
+          "Limit": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "Page": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "Total": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "Warehouses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": "example_value"
+          }
+        }
+      }
+    },
+    "parameters": {
+      "APIKey": {
+        "name": "X-API-KEY",
+        "in": "header",
+        "description": "API ключ для аутентификации",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "example": "your_api_key_here"
+      }
+    },
+    "requestBodies": {},
+    "responses": {},
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "description": "API ключ для аутентификации",
+        "name": "X-API-KEY",
+        "in": "header"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Products",
+      "description": "Управление продуктами"
+    },
+    {
+      "name": "Offers",
+      "description": "Управление предложениями"
+    },
+    {
+      "name": "Orders",
+      "description": "Управление заказами"
+    },
+    {
+      "name": "Warehouses",
+      "description": "Управление складами"
+    },
+    {
+      "name": "Rate Limiting",
+      "description": "Управление лимитами API"
+    }
+  ]
+}

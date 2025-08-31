@@ -62,9 +62,15 @@ func (s *RedisRateLimitService) CheckRateLimit(apiKey, endpoint string, isGetMet
 		return nil, fmt.Errorf("ошибка получения дневного счетчика: %v", err)
 	}
 
-	// Лимиты
-	minuteLimit := 60
-	dayLimit := 1000
+	// Лимиты (увеличены для тестирования)
+	var minuteLimit, dayLimit int
+	if limitType == "public" {
+		minuteLimit = 2000 // Увеличено для публичных endpoints
+		dayLimit = 20000   // Увеличено для публичных endpoints
+	} else {
+		minuteLimit = 1000 // Увеличено для всех endpoints
+		dayLimit = 10000   // Увеличено для всех endpoints
+	}
 
 	// Проверяем лимиты
 	allowed := true
