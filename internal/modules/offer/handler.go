@@ -35,6 +35,22 @@ func (h *Handlers) CreateOffer(c *gin.Context) {
 	offer, err := h.service.CreateOffer(req, userID.(int64))
 	if err != nil {
 		log.Printf("CreateOffer error: %v", err)
+		// Проверяем ошибки "не найден" - возвращаем 404 (проверяем первым)
+		if strings.Contains(err.Error(), "не найден") {
+			response.NotFound(c, err.Error())
+			return
+		}
+		// Проверяем, является ли ошибка связанной с отсутствующими category_id/brand_id
+		if strings.Contains(err.Error(), "Продукт требует классификации") {
+			response.BadRequest(c, err.Error())
+			return
+		}
+		// Проверяем другие типы ошибок валидации
+		if strings.Contains(err.Error(), "должен быть") || strings.Contains(err.Error(), "не может быть") || strings.Contains(err.Error(), "Требуются") {
+			response.BadRequest(c, err.Error())
+			return
+		}
+		// Остальные ошибки - внутренние
 		response.InternalServerError(c, err.Error())
 		return
 	}
@@ -413,6 +429,22 @@ func (h *Handlers) CreateOffers(c *gin.Context) {
 	offers, err := h.service.CreateOffers(req, userID.(int64))
 	if err != nil {
 		log.Printf("CreateOffers error: %v", err)
+		// Проверяем ошибки "не найден" - возвращаем 404 (проверяем первым)
+		if strings.Contains(err.Error(), "не найден") {
+			response.NotFound(c, err.Error())
+			return
+		}
+		// Проверяем, является ли ошибка связанной с отсутствующими category_id/brand_id
+		if strings.Contains(err.Error(), "Продукт требует классификации") {
+			response.BadRequest(c, "Один или несколько продуктов требуют классификации. Поля category_id и brand_id должны быть заполнены. Подготовка этих данных может занять некоторое время.")
+			return
+		}
+		// Проверяем другие типы ошибок валидации
+		if strings.Contains(err.Error(), "должен быть") || strings.Contains(err.Error(), "не может быть") || strings.Contains(err.Error(), "Требуются") {
+			response.BadRequest(c, err.Error())
+			return
+		}
+		// Остальные ошибки - внутренние
 		response.InternalServerError(c, err.Error())
 		return
 	}

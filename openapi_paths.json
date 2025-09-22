@@ -1,0 +1,916 @@
+{
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Проверка доступности API",
+        "description": "Основной endpoint для проверки доступности API",
+        "responses": {
+          "200": {
+            "description": "API доступен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "API ПорталДанных.РФ доступен"
+                        },
+                        "version": {
+                          "type": "string",
+                          "example": "v1"
+                        },
+                        "database": {
+                          "type": "string",
+                          "example": "MySQL"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "running"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browser": {
+      "get": {
+        "summary": "Просмотр API в браузере",
+        "description": "Страница для просмотра API в браузере",
+        "responses": {
+          "200": {
+            "description": "HTML страница для просмотра API"
+          }
+        }
+      }
+    },
+    "/swagger/{any}": {
+      "get": {
+        "summary": "Swagger UI",
+        "description": "Swagger UI для просмотра документации API",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "any",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Swagger UI параметры"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Swagger UI интерфейс"
+          }
+        }
+      }
+    },
+    "/products": {
+      "post": {
+        "summary": "Создать продукт",
+        "description": "Создает новый продукт в системе с поддержкой медиаданных",
+        "security": [{"ApiKeyAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Продукт создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      },
+      "get": {
+        "summary": "Список продуктов",
+        "description": "Возвращает список продуктов с пагинацией и фильтрацией",
+        "security": [{"ApiKeyAuth": []}],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "owner",
+            "schema": {
+              "type": "string",
+              "enum": ["my", "others", "all"],
+              "default": "all"
+            },
+            "description": "Фильтр по владельцу продуктов"
+          },
+          {
+            "in": "query",
+            "name": "upload_status",
+            "schema": {
+              "type": "string",
+              "enum": ["pending", "not_classified", "classified"],
+              "default": "classified"
+            },
+            "description": "Фильтр по статусу загрузки продуктов"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1
+            },
+            "description": "Номер страницы для пагинации"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Количество продуктов на страницу"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список продуктов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Product"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "summary": "Получить продукт по ID",
+        "description": "Возвращает продукт по его уникальному идентификатору",
+        "security": [{"ApiKeyAuth": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор продукта"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Продукт найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Продукт не найден"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      },
+      "put": {
+        "summary": "Обновить продукт",
+        "description": "Обновляет данные продукта по ID",
+        "security": [{"ApiKeyAuth": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор продукта"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Продукт обновлен"
+          },
+          "404": {
+            "description": "Продукт не найден"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Удалить продукт",
+        "description": "Удаляет продукт по ID",
+        "security": [{"ApiKeyAuth": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор продукта"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Продукт удален"
+          },
+          "404": {
+            "description": "Продукт не найден"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      }
+    },
+    "/products/batch": {
+      "post": {
+        "summary": "Пакетное создание продуктов",
+        "description": "Создает несколько продуктов одновременно",
+        "security": [{"ApiKeyAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchCreateProductRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Продукты созданы"
+          },
+          "400": {
+            "description": "Ошибка валидации"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      }
+    },
+    "/offers": {
+      "post": {
+        "summary": "Создать оффер",
+        "description": "Создает новый оффер для продажи или покупки товара",
+        "security": [{"ApiKeyAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOfferRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Оффер создан"
+          },
+          "400": {
+            "description": "Ошибка валидации"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      },
+      "get": {
+        "summary": "Список офферов пользователя",
+        "description": "Возвращает список офферов, созданных текущим пользователем",
+        "security": [{"ApiKeyAuth": []}],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1
+            },
+            "description": "Номер страницы для пагинации"
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Количество офферов на страницу"
+          },
+          {
+            "in": "query",
+            "name": "offer_type",
+            "schema": {
+              "type": "string",
+              "enum": ["buy", "sell"]
+            },
+            "description": "Фильтр по типу оффера"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список офферов"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      }
+    },
+    "/offers/public": {
+      "get": {
+        "summary": "Публичные офферы",
+        "description": "Возвращает список публичных офферов с возможностью фильтрации",
+        "responses": {
+          "200": {
+            "description": "Список публичных офферов"
+          }
+        }
+      }
+    },
+    "/offers/{id}": {
+      "put": {
+        "summary": "Обновить оффер",
+        "description": "Обновляет данные оффера по ID",
+        "security": [{"ApiKeyAuth": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор оффера"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOfferRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Оффер обновлен"
+          },
+          "404": {
+            "description": "Оффер не найден"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Удалить оффер",
+        "description": "Удаляет оффер по ID",
+        "security": [{"ApiKeyAuth": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор оффера"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Оффер удален"
+          },
+          "404": {
+            "description": "Оффер не найден"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      }
+    },
+    "/offers/batch": {
+      "post": {
+        "summary": "Пакетное создание офферов",
+        "description": "Создает несколько офферов одновременно",
+        "security": [{"ApiKeyAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOffersRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Офферы созданы"
+          },
+          "400": {
+            "description": "Ошибка валидации"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      }
+    },
+    "/orders": {
+      "post": {
+        "summary": "Создать заказ",
+        "description": "Создает новый заказ",
+        "security": [{"ApiKeyAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Заказ создан"
+          },
+          "400": {
+            "description": "Ошибка валидации"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      },
+      "get": {
+        "summary": "Список заказов пользователя",
+        "description": "Возвращает список заказов, созданных текущим пользователем",
+        "security": [{"ApiKeyAuth": []}],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1
+            },
+            "description": "Номер страницы для пагинации"
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Количество заказов на страницу"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "rejected"]
+            },
+            "description": "Фильтр по статусу заказа"
+          },
+          {
+            "in": "query",
+            "name": "role",
+            "schema": {
+              "type": "string",
+              "enum": ["buyer", "seller", "all"],
+              "default": "all"
+            },
+            "description": "Фильтр по роли в заказе"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список заказов"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "summary": "Получить заказ по ID",
+        "description": "Возвращает заказ по его уникальному идентификатору",
+        "security": [{"ApiKeyAuth": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор заказа"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Заказ найден"
+          },
+          "404": {
+            "description": "Заказ не найден"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      }
+    },
+    "/orders/{id}/status": {
+      "put": {
+        "summary": "Изменить статус заказа",
+        "description": "Изменяет статус заказа",
+        "security": [{"ApiKeyAuth": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор заказа"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrderStatusRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Статус изменен"
+          },
+          "400": {
+            "description": "Недопустимый статус"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "404": {
+            "description": "Заказ не найден"
+          }
+        }
+      }
+    },
+    "/warehouses": {
+      "post": {
+        "summary": "Создать склад",
+        "description": "Создает новый склад",
+        "security": [{"ApiKeyAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWarehouseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Склад создан"
+          },
+          "400": {
+            "description": "Ошибка валидации"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      },
+      "get": {
+        "summary": "Список складов пользователя",
+        "description": "Возвращает список складов, созданных текущим пользователем",
+        "security": [{"ApiKeyAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Список складов"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      }
+    },
+    "/warehouses/{id}": {
+      "put": {
+        "summary": "Обновить склад",
+        "description": "Обновляет данные склада по ID",
+        "security": [{"ApiKeyAuth": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор склада"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWarehouseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Склад обновлен"
+          },
+          "404": {
+            "description": "Склад не найден"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Удалить склад",
+        "description": "Удаляет склад по ID",
+        "security": [{"ApiKeyAuth": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Уникальный идентификатор склада"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Склад удален"
+          },
+          "404": {
+            "description": "Склад не найден"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      }
+    },
+    "/warehouses/batch": {
+      "post": {
+        "summary": "Пакетное создание складов",
+        "description": "Создает несколько складов одновременно",
+        "security": [{"ApiKeyAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBatchWarehouseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Склады созданы"
+          },
+          "400": {
+            "description": "Ошибка валидации"
+          },
+          "401": {
+            "description": "Не авторизован"
+          }
+        }
+      }
+    },
+    "/rate-limit/api-keys/{api_key}": {
+      "get": {
+        "summary": "Информация об API ключе",
+        "description": "Получает информацию об API ключе и его использовании",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "api_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API ключ для получения информации"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация об API ключе"
+          },
+          "400": {
+            "description": "API ключ не указан"
+          }
+        }
+      }
+    },
+    "/rate-limit/api-keys/{api_key}/stats": {
+      "get": {
+        "summary": "Статистика по API ключу",
+        "description": "Получает статистику использования API ключа",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "api_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API ключ для получения статистики"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Статистика по API ключу"
+          }
+        }
+      }
+    },
+    "/rate-limit/api-keys/{api_key}/reset": {
+      "post": {
+        "summary": "Сбросить счетчики API ключа",
+        "description": "Сбрасывает счетчики использования API ключа",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "api_key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API ключ для сброса счетчиков"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Счетчики сброшены"
+          }
+        }
+      }
+    },
+    "/rate-limit/search": {
+      "get": {
+        "summary": "Поиск API ключей",
+        "description": "Поиск API ключей по паттерну",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "pattern",
+            "schema": {
+              "type": "string",
+              "default": "*"
+            },
+            "description": "Паттерн для поиска API ключей"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Результаты поиска"
+          }
+        }
+      }
+    },
+    "/rate-limit/stats": {
+      "get": {
+        "summary": "Общая статистика rate limiting",
+        "description": "Получает общую статистику по rate limiting",
+        "responses": {
+          "200": {
+            "description": "Общая статистика"
+          }
+        }
+      }
+    },
+    "/rate-limit/top": {
+      "get": {
+        "summary": "Топ API ключей по использованию",
+        "description": "Возвращает топ API ключей по количеству запросов",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "Количество ключей в топе"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Топ API ключей"
+          }
+        }
+      }
+    }
+  }
+}

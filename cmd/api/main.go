@@ -14,6 +14,7 @@ import (
 	order "portaldata-api/internal/modules/order"
 	products "portaldata-api/internal/modules/products"
 	ratelimit "portaldata-api/internal/modules/ratelimit"
+	tariff "portaldata-api/internal/modules/tariff"
 	user "portaldata-api/internal/modules/user"
 	warehouse "portaldata-api/internal/modules/warehouse"
 
@@ -56,11 +57,15 @@ func main() {
 	warehouseService := warehouse.NewService(db)
 	warehouseHandlers := warehouse.NewHandlers(warehouseService)
 
+	tariffService := tariff.NewService(db.DB)
+	tariffHandlers := tariff.NewHandler(tariffService)
+
 	// Инициализация Redis Rate Limiting
 	redisRateLimitService := ratelimit.NewRedisRateLimitService(
 		"127.0.0.1:6379", // Redis адрес
 		"",               // Redis пароль
 		0,                // Redis база данных
+		db.DB,            // База данных для получения лимитов тарифов
 	)
 
 	// Основной endpoint для проверки доступности
@@ -85,9 +90,9 @@ func main() {
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// API маршруты (с rate limiting)
-	apiGroup := router.Group("")
+	apiGroup := router.Group("/api")
 
-	// Применяем rate limiting middleware к API маршрутам
+	// Применяем rate limiting middleware к API маршрутам ПЕРВЫМ (для быстрой блокировки)
 	if redisRateLimitService == nil {
 		log.Printf("⚠️  Предупреждение: Redis Rate Limiting недоступен, используется MySQL-based rate limiting")
 		apiGroup.Use(ratelimit.RateLimitMiddleware(ratelimit.NewService(db.DB)))
@@ -99,7 +104,7 @@ func main() {
 	// Публичные офферы (без авторизации) - регистрируем ДО authMiddleware
 	offer.RegisterPublicRoutes(apiGroup, offerHandlers)
 
-	// Применяем auth middleware к защищенным маршрутам
+	// Применяем auth middleware к защищенным маршрутам (с кэшированием в Redis)
 	apiGroup.Use(authMiddleware)
 
 	// Защищенные маршруты (с авторизацией)
@@ -107,6 +112,7 @@ func main() {
 	offer.RegisterRoutes(apiGroup, offerHandlers)
 	order.RegisterRoutes(apiGroup, orderHandlers)
 	warehouse.RegisterRoutes(apiGroup, warehouseHandlers)
+	tariff.RegisterRoutes(apiGroup, tariffHandlers)
 
 	// Redis Rate Limiting API маршруты (публичные для мониторинга)
 	if redisRateLimitService != nil {

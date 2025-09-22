@@ -22,6 +22,11 @@ func (s *Service) CreateOffer(req CreateOfferRequest, userID int64) (*Offer, err
 		return nil, errors.New("Требуются product_id, offer_type, price_per_unit, available_lots, tax_nds, units_per_lot, warehouse_id")
 	}
 
+	// Валидация цены (проверяем первым)
+	if req.PricePerUnit < 0 {
+		return nil, errors.New("Цена не может быть отрицательной")
+	}
+
 	// Валидация offer_type
 	if req.OfferType != "sale" && req.OfferType != "buy" {
 		return nil, errors.New("offer_type должен быть 'sale' или 'buy'")
@@ -37,7 +42,16 @@ func (s *Service) CreateOffer(req CreateOfferRequest, userID int64) (*Offer, err
 	}
 
 	if !categoryID.Valid || !brandID.Valid {
-		return nil, errors.New("Нельзя создать оффер для продукта без category_id или brand_id. Продукт должен быть классифицирован")
+		return nil, errors.New("Продукт требует классификации. Поля category_id и brand_id должны быть заполнены. Подготовка этих данных может занять некоторое время.")
+	}
+
+	// Проверяем, что склад существует
+	var warehouseExists bool
+	err = s.db.QueryRow("SELECT 1 FROM warehouses WHERE id = ?", req.WarehouseID).Scan(&warehouseExists)
+	if err == sql.ErrNoRows {
+		return nil, errors.New("Склад не найден")
+	} else if err != nil {
+		return nil, fmt.Errorf("Ошибка при проверке склада: %v", err)
 	}
 
 	// Устанавливаем значение по умолчанию для is_public

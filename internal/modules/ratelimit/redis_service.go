@@ -2,6 +2,7 @@ package ratelimit
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"strconv"
@@ -14,9 +15,10 @@ import (
 type RedisRateLimitService struct {
 	client *redis.Client
 	ctx    context.Context
+	db     *sql.DB
 }
 
-func NewRedisRateLimitService(redisAddr, redisPassword string, redisDB int) *RedisRateLimitService {
+func NewRedisRateLimitService(redisAddr, redisPassword string, redisDB int, db *sql.DB) *RedisRateLimitService {
 	client := redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
 		Password: redisPassword,
@@ -36,11 +38,43 @@ func NewRedisRateLimitService(redisAddr, redisPassword string, redisDB int) *Red
 	return &RedisRateLimitService{
 		client: client,
 		ctx:    ctx,
+		db:     db,
 	}
 }
 
 // CheckRateLimit проверяет лимиты для API ключа
 func (s *RedisRateLimitService) CheckRateLimit(apiKey, endpoint string, isGetMethod bool) (*RateLimitCheck, error) {
+	log.Printf("DEBUG: CheckRateLimit called with apiKey=%s, endpoint=%s", apiKey, endpoint)
+	
+	// Получаем userID по API ключу
+	userID, err := s.getUserIDByAPIKey(apiKey)
+	if err != nil {
+		// Если пользователь не найден, используем дефолтные лимиты
+		log.Printf("Пользователь не найден для API ключа %s, используем дефолтные лимиты", apiKey)
+		return s.checkRateLimitWithLimits(apiKey, endpoint, isGetMethod, &RateLimitConfig{
+			MinuteLimit: 1000,
+			DayLimit:    10000,
+		})
+	}
+
+	// Получаем лимиты пользователя из тарифа
+	minuteLimit, dayLimit, err := s.getUserLimitsFromAPIKey(apiKey)
+	if err != nil {
+		log.Printf("Ошибка получения лимитов пользователя %d: %v, используем дефолтные лимиты", userID, err)
+		minuteLimit = 60
+		dayLimit = 1000
+	}
+
+	limits := &RateLimitConfig{
+		MinuteLimit: minuteLimit,
+		DayLimit:    dayLimit,
+	}
+
+	return s.checkRateLimitWithLimits(apiKey, endpoint, isGetMethod, limits)
+}
+
+// checkRateLimitWithLimits проверяет лимиты с заданными значениями
+func (s *RedisRateLimitService) checkRateLimitWithLimits(apiKey, endpoint string, isGetMethod bool, limits *RateLimitConfig) (*RateLimitCheck, error) {
 	// Определяем тип лимита на основе эндпоинта
 	limitType := "all"
 	if endpoint == "public" {
@@ -62,15 +96,12 @@ func (s *RedisRateLimitService) CheckRateLimit(apiKey, endpoint string, isGetMet
 		return nil, fmt.Errorf("ошибка получения дневного счетчика: %v", err)
 	}
 
-	// Лимиты (увеличены для тестирования)
-	var minuteLimit, dayLimit int
-	if limitType == "public" {
-		minuteLimit = 2000 // Увеличено для публичных endpoints
-		dayLimit = 20000   // Увеличено для публичных endpoints
-	} else {
-		minuteLimit = 1000 // Увеличено для всех endpoints
-		dayLimit = 10000   // Увеличено для всех endpoints
-	}
+	// Используем лимиты из тарифа
+	minuteLimit := limits.MinuteLimit
+	dayLimit := limits.DayLimit
+
+	// Для публичных endpoints оставляем лимиты как есть (уже настроены в тарифе)
+	// Убираем удвоение лимитов, так как тариф уже содержит правильные значения
 
 	// Проверяем лимиты
 	allowed := true
@@ -84,12 +115,10 @@ func (s *RedisRateLimitService) CheckRateLimit(apiKey, endpoint string, isGetMet
 		message = fmt.Sprintf("Превышен дневной лимит: %d/%d", dayCount, dayLimit)
 	}
 
-	// Если запрос разрешен, обновляем счетчики
-	if allowed {
-		err = s.incrementCounters(apiKey, limitType, isGetMethod)
-		if err != nil {
-			log.Printf("Ошибка обновления счетчиков: %v", err)
-		}
+	// Обновляем счетчики для всех запросов (для статистики)
+	err = s.incrementCounters(apiKey, limitType, isGetMethod)
+	if err != nil {
+		log.Printf("Ошибка обновления счетчиков: %v", err)
 	}
 
 	return &RateLimitCheck{
@@ -301,4 +330,83 @@ func (s *RedisRateLimitService) ResetCounters(apiKey, resetType string) error {
 	}
 
 	return nil
+}
+
+// getUserIDByAPIKey получает ID пользователя по API ключу
+func (s *RedisRateLimitService) getUserIDByAPIKey(apiKey string) (int64, error) {
+	if s.db == nil {
+		return 0, fmt.Errorf("база данных не инициализирована")
+	}
+
+	var userID int64
+	err := s.db.QueryRow("SELECT id FROM users WHERE api_token = ? AND is_active = TRUE", apiKey).Scan(&userID)
+	if err != nil {
+		return 0, err
+	}
+	return userID, nil
+}
+
+// getUserTariffLimits получает лимиты тарифа пользователя
+func (s *RedisRateLimitService) getUserTariffLimits(userID int64) (*RateLimitConfig, error) {
+	if s.db == nil {
+		return nil, fmt.Errorf("база данных не инициализирована")
+	}
+
+	var limits RateLimitConfig
+	err := s.db.QueryRow(`
+		SELECT t.minute_limit, t.day_limit
+		FROM users u
+		JOIN tariffs t ON u.tariff_id = t.id
+		WHERE u.id = ? AND u.is_active = TRUE AND t.is_active = TRUE
+	`, userID).Scan(&limits.MinuteLimit, &limits.DayLimit)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &limits, nil
+}
+
+// getUserLimitsFromAPIKey получает лимиты пользователя по API ключу
+func (s *RedisRateLimitService) getUserLimitsFromAPIKey(apiKey string) (int, int, error) {
+	if s.db == nil {
+		return 0, 0, fmt.Errorf("база данных не инициализирована")
+	}
+
+	// Сначала получаем userID по API ключу
+	var userID int64
+	err := s.db.QueryRow("SELECT id FROM users WHERE api_token = ? AND is_active = TRUE", apiKey).Scan(&userID)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// Затем получаем лимиты пользователя
+	var dailyLimit int
+
+	// Получаем лимиты из тарифа пользователя
+	var minuteLimit int
+	query := `
+		SELECT t.minute_limit, t.day_limit
+		FROM users u
+		JOIN tariffs t ON u.tariff_id = t.id
+		WHERE u.id = ? AND u.is_active = 1 AND t.is_active = 1
+	`
+	err = s.db.QueryRow(query, userID).Scan(&minuteLimit, &dailyLimit)
+	if err != nil {
+		// Если пользователь не найден или тариф не найден, используем дефолтные лимиты
+		return 60, 1000, nil
+	}
+
+	// Если лимиты не найдены или некорректные, используем дефолтные
+	if dailyLimit <= 0 {
+		dailyLimit = 1000
+	}
+	if minuteLimit <= 0 {
+		minuteLimit = 60
+	}
+
+	// Отладочный лог
+	log.Printf("DEBUG: getUserLimitsFromAPIKey apiKey=%s, minuteLimit=%d, dailyLimit=%d", apiKey, minuteLimit, dailyLimit)
+
+	return minuteLimit, dailyLimit, nil
 }

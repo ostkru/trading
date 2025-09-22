@@ -9,7 +9,7 @@ class ComprehensiveAPITestImproved {
     private $users = [
         'user1' => [
             'name' => 'clear13808',
-            'api_token' => '80479fe392866b79e55c1640c107ee96c6aa25b7f8acf627a5ef226a5d8d1a27'
+            'api_token' => 'sk_a8fe0d325d5355e598dbdf719fc7911a7fc4889a0335d6dfcf2128b7e5c9fb30'
         ],
         'user2' => [
             'name' => 'veriy47043', 

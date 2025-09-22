@@ -80,6 +80,14 @@ func (h *RedisHandler) GetAPIKeyStats(c *gin.Context) {
 		return
 	}
 
+	// Получаем лимиты из тарифа пользователя
+	minuteLimit, dayLimit, err := h.redisService.getUserLimitsFromAPIKey(apiKey)
+	if err != nil {
+		// Если не удалось получить лимиты, используем дефолтные
+		minuteLimit = 60
+		dayLimit = 1000
+	}
+
 	// Формируем расширенную статистику
 	stats := gin.H{
 		"api_key":        apiKey,
@@ -88,11 +96,11 @@ func (h *RedisHandler) GetAPIKeyStats(c *gin.Context) {
 		"endpoints":      info.Endpoints,
 		"limits": gin.H{
 			"minute": gin.H{
-				"limit":       60,
+				"limit":       minuteLimit,
 				"description": "Запросов в минуту",
 			},
 			"day": gin.H{
-				"limit":       1000,
+				"limit":       dayLimit,
 				"description": "Запросов в день (только GET)",
 			},
 		},

@@ -19,44 +19,49 @@ func NewService(db *sql.DB) *Service {
 func (s *Service) CheckRateLimit(userID int64, apiKey, endpoint string, isGetMethod bool) (*RateLimitCheck, error) {
 	// Определяем тип лимита на основе эндпоинта
 	limitType := "all" // по умолчанию для всех методов
-	
+
 	// Для публичных методов используем отдельный лимит
 	if endpoint == "public" {
 		limitType = "public"
 	}
-	
+
 	// Получаем текущую запись о лимитах
 	rateLimit, err := s.getOrCreateRateLimit(userID, apiKey, limitType)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	now := time.Now()
-	
-	// Проверяем минутные лимиты (работают для всех методов)
-	minuteLimit := 60
+
+	// Получаем лимиты из тарифа пользователя
+	minuteLimit, dayLimit, err := s.getUserLimits(userID)
+	if err != nil {
+		log.Printf("Ошибка получения лимитов пользователя %d: %v, используем дефолтные", userID, err)
+		minuteLimit = 60
+		dayLimit = 1000
+	}
+
 	minuteUsed := rateLimit.MinuteCount
-	
+
 	// Сброс минутного счетчика если прошла минута
 	if now.Sub(rateLimit.MinuteStart) >= time.Minute {
 		minuteUsed = 0
 		rateLimit.MinuteStart = now
 	}
-	
+
 	// Проверяем дневные лимиты (только для GET методов)
-	dayLimit := 1000
 	dayUsed := rateLimit.DayCount
-	
+
 	// Сброс дневного счетчика если прошел день
 	if now.Sub(rateLimit.DayStart) >= 24*time.Hour {
 		dayUsed = 0
 		rateLimit.DayStart = now
 	}
-	
+
 	// Проверяем лимиты
 	allowed := true
 	message := ""
-	
+
 	if minuteUsed >= minuteLimit {
 		allowed = false
 		message = fmt.Sprintf("Превышен минутный лимит: %d/%d", minuteUsed, minuteLimit)
@@ -64,24 +69,24 @@ func (s *Service) CheckRateLimit(userID int64, apiKey, endpoint string, isGetMet
 		allowed = false
 		message = fmt.Sprintf("Превышен дневной лимит: %d/%d", dayUsed, dayLimit)
 	}
-	
+
 	// Если запрос разрешен, обновляем счетчики
 	if allowed {
 		// Для минутных лимитов увеличиваем всегда
 		newMinuteCount := minuteUsed + 1
-		
+
 		// Для дневных лимитов увеличиваем только для GET методов
 		newDayCount := dayUsed
 		if isGetMethod {
 			newDayCount = dayUsed + 1
 		}
-		
+
 		err = s.updateRateLimit(userID, apiKey, limitType, newMinuteCount, newDayCount, now)
 		if err != nil {
 			log.Printf("Ошибка обновления лимитов: %v", err)
 		}
 	}
-	
+
 	return &RateLimitCheck{
 		Allowed:     allowed,
 		MinuteLimit: minuteLimit,
@@ -98,7 +103,7 @@ func (s *Service) getOrCreateRateLimit(userID int64, apiKey, limitType string) (
 	          last_request_time, minute_start, day_start, created_at, updated_at 
 	          FROM api_rate_limits 
 	          WHERE user_id = ? AND api_key = ? AND endpoint = ?`
-	
+
 	var rateLimit RateLimit
 	err := s.db.QueryRow(query, userID, apiKey, limitType).Scan(
 		&rateLimit.ID,
@@ -114,24 +119,24 @@ func (s *Service) getOrCreateRateLimit(userID int64, apiKey, limitType string) (
 		&rateLimit.CreatedAt,
 		&rateLimit.UpdatedAt,
 	)
-	
+
 	if err == sql.ErrNoRows {
 		// Создаем новую запись
 		now := time.Now()
 		insertQuery := `INSERT INTO api_rate_limits (user_id, api_key, endpoint, request_count, minute_count, day_count, 
 		               last_request_time, minute_start, day_start, created_at, updated_at) 
 		               VALUES (?, ?, ?, 0, 0, 0, ?, ?, ?, ?, ?)`
-		
+
 		result, err := s.db.Exec(insertQuery, userID, apiKey, limitType, now, now, now, now, now)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		id, err := result.LastInsertId()
 		if err != nil {
 			return nil, err
 		}
-		
+
 		return &RateLimit{
 			ID:              id,
 			UserID:          userID,
@@ -147,11 +152,11 @@ func (s *Service) getOrCreateRateLimit(userID int64, apiKey, limitType string) (
 			UpdatedAt:       now,
 		}, nil
 	}
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &rateLimit, nil
 }
 
@@ -160,7 +165,7 @@ func (s *Service) updateRateLimit(userID int64, apiKey, limitType string, minute
 	query := `UPDATE api_rate_limits 
 	          SET minute_count = ?, day_count = ?, last_request_time = ?, updated_at = ? 
 	          WHERE user_id = ? AND api_key = ? AND endpoint = ?`
-	
+
 	_, err := s.db.Exec(query, minuteCount, dayCount, now, now, userID, apiKey, limitType)
 	return err
 }
@@ -171,13 +176,13 @@ func (s *Service) GetRateLimitStats(userID int64, apiKey string) ([]*RateLimit, 
 	          last_request_time, minute_start, day_start, created_at, updated_at 
 	          FROM api_rate_limits 
 	          WHERE user_id = ? AND api_key = ?`
-	
+
 	rows, err := s.db.Query(query, userID, apiKey)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var rateLimits []*RateLimit
 	for rows.Next() {
 		var rateLimit RateLimit
@@ -200,7 +205,7 @@ func (s *Service) GetRateLimitStats(userID int64, apiKey string) ([]*RateLimit, 
 		}
 		rateLimits = append(rateLimits, &rateLimit)
 	}
-	
+
 	return rateLimits, nil
 }
 
@@ -209,7 +214,38 @@ func (s *Service) ResetRateLimits(userID int64, apiKey string) error {
 	query := `UPDATE api_rate_limits 
 	          SET minute_count = 0, day_count = 0, last_request_time = NOW(), updated_at = NOW() 
 	          WHERE user_id = ? AND api_key = ?`
-	
+
 	_, err := s.db.Exec(query, userID, apiKey)
 	return err
-} 
+}
+
+// getUserLimits получает лимиты пользователя из тарифа
+func (s *Service) getUserLimits(userID int64) (int, int, error) {
+	var dailyLimit int
+
+	// Получаем дневной лимит из тарифа пользователя
+	query := `
+		SELECT JSON_UNQUOTE(JSON_EXTRACT(t.features, '$.daily_requests_limit'))
+		FROM users u
+		JOIN tariffs t ON u.tariff_id = t.id
+		WHERE u.id = ? AND u.is_active = 1 AND t.is_active = 1
+	`
+	err := s.db.QueryRow(query, userID).Scan(&dailyLimit)
+	if err != nil {
+		// Если пользователь не найден или тариф не найден, используем дефолтные лимиты
+		return 60, 1000, nil
+	}
+
+	// Если лимит не найден или некорректный, используем дефолтные
+	if dailyLimit <= 0 {
+		dailyLimit = 1000
+	}
+
+	// Минутный лимит = дневной лимит / 1440 (минут в дне), но минимум 60
+	minuteLimit := dailyLimit / 1440
+	if minuteLimit < 60 {
+		minuteLimit = 60
+	}
+
+	return minuteLimit, dailyLimit, nil
+}
