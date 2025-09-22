@@ -122,6 +122,39 @@ func (h *Handlers) ListWarehouses(c *gin.Context) {
 	c.JSON(http.StatusOK, warehouses)
 }
 
+func (h *Handlers) GetWarehouse(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не авторизован"})
+		return
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID склада"})
+		return
+	}
+
+	warehouse, err := h.service.GetWarehouseByID(id)
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Склад не найден"})
+			return
+		}
+		log.Printf("GetWarehouse error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сервера: " + err.Error()})
+		return
+	}
+
+	// Проверяем, что склад принадлежит пользователю
+	if warehouse.UserID != userID.(int64) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	c.JSON(http.StatusOK, warehouse)
+}
+
 // CreateBatchWarehouses создает несколько складов одновременно
 func (h *Handlers) CreateBatchWarehouses(c *gin.Context) {
 	var req CreateBatchWarehouseRequest
