@@ -258,6 +258,9 @@ func (s *Service) CreateProduct(req *CreateProductRequest, userID int64) (*Produ
 		return nil, errors.New("Требуется category")
 	}
 
+	// Автоматически генерируем category_id если не предоставлен
+	req.GenerateCategoryID()
+
 	// Начинаем транзакцию
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -506,6 +509,9 @@ func (s *Service) UpdateProduct(id int64, req UpdateProductRequest, userID int64
 		return nil, errors.New("Требуется id")
 	}
 
+	// Автоматически генерируем category_id если category изменен, но category_id не предоставлен
+	req.GenerateCategoryID()
+
 	// Проверяем существование продукта и права доступа
 	var productUserID int64
 	err := s.db.QueryRow("SELECT user_id FROM products WHERE id = ?", id).Scan(&productUserID)
@@ -742,8 +748,13 @@ func (s *Service) CreateProducts(req CreateProductsRequest, userID int64) ([]Pro
 		return nil, err
 	}
 
-	// Валидация всех продуктов перед вставкой
-	for _, p := range req.Products {
+	// Валидация всех продуктов перед вставкой и генерация category_id
+	for i := range req.Products {
+		p := &req.Products[i]
+		
+		// Автоматически генерируем category_id если не предоставлен
+		p.GenerateCategoryID()
+		
 		if err := s.validateMediaURLs(p.ImageURLs, p.VideoURLs, p.Model3DURLs); err != nil {
 			return nil, err
 		}

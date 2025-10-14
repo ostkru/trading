@@ -33,9 +33,18 @@ func (s *Service) CreateWarehouse(req CreateWarehouseRequest, userID int64) (*Wa
 		return nil, errors.New("Longitude должен быть в диапазоне от -180 до 180")
 	}
 
+	// Устанавливаем значение по умолчанию для минимальной суммы заказа
+	minOrderAmount := 0.0
+	if req.MinOrderAmount != nil {
+		if *req.MinOrderAmount < 0 {
+			return nil, errors.New("Минимальная сумма заказа не может быть отрицательной")
+		}
+		minOrderAmount = *req.MinOrderAmount
+	}
+
 	// MySQL не поддерживает RETURNING, используем отдельные запросы
-	result, err := s.db.Exec(`INSERT INTO warehouses (user_id, name, address, latitude, longitude, working_hours) VALUES (?, ?, ?, ?, ?, ?)`,
-		userID, req.Name, req.Address, req.Latitude, req.Longitude, req.WorkingHours)
+	result, err := s.db.Exec(`INSERT INTO warehouses (user_id, name, address, latitude, longitude, working_hours, min_order_amount) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		userID, req.Name, req.Address, req.Latitude, req.Longitude, req.WorkingHours, minOrderAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +56,8 @@ func (s *Service) CreateWarehouse(req CreateWarehouseRequest, userID int64) (*Wa
 
 	// Получаем созданный склад
 	var wh Warehouse
-	err = s.db.QueryRow(`SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at FROM warehouses WHERE id = ?`, id).
-		Scan(&wh.ID, &wh.UserID, &wh.Name, &wh.Address, &wh.Latitude, &wh.Longitude, &wh.WorkingHours, &wh.WBID, &wh.CreatedAt, &wh.UpdatedAt)
+	err = s.db.QueryRow(`SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at, min_order_amount FROM warehouses WHERE id = ?`, id).
+		Scan(&wh.ID, &wh.UserID, &wh.Name, &wh.Address, &wh.Latitude, &wh.Longitude, &wh.WorkingHours, &wh.WBID, &wh.CreatedAt, &wh.UpdatedAt, &wh.MinOrderAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -63,21 +72,26 @@ func (s *Service) UpdateWarehouse(id int64, req UpdateWarehouseRequest, userID i
 	err := s.db.QueryRow("SELECT user_id FROM warehouses WHERE id = ?", id).Scan(&dbUserID)
 	if err == sql.ErrNoRows || dbUserID != userID {
 		return nil, errors.New("Доступ запрещён")
-	} else if err != nil {
+	} else 	if err != nil {
 		return nil, err
 	}
 
+	// Валидация минимальной суммы заказа
+	if req.MinOrderAmount != nil && *req.MinOrderAmount < 0 {
+		return nil, errors.New("Минимальная сумма заказа не может быть отрицательной")
+	}
+
 	// MySQL не поддерживает RETURNING, используем UPDATE + SELECT
-	_, err = s.db.Exec(`UPDATE warehouses SET name = ?, address = ?, latitude = ?, longitude = ?, working_hours = ? WHERE id = ?`,
-		utils.Coalesce(req.Name, ""), utils.Coalesce(req.Address, ""), utils.Coalesce(req.Latitude, 0.0), utils.Coalesce(req.Longitude, 0.0), utils.Coalesce(req.WorkingHours, ""), id)
+	_, err = s.db.Exec(`UPDATE warehouses SET name = ?, address = ?, latitude = ?, longitude = ?, working_hours = ?, min_order_amount = ? WHERE id = ?`,
+		utils.Coalesce(req.Name, ""), utils.Coalesce(req.Address, ""), utils.Coalesce(req.Latitude, 0.0), utils.Coalesce(req.Longitude, 0.0), utils.Coalesce(req.WorkingHours, ""), utils.Coalesce(req.MinOrderAmount, 0.0), id)
 	if err != nil {
 		return nil, err
 	}
 
 	// Получаем обновленный склад
 	var wh Warehouse
-	err = s.db.QueryRow(`SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at FROM warehouses WHERE id = ?`, id).
-		Scan(&wh.ID, &wh.UserID, &wh.Name, &wh.Address, &wh.Latitude, &wh.Longitude, &wh.WorkingHours, &wh.WBID, &wh.CreatedAt, &wh.UpdatedAt)
+	err = s.db.QueryRow(`SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at, min_order_amount FROM warehouses WHERE id = ?`, id).
+		Scan(&wh.ID, &wh.UserID, &wh.Name, &wh.Address, &wh.Latitude, &wh.Longitude, &wh.WorkingHours, &wh.WBID, &wh.CreatedAt, &wh.UpdatedAt, &wh.MinOrderAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +150,7 @@ func (s *Service) ListWarehouses(userID int64, page, limit int) (*WarehouseListR
 	if err != nil {
 		return nil, err
 	}
-	query := `SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at FROM warehouses WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`
+	query := `SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at, min_order_amount FROM warehouses WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	rows, err := s.db.Query(query, userID, limit, offset)
 	if err != nil {
 		return nil, err
@@ -145,7 +159,7 @@ func (s *Service) ListWarehouses(userID int64, page, limit int) (*WarehouseListR
 	var warehouses []Warehouse
 	for rows.Next() {
 		var wh Warehouse
-		err := rows.Scan(&wh.ID, &wh.UserID, &wh.Name, &wh.Address, &wh.Latitude, &wh.Longitude, &wh.WorkingHours, &wh.WBID, &wh.CreatedAt, &wh.UpdatedAt)
+		err := rows.Scan(&wh.ID, &wh.UserID, &wh.Name, &wh.Address, &wh.Latitude, &wh.Longitude, &wh.WorkingHours, &wh.WBID, &wh.CreatedAt, &wh.UpdatedAt, &wh.MinOrderAmount)
 		if err != nil {
 			return nil, err
 		}
@@ -160,9 +174,9 @@ func (s *Service) ListWarehouses(userID int64, page, limit int) (*WarehouseListR
 }
 
 func (s *Service) GetWarehouseByID(id int64) (*Warehouse, error) {
-	row := s.db.QueryRow(`SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at FROM warehouses WHERE id = ?`, id)
+	row := s.db.QueryRow(`SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at, min_order_amount FROM warehouses WHERE id = ?`, id)
 	wh := Warehouse{}
-	err := row.Scan(&wh.ID, &wh.UserID, &wh.Name, &wh.Address, &wh.Latitude, &wh.Longitude, &wh.WorkingHours, &wh.WBID, &wh.CreatedAt, &wh.UpdatedAt)
+	err := row.Scan(&wh.ID, &wh.UserID, &wh.Name, &wh.Address, &wh.Latitude, &wh.Longitude, &wh.WorkingHours, &wh.WBID, &wh.CreatedAt, &wh.UpdatedAt, &wh.MinOrderAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -193,6 +207,9 @@ func (s *Service) CreateBatchWarehouses(warehouses []CreateWarehouseRequest, use
 		if req.Longitude < -180 || req.Longitude > 180 {
 			return nil, fmt.Errorf("склад %d: longitude должен быть в диапазоне от -180 до 180", i+1)
 		}
+		if req.MinOrderAmount != nil && *req.MinOrderAmount < 0 {
+			return nil, fmt.Errorf("склад %d: минимальная сумма заказа не может быть отрицательной", i+1)
+		}
 	}
 
 	var createdWarehouses []Warehouse
@@ -205,9 +222,15 @@ func (s *Service) CreateBatchWarehouses(warehouses []CreateWarehouseRequest, use
 	defer tx.Rollback()
 
 	for _, req := range warehouses {
+		// Устанавливаем значение по умолчанию для минимальной суммы заказа
+		minOrderAmount := 0.0
+		if req.MinOrderAmount != nil {
+			minOrderAmount = *req.MinOrderAmount
+		}
+
 		// Создаем склад
-		result, err := tx.Exec(`INSERT INTO warehouses (user_id, name, address, latitude, longitude, working_hours) VALUES (?, ?, ?, ?, ?, ?)`,
-			userID, req.Name, req.Address, req.Latitude, req.Longitude, req.WorkingHours)
+		result, err := tx.Exec(`INSERT INTO warehouses (user_id, name, address, latitude, longitude, working_hours, min_order_amount) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			userID, req.Name, req.Address, req.Latitude, req.Longitude, req.WorkingHours, minOrderAmount)
 		if err != nil {
 			return nil, fmt.Errorf("ошибка создания склада %s: %v", req.Name, err)
 		}
@@ -219,8 +242,8 @@ func (s *Service) CreateBatchWarehouses(warehouses []CreateWarehouseRequest, use
 
 		// Получаем созданный склад
 		var wh Warehouse
-		err = tx.QueryRow(`SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at FROM warehouses WHERE id = ?`, id).
-			Scan(&wh.ID, &wh.UserID, &wh.Name, &wh.Address, &wh.Latitude, &wh.Longitude, &wh.WorkingHours, &wh.WBID, &wh.CreatedAt, &wh.UpdatedAt)
+		err = tx.QueryRow(`SELECT id, user_id, name, address, latitude, longitude, working_hours, wb_id, created_at, updated_at, min_order_amount FROM warehouses WHERE id = ?`, id).
+			Scan(&wh.ID, &wh.UserID, &wh.Name, &wh.Address, &wh.Latitude, &wh.Longitude, &wh.WorkingHours, &wh.WBID, &wh.CreatedAt, &wh.UpdatedAt, &wh.MinOrderAmount)
 		if err != nil {
 			return nil, fmt.Errorf("ошибка получения созданного склада %s: %v", req.Name, err)
 		}

@@ -14,6 +14,7 @@ import (
 	order "portaldata-api/internal/modules/order"
 	products "portaldata-api/internal/modules/products"
 	ratelimit "portaldata-api/internal/modules/ratelimit"
+	search "portaldata-api/internal/modules/search"
 	tariff "portaldata-api/internal/modules/tariff"
 	user "portaldata-api/internal/modules/user"
 	warehouse "portaldata-api/internal/modules/warehouse"
@@ -42,6 +43,7 @@ func main() {
 	// router.Use(middleware.BruteForceMiddleware())
 
 	userService := user.NewService(db.DB)
+userHandlers := user.NewHandlers(userService)
 	authService := user.NewAuthService(userService)
 	authMiddleware := authService.AuthMiddleware()
 
@@ -59,6 +61,10 @@ func main() {
 
 	tariffService := tariff.NewService(db.DB)
 	tariffHandlers := tariff.NewHandler(tariffService)
+
+	// Инициализация поиска
+	searchService := search.NewService("http://localhost:9200")
+	searchHandlers := search.NewHandlers(searchService)
 
 	// Инициализация Redis Rate Limiting
 	redisRateLimitService := ratelimit.NewRedisRateLimitService(
@@ -103,7 +109,10 @@ func main() {
 
 	// Публичные офферы (без авторизации) - регистрируем ДО authMiddleware
 	offer.RegisterPublicRoutes(apiGroup, offerHandlers)
-
+	// Регистрируем роуты пользователей (публичные и защищенные)
+	user.RegisterRoutes(apiGroup, userHandlers)
+	// Регистрируем роуты поиска (публичные)
+	search.RegisterRoutes(apiGroup, searchHandlers)
 	// Применяем auth middleware к защищенным маршрутам (с кэшированием в Redis)
 	apiGroup.Use(authMiddleware)
 

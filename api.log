@@ -1,54 +1,40 @@
-2025/08/31 16:36:49 Database connected successfully
+2025/10/10 07:35:13 Database connected successfully
 [GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
 
 [GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
  - using env:	export GIN_MODE=release
  - using code:	gin.SetMode(gin.ReleaseMode)
 
-2025/08/31 16:36:49 ✅ Redis кэш успешно инициализирован
-2025/08/31 16:36:49 🚀 Воркер классификации запущен
-2025/08/31 16:36:49 ✅ Prepared statements успешно инициализированы
-2025/08/31 16:36:49 ✅ Redis Rate Limiting подключен успешно
-[GIN-debug] GET    /                         --> main.main.func1 (4 handlers)
-[GIN-debug] GET    /browser                  --> main.main.func2 (4 handlers)
-[GIN-debug] GET    /swagger/*any             --> github.com/swaggo/gin-swagger.CustomWrapHandler.func1 (4 handlers)
-[GIN-debug] GET    /api/v1/offers/public     --> portaldata-api/internal/modules/offer.(*Handlers).PublicListOffers-fm (4 handlers)
-[GIN-debug] POST   /api/v1/offers/public/filter --> portaldata-api/internal/modules/offer.(*Handlers).PublicListOffersWithFilters-fm (4 handlers)
-[GIN-debug] POST   /api/v1/metaproducts      --> portaldata-api/internal/modules/products.(*Handlers).CreateMetaproduct-fm (5 handlers)
-[GIN-debug] GET    /api/v1/metaproducts      --> portaldata-api/internal/modules/products.(*Handlers).ListMetaproducts-fm (5 handlers)
-[GIN-debug] GET    /api/v1/metaproducts/:id  --> portaldata-api/internal/modules/products.(*Handlers).GetMetaproduct-fm (5 handlers)
-[GIN-debug] PUT    /api/v1/metaproducts/:id  --> portaldata-api/internal/modules/products.(*Handlers).UpdateMetaproduct-fm (5 handlers)
-[GIN-debug] DELETE /api/v1/metaproducts/:id  --> portaldata-api/internal/modules/products.(*Handlers).DeleteMetaproduct-fm (5 handlers)
-[GIN-debug] POST   /api/v1/metaproducts/batch --> portaldata-api/internal/modules/products.(*Handlers).CreateMetaproducts-fm (5 handlers)
-[GIN-debug] POST   /api/v1/products          --> portaldata-api/internal/modules/products.(*Handlers).CreateMetaproduct-fm (5 handlers)
-[GIN-debug] GET    /api/v1/products          --> portaldata-api/internal/modules/products.(*Handlers).ListMetaproducts-fm (5 handlers)
-[GIN-debug] GET    /api/v1/products/:id      --> portaldata-api/internal/modules/products.(*Handlers).GetMetaproduct-fm (5 handlers)
-[GIN-debug] PUT    /api/v1/products/:id      --> portaldata-api/internal/modules/products.(*Handlers).UpdateMetaproduct-fm (5 handlers)
-[GIN-debug] DELETE /api/v1/products/:id      --> portaldata-api/internal/modules/products.(*Handlers).DeleteMetaproduct-fm (5 handlers)
-[GIN-debug] POST   /api/v1/products/batch    --> portaldata-api/internal/modules/products.(*Handlers).CreateMetaproducts-fm (5 handlers)
-[GIN-debug] POST   /api/v1/offers            --> portaldata-api/internal/modules/offer.(*Handlers).CreateOffer-fm (5 handlers)
-[GIN-debug] PUT    /api/v1/offers/:id        --> portaldata-api/internal/modules/offer.(*Handlers).UpdateOffer-fm (5 handlers)
-[GIN-debug] DELETE /api/v1/offers/:id        --> portaldata-api/internal/modules/offer.(*Handlers).DeleteOffer-fm (5 handlers)
-[GIN-debug] GET    /api/v1/offers            --> portaldata-api/internal/modules/offer.(*Handlers).ListOffers-fm (5 handlers)
-[GIN-debug] POST   /api/v1/offers/filter     --> portaldata-api/internal/modules/offer.(*Handlers).ListOffersWithFilters-fm (5 handlers)
-[GIN-debug] GET    /api/v1/offers/:id        --> portaldata-api/internal/modules/offer.(*Handlers).GetOffer-fm (5 handlers)
-[GIN-debug] GET    /api/v1/offers/wb_stock   --> portaldata-api/internal/modules/offer.(*Handlers).WBStock-fm (5 handlers)
-[GIN-debug] POST   /api/v1/offers/batch      --> portaldata-api/internal/modules/offer.(*Handlers).CreateOffers-fm (5 handlers)
-[GIN-debug] GET    /api/v1/orders/:id        --> portaldata-api/internal/modules/order.(*Handlers).GetOrder-fm (5 handlers)
-[GIN-debug] GET    /api/v1/orders            --> portaldata-api/internal/modules/order.(*Handlers).ListOrders-fm (5 handlers)
-[GIN-debug] POST   /api/v1/orders            --> portaldata-api/internal/modules/order.(*Handlers).CreateOrder-fm (5 handlers)
-[GIN-debug] PUT    /api/v1/orders/:id/status --> portaldata-api/internal/modules/order.(*Handlers).UpdateOrderStatus-fm (5 handlers)
-[GIN-debug] POST   /api/v1/warehouses        --> portaldata-api/internal/modules/warehouse.(*Handlers).CreateWarehouse-fm (5 handlers)
-[GIN-debug] POST   /api/v1/warehouses/batch  --> portaldata-api/internal/modules/warehouse.(*Handlers).CreateBatchWarehouses-fm (5 handlers)
-[GIN-debug] PUT    /api/v1/warehouses/:id    --> portaldata-api/internal/modules/warehouse.(*Handlers).UpdateWarehouse-fm (5 handlers)
-[GIN-debug] DELETE /api/v1/warehouses/:id    --> portaldata-api/internal/modules/warehouse.(*Handlers).DeleteWarehouse-fm (5 handlers)
-[GIN-debug] GET    /api/v1/warehouses        --> portaldata-api/internal/modules/warehouse.(*Handlers).ListWarehouses-fm (5 handlers)
-[GIN-debug] GET    /api/v1/rate-limit/api-keys/:api_key --> portaldata-api/internal/modules/ratelimit.(*RedisHandler).GetAPIKeyInfo-fm (4 handlers)
-[GIN-debug] GET    /api/v1/rate-limit/api-keys/:api_key/stats --> portaldata-api/internal/modules/ratelimit.(*RedisHandler).GetAPIKeyStats-fm (4 handlers)
-[GIN-debug] POST   /api/v1/rate-limit/api-keys/:api_key/reset --> portaldata-api/internal/modules/ratelimit.(*RedisHandler).ResetAPIKeyCounters-fm (4 handlers)
-[GIN-debug] GET    /api/v1/rate-limit/search --> portaldata-api/internal/modules/ratelimit.(*RedisHandler).SearchAPIKeys-fm (4 handlers)
-[GIN-debug] GET    /api/v1/rate-limit/stats  --> portaldata-api/internal/modules/ratelimit.(*RedisHandler).GetRateLimitStats-fm (4 handlers)
-[GIN-debug] GET    /api/v1/rate-limit/top    --> portaldata-api/internal/modules/ratelimit.(*RedisHandler).GetTopAPIKeys-fm (4 handlers)
-2025/08/31 16:36:49 ✅ Redis Rate Limiting API маршруты зарегистрированы
-[GIN] 2025/08/31 - 16:37:03 | 200 |     609.975µs |       127.0.0.1 | GET      "/api/v1/rate-limit/stats"
-2025/08/31 16:39:25 Сервер останавливается...
+2025/10/10 07:35:13 ✅ Redis кэш успешно инициализирован
+2025/10/10 07:35:13 🚀 Воркер классификации запущен
+2025/10/10 07:35:13 ✅ Prepared statements успешно инициализированы
+[GIN-debug] GET    /                         --> main.main.func1 (3 handlers)
+[GIN-debug] GET    /browser                  --> main.main.func2 (3 handlers)
+[GIN-debug] GET    /swagger/*any             --> github.com/swaggo/gin-swagger.CustomWrapHandler.func1 (3 handlers)
+2025/10/10 07:35:13 ✅ Redis Rate Limiting подключен успешно
+[GIN-debug] GET    /api/offers/public        --> portaldata-api/internal/modules/offer.(*Handlers).PublicListOffers-fm (4 handlers)
+[GIN-debug] POST   /api/offers/public/filter --> portaldata-api/internal/modules/offer.(*Handlers).PublicListOffersWithFilters-fm (4 handlers)
+[GIN-debug] POST   /api/user/registration    --> portaldata-api/internal/modules/user.(*Handlers).RegisterUser-fm (4 handlers)
+[GIN-debug] POST   /api/authentication_token --> portaldata-api/internal/modules/user.(*Handlers).AuthenticateUser-fm (4 handlers)
+[GIN-debug] POST   /api/user/create_password_reset --> portaldata-api/internal/modules/user.(*Handlers).CreatePasswordReset-fm (4 handlers)
+[GIN-debug] POST   /api/user/password_reset/:token --> portaldata-api/internal/modules/user.(*Handlers).ResetPassword-fm (4 handlers)
+[GIN-debug] POST   /api/user/verify          --> portaldata-api/internal/modules/user.(*Handlers).VerifyUser-fm (4 handlers)
+[GIN-debug] GET    /api/user/data            --> portaldata-api/internal/modules/user.(*Handlers).GetUserData-fm (4 handlers)
+[GIN-debug] PUT    /api/user                 --> portaldata-api/internal/modules/user.(*Handlers).UpdateUser-fm (4 handlers)
+[GIN-debug] DELETE /api/user                 --> portaldata-api/internal/modules/user.(*Handlers).DeleteUser-fm (4 handlers)
+[GIN-debug] POST   /api/user/registration    --> portaldata-api/internal/modules/user.(*Handlers).RegisterUser-fm (4 handlers)
+panic: handlers are already registered for path '/api/user/registration'
+
+goroutine 1 [running]:
+github.com/gin-gonic/gin.(*node).addRoute(0x1054f2b?, {0xc000b60168, 0x16}, {0xc000020400, 0x4, 0x4})
+	/root/go/pkg/mod/github.com/gin-gonic/gin@v1.10.1/tree.go:260 +0x6fb
+github.com/gin-gonic/gin.(*Engine).addRoute(0xc0000ee1a0, {0x1054f2b, 0x4}, {0xc000b60168, 0x16}, {0xc000020400, 0x4, 0x4})
+	/root/go/pkg/mod/github.com/gin-gonic/gin@v1.10.1/gin.go:352 +0x252
+github.com/gin-gonic/gin.(*RouterGroup).handle(0xc0000a1b40, {0x1054f2b, 0x4}, {0x1068dd7?, 0x10?}, {0xc00001a190, 0x1, 0xf8fce0?})
+	/root/go/pkg/mod/github.com/gin-gonic/gin@v1.10.1/routergroup.go:89 +0x145
+github.com/gin-gonic/gin.(*RouterGroup).POST(...)
+	/root/go/pkg/mod/github.com/gin-gonic/gin@v1.10.1/routergroup.go:112
+portaldata-api/internal/modules/user.RegisterRoutes(0xc0000a1b40, 0xc00001a018)
+	/var/www/trading/internal/modules/user/handlers.go:28 +0xa7
+main.main()
+	/var/www/trading/cmd/api/main.go:109 +0xa1a

@@ -50,23 +50,24 @@ func (s *Service) CreateOrder(initiatorUserID int64, req CreateOrderRequest) (*O
 		return nil, err
 	}
 
-    var orderType string
-    switch offer.OfferType {
-    case "sale":
-        // Заказ к офферу на продажу — это покупка
-        orderType = "buy"
-    case "buy":
-        // Заказ к офферу на покупку — это продажа
-        orderType = "sell"
-    default:
-        return nil, errors.New("unsupported offer_type for order: must be 'sale' or 'buy'")
-    }
+	var orderType string
+	switch offer.OfferType {
+	case "sale":
+		// Заказ к офферу на продажу — это покупка
+		orderType = "buy"
+	case "buy":
+		// Заказ к офферу на покупку — это продажа
+		orderType = "sell"
+	default:
+		return nil, errors.New("unsupported offer_type for order: must be 'sale' or 'buy'")
+	}
 
 	// Вычисляем total_amount
 	calculatedTotalAmount := offer.PricePerUnit * float64(req.LotCount) * float64(offer.UnitsPerLot)
 
-	query := `INSERT INTO orders (initiator_user_id, counterparty_user_id, offer_id, lot_count, order_type, price_per_unit, units_per_lot, max_shipping_days, total_amount)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	// Начальный статус заказа — created
+	query := `INSERT INTO orders (initiator_user_id, counterparty_user_id, offer_id, lot_count, order_type, price_per_unit, units_per_lot, max_shipping_days, total_amount, order_status)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	var order Order
 	order.InitiatorUserID = initiatorUserID
@@ -88,6 +89,7 @@ func (s *Service) CreateOrder(initiatorUserID int64, req CreateOrderRequest) (*O
 		order.UnitsPerLot,
 		order.MaxShippingDays,
 		calculatedTotalAmount,
+		"created",
 	)
 	if err != nil {
 		return nil, err
@@ -292,21 +294,70 @@ func (s *Service) UpdateOrderStatus(orderID, userID int64, status string) (*Orde
 		return nil, errors.New("Требуется order_id")
 	}
 
-	// Проверяем, что заказ принадлежит пользователю
-	var orderUserID int64
-	err := s.db.QueryRow("SELECT initiator_user_id FROM orders WHERE order_id = ?", orderID).Scan(&orderUserID)
+	// Загружаем заказ и роли участников
+	var initiatorID, counterpartyID int64
+	var orderType string
+	var currentStatus sql.NullString
+	err := s.db.QueryRow("SELECT initiator_user_id, counterparty_user_id, order_type, order_status FROM orders WHERE order_id = ?", orderID).Scan(&initiatorID, &counterpartyID, &orderType, &currentStatus)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("Order not found")
 		}
 		return nil, err
 	}
-	if orderUserID != userID {
+
+	// Определяем роль текущего пользователя
+	role := ""
+	if userID == initiatorID {
+		role = "initiator"
+	} else if userID == counterpartyID {
+		role = "counterparty"
+	} else {
 		return nil, errors.New("Access denied")
 	}
 
-	// Обновляем статус заказа
-	_, err = s.db.Exec("UPDATE orders SET order_status = ? WHERE order_id = ?", status, orderID)
+	// Текущий статус
+	curr := ""
+	if currentStatus.Valid {
+		curr = currentStatus.String
+	}
+
+	// Разрешенные переходы по ролям для типов заказов
+	// Для order_type=buy: инициатор=покупатель, контрагент=продавец
+	// Для order_type=sell: инициатор=продавец, контрагент=покупатель
+	allowed := map[string]map[string][]string{
+		"buy": {
+			// покупатель
+			"initiator": {"created:cancelled_by_buyer", "accepted_by_seller:paid_by_buyer", "shipped_by_seller:delivered", "delivered:completed"},
+			// продавец
+			"counterparty": {"created:accepted_by_seller", "paid_by_buyer:payment_confirmed_by_seller", "payment_confirmed_by_seller:shipped_by_seller"},
+		},
+		"sell": {
+			// продавец
+			"initiator": {"created:accepted_by_seller", "paid_by_buyer:payment_confirmed_by_seller", "payment_confirmed_by_seller:shipped_by_seller"},
+			// покупатель
+			"counterparty": {"created:cancelled_by_buyer", "accepted_by_seller:paid_by_buyer", "shipped_by_seller:delivered", "delivered:completed"},
+		},
+	}
+
+	// Проверяем допустимость перехода
+	next := status
+	isAllowed := false
+	for _, rule := range allowed[orderType][role] {
+		// rule формат: "from:to"; from может быть "" (любой) — не используем сейчас
+		parts := strings.Split(rule, ":")
+		from, to := parts[0], parts[1]
+		if from == curr && to == next {
+			isAllowed = true
+			break
+		}
+	}
+	if !isAllowed {
+		return nil, errors.New("Invalid status transition for role")
+	}
+
+	// Обновляем статус заказа + аудит
+	_, err = s.db.Exec("UPDATE orders SET order_status = ?, status_changed_at = CURRENT_TIMESTAMP, status_changed_by = ? WHERE order_id = ?", status, userID, orderID)
 	if err != nil {
 		return nil, err
 	}

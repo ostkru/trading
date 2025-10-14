@@ -1677,6 +1677,7 @@ class ComprehensiveAPITestImproved {
         echo "\n";
     }
 
+
     private function testIncorrectAlgorithms() {
         echo "❌ 12. ТЕСТИРОВАНИЕ НЕПРАВИЛЬНЫХ АЛГОРИТМОВ (ДОЛЖНЫ ПРОВАЛИТЬСЯ)\n";
         echo "------------------------------------------------------------------------\n";
@@ -1816,24 +1817,46 @@ class ComprehensiveAPITestImproved {
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_TIMEOUT => 30
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 3,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false
         ];
         
         if ($token) {
             $options[CURLOPT_HTTPHEADER][] = "X-API-KEY: $token";
         }
         
-        if ($data && in_array($method, ['POST', 'PUT'])) {
+        if ($data && in_array($method, ['POST', 'PUT', 'PATCH'])) {
             $options[CURLOPT_POSTFIELDS] = json_encode($data);
         }
         
         curl_setopt_array($ch, $options);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        $curlInfo = curl_getinfo($ch);
         curl_close($ch);
         
-        $decodedResponse = json_decode($response, true) ?: [];
+        // Обработка ошибок cURL
+        if ($response === false) {
+            return [
+                'status' => 0,
+                'error' => 'cURL Error: ' . $curlError,
+                'curl_info' => $curlInfo
+            ];
+        }
+        
+        $decodedResponse = json_decode($response, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            // Если ответ не JSON, возвращаем как есть
+            $decodedResponse = ['raw_response' => $response];
+        }
+        
         $decodedResponse['status'] = $httpCode;
+        $decodedResponse['curl_info'] = $curlInfo;
         
         return $decodedResponse;
     }
@@ -1841,19 +1864,49 @@ class ComprehensiveAPITestImproved {
     private function assertTest($testName, $condition, $response) {
         $result = $condition ? '✅ ПРОЙДЕН' : '❌ ПРОВАЛЕН';
         $status = $response['status'];
-        $message = isset($response['data']['error']) ? $response['data']['error'] : '';
         
-        echo sprintf("%-60s %s (HTTP %d)", $testName, $result, $status);
+        // Извлекаем сообщение об ошибке из разных возможных мест
+        $message = '';
+        if (isset($response['data']['error'])) {
+            $message = $response['data']['error'];
+        } elseif (isset($response['error'])) {
+            $message = $response['error'];
+        } elseif (isset($response['message'])) {
+            $message = $response['message'];
+        } elseif (isset($response['data']['message'])) {
+            $message = $response['data']['message'];
+        }
+        
+        // Добавляем информацию о времени ответа
+        $responseTime = '';
+        if (isset($response['curl_info']['total_time'])) {
+            $responseTime = sprintf(" (%.2fms)", $response['curl_info']['total_time'] * 1000);
+        }
+        
+        echo sprintf("%-60s %s (HTTP %d)%s", $testName, $result, $status, $responseTime);
         if ($message) {
             echo " - $message";
         }
         echo "\n";
         
+        // Детальное логирование для проваленных тестов
+        if (!$condition && $status >= 400) {
+            echo "   🔍 Детали ошибки:\n";
+            if (isset($response['curl_info'])) {
+                echo "   📊 Время ответа: " . round($response['curl_info']['total_time'] * 1000, 2) . " мс\n";
+                echo "   🌐 URL: " . $response['curl_info']['url'] . "\n";
+            }
+            if (isset($response['data'])) {
+                echo "   📄 Ответ: " . json_encode($response['data'], JSON_UNESCAPED_UNICODE) . "\n";
+            }
+        }
+        
         $this->testResults[] = [
             'name' => $testName,
             'passed' => $condition,
             'status' => $status,
-            'message' => $message
+            'message' => $message,
+            'response_time' => isset($response['curl_info']['total_time']) ? $response['curl_info']['total_time'] * 1000 : 0
         ];
     }
 
@@ -1878,12 +1931,52 @@ class ComprehensiveAPITestImproved {
         
         echo "⚡ МЕТРИКИ ПРОИЗВОДИТЕЛЬНОСТИ:\n";
         echo str_repeat("-", 100) . "\n";
+        
+        // Группируем метрики по категориям
+        $categories = [
+            'Продукты' => [],
+            'Склады' => [],
+            'Предложения' => [],
+            'Заказы' => [],
+            'Redis' => [],
+            'Другие' => []
+        ];
+        
         foreach ($this->performanceMetrics as $testName => $time) {
             if ($testName !== 'total_time') {
-                echo sprintf("%-60s %6.2f мс\n", $testName, $time);
+                $category = 'Другие';
+                foreach ($categories as $catName => $catTests) {
+                    if (strpos($testName, $catName) !== false) {
+                        $category = $catName;
+                        break;
+                    }
+                }
+                $categories[$category][] = ['name' => $testName, 'time' => $time];
             }
         }
+        
+        foreach ($categories as $categoryName => $tests) {
+            if (!empty($tests)) {
+                echo "\n📊 $categoryName:\n";
+                foreach ($tests as $test) {
+                    echo sprintf("   %-55s %6.2f мс\n", $test['name'], $test['time']);
+                }
+            }
+        }
+        
         echo str_repeat("-", 100) . "\n";
+        
+        // Статистика времени ответа
+        $responseTimes = array_column($this->testResults, 'response_time');
+        $responseTimes = array_filter($responseTimes, function($time) { return $time > 0; });
+        
+        if (!empty($responseTimes)) {
+            echo "\n📈 СТАТИСТИКА ВРЕМЕНИ ОТВЕТА:\n";
+            echo "   Среднее время: " . round(array_sum($responseTimes) / count($responseTimes), 2) . " мс\n";
+            echo "   Минимальное время: " . round(min($responseTimes), 2) . " мс\n";
+            echo "   Максимальное время: " . round(max($responseTimes), 2) . " мс\n";
+            echo "   Медиана: " . round($this->calculateMedian($responseTimes), 2) . " мс\n";
+        }
         
         if ($failedTests > 0) {
             echo "\n❌ ПРОВАЛЕННЫЕ ТЕСТЫ:\n";
@@ -1898,8 +1991,8 @@ class ComprehensiveAPITestImproved {
         echo "\n" . str_repeat("=", 100) . "\n";
         echo "🎯 ПРОТЕСТИРОВАННЫЕ МЕТОДЫ:\n";
         echo "✅ Products (Metaproducts): POST, GET, PUT, DELETE, Batch\n";
-        echo "✅ Warehouses: POST, GET, PUT, DELETE\n";
-        echo "✅ Offers: POST, GET, PUT, DELETE, Batch, Public, WB Stock\n";
+        echo "✅ Warehouses: POST, GET, PUT, DELETE, Batch\n";
+        echo "✅ Offers: POST, GET, PUT, DELETE, Batch, Public, WB Stock, Filtering\n";
         echo "✅ Orders: POST, GET, PUT (status)\n";
         echo "✅ Redis Rate Limiting: API Keys, Search, Stats, Limits, Headers\n";
         echo "✅ Security: Authorization, Validation, Permissions\n";
@@ -1921,6 +2014,18 @@ class ComprehensiveAPITestImproved {
         echo str_repeat("=", 100) . "\n";
         echo "🎉 УЛУЧШЕННОЕ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО\n";
         echo str_repeat("=", 100) . "\n";
+    }
+    
+    private function calculateMedian($array) {
+        sort($array);
+        $count = count($array);
+        $middle = floor(($count - 1) / 2);
+        
+        if ($count % 2) {
+            return $array[$middle];
+        } else {
+            return ($array[$middle] + $array[$middle + 1]) / 2;
+        }
     }
 }
 

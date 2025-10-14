@@ -121,15 +121,18 @@ func (h *Handlers) UpdateOrderStatus(c *gin.Context) {
 		return
 	}
 
-	order, err := h.service.UpdateOrderStatus(id, userID.(int64), req.Status)
+    order, err := h.service.UpdateOrderStatus(id, userID.(int64), req.Status)
 	if err != nil {
-		if err.Error() == "Заказ не найден" {
+        switch err.Error() {
+        case "Заказ не найден", "Order not found":
 			c.JSON(http.StatusNotFound, gin.H{"error": "Заказ не найден"})
 			return
-		}
-		if err.Error() == "Доступ запрещен" {
+        case "Доступ запрещен", "Access denied":
 			c.JSON(http.StatusForbidden, gin.H{"error": "Доступ запрещен"})
 			return
+        case "Invalid status transition for role":
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый переход статуса для вашей роли"})
+            return
 		}
 		log.Printf("UpdateOrderStatus error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

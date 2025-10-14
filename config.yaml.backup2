@@ -1,0 +1,12 @@
+server:
+  port: "8095"
+
+database:
+  host: "localhost"
+  port: "3306"
+  user: "root"
+  password: "123456"
+  dbname: "portaldata"
+
+data_path: "/var/www/api.portaldata.ru/data"
+api_key: "f428fbc16a97b9e2a55717bd34e97537ec34cb8c04a5f32eeb4e88c9ee998a53" 
