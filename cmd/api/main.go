@@ -1,3 +1,22 @@
+// @title Trading API
+// @version 1.0
+// @description API для торговой платформы PortalData
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8095
+// @BasePath /api
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
+
 package main
 
 import (
@@ -7,9 +26,15 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/go-redis/redis/v8"
+	"github.com/gin-gonic/gin"
+
 	"portaldata-api/internal/pkg/config"
 	"portaldata-api/internal/pkg/database"
+	"portaldata-api/internal/pkg/middleware"
 
+	categories "portaldata-api/internal/modules/categories"
+	characteristics "portaldata-api/internal/modules/characteristics"
 	offer "portaldata-api/internal/modules/offer"
 	order "portaldata-api/internal/modules/order"
 	products "portaldata-api/internal/modules/products"
@@ -20,7 +45,6 @@ import (
 	warehouse "portaldata-api/internal/modules/warehouse"
 
 	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -37,6 +61,14 @@ func main() {
 	}
 	defer db.Close()
 
+	// Инициализация Redis клиента для кэширования
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     "127.0.0.1:6379",
+		Password: "",
+		DB:       0,
+		PoolSize: 10,
+	})
+
 	router := gin.Default()
 
 	// Middlewares
@@ -49,6 +81,12 @@ userHandlers := user.NewHandlers(userService)
 
 	productsService := products.NewService(db)
 	productsHandlers := products.NewHandlers(productsService)
+
+	categoriesService := categories.NewService(db, redisClient)
+	categoriesHandlers := categories.NewHandlers(categoriesService)
+
+	characteristicsService := characteristics.NewService(db)
+	characteristicsHandlers := characteristics.NewHandlers(characteristicsService)
 
 	offerService := offer.NewService(db)
 	offerHandlers := offer.NewHandlers(offerService)
@@ -63,8 +101,12 @@ userHandlers := user.NewHandlers(userService)
 	tariffHandlers := tariff.NewHandler(tariffService)
 
 	// Инициализация поиска
-	searchService := search.NewService("http://localhost:9200")
+	searchService := search.NewService("http://localhost:9200", db.DB, redisClient)
 	searchHandlers := search.NewHandlers(searchService)
+
+	// Инициализация синхронизации OpenSearch для offers
+	opensearchSync := offer.NewOpenSearchSync(searchService)
+	offerService.SetOpenSearchSync(opensearchSync)
 
 	// Инициализация Redis Rate Limiting
 	redisRateLimitService := ratelimit.NewRedisRateLimitService(
@@ -113,8 +155,15 @@ userHandlers := user.NewHandlers(userService)
 	user.RegisterRoutes(apiGroup, userHandlers)
 	// Регистрируем роуты поиска (публичные)
 	search.RegisterRoutes(apiGroup, searchHandlers)
+	// Регистрируем роуты категорий (публичные)
+	categories.RegisterRoutes(apiGroup, categoriesHandlers)
+	// Регистрируем роуты характеристик (публичные)
+	characteristics.RegisterRoutes(apiGroup, characteristicsHandlers)
 	// Применяем auth middleware к защищенным маршрутам (с кэшированием в Redis)
 	apiGroup.Use(authMiddleware)
+	
+	// Применяем INN verification middleware для POST/PUT/DELETE запросов
+	apiGroup.Use(middleware.INNVerificationMiddleware(db.DB))
 
 	// Защищенные маршруты (с авторизацией)
 	products.RegisterRoutes(apiGroup, productsHandlers)
